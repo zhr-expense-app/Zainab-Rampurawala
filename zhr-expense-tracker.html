@@ -1,0 +1,3084 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>ZHR Expense App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.png" type="image/png">
+  
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
+authDomain: "zhr-expense-app-4747f.firebaseapp.com",
+projectId: "zhr-expense-app-4747f",
+storageBucket: "zhr-expense-app-4747f.firebasestorage.app",
+messagingSenderId: "386125567038",
+appId: "1:386125567038:web:a2570fa8341d024ccf6d6f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+auth.onAuthStateChanged(user => {
+
+if(user){
+
+showDashboard();
+
+}
+
+});	
+
+</script>
+
+<style>
+
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+background: #f4f6f9;
+margin: 0;
+}
+
+.logo {
+width: 320px;
+margin: 20px 0;
+}
+
+h2, h3 {
+margin-bottom: 15px;
+}
+
+input, select {
+width: 100%;
+padding: 10px;
+margin: 8px 0;
+border-radius: 6px;
+border: 1px solid #ccc;
+font-size: 14px;
+}
+
+button {
+background: #001d4c;
+color: white;
+border: none;
+padding: 10px 16px;
+margin: 6px;
+cursor: pointer;
+font-weight: 500;
+border-radius: 4px;
+}
+
+button:hover {
+opacity: 0.9;
+}
+
+* {
+box-sizing: border-box;
+}
+
+/* LOGIN BOX */
+
+#login {
+width: 400px;
+margin: 80px auto;
+background: white;
+padding: 40px;
+border-radius: 12px;
+box-shadow: 0px 8px 25px rgba(0,0,0,0.08);
+text-align: center;
+}
+
+#login input {
+width: 100%;
+padding: 14px;
+margin: 12px 0;
+border-radius: 8px;
+border: 1px solid #ccc;
+font-size: 15px;
+}
+
+#login button {
+width: 120px;
+padding: 12px;
+margin-top: 15px;
+border-radius: 6px;
+}
+
+/* SUMMARY TABLES */
+
+.summary-container {
+display: flex;
+justify-content: center;
+gap: 40px;
+margin: 20px 0;
+flex-wrap: wrap;
+}
+
+.summary-box {
+background: white;
+padding: 15px;
+border: 1px solid #001d4c;
+border-radius: 6px;
+width: 320px;
+}
+
+.summary-box table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.summary-box th,
+.summary-box td {
+border: 1px solid #001d4c;
+padding: 8px;
+}
+
+/* CHART SECTION */
+
+.charts-container{
+display:flex;
+justify-content:center;
+gap:50px;
+margin-top:20px;
+margin-bottom:90px;
+}
+
+.chart-box{
+
+border-radius:6px;
+
+width:400px;
+height:300px;
+}
+
+.chart-box canvas{
+width:100% !important;
+height:300px !important;
+}
+
+#expensePieChart,
+#cashFlowChart{
+width:100% !important;
+height:300px !important;
+
+}
+
+/* REPORT TABLE */
+
+.report-table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 15px;
+}
+
+.report-table th,
+.report-table td {
+border: 1px solid #001d4c;
+padding: 10px;
+text-align: center;
+}
+
+.report-table th {
+background: #001d4c;
+color: white;
+}
+
+/* POPUP */
+
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+background: white;
+margin: 8% auto;
+padding: 25px;
+width: 400px;
+border-radius: 8px;
+text-align: left;
+}
+
+.close {
+float: right;
+font-size: 22px;
+cursor: pointer;
+}
+
+.dashboard-container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 20px;
+}
+
+#reportOutput {
+max-width: 1100px;
+margin: 30px auto;
+}
+
+.summary-title{
+font-weight:600;
+font-size:18px;
+margin-bottom:12px;
+text-align:center;
+}
+
+/* ===================================
+MOBILE OPTIMIZED VERTICAL LAYOUT
+=================================== */
+
+@media screen and (max-width: 768px) {
+
+body{
+padding:10px;
+}
+
+/* LOGIN */
+
+#login{
+width:95%;
+margin:40px auto;
+padding:25px;
+}
+
+/* LOGO */
+
+.logo{
+width:200px;
+}
+
+/* SUMMARY TABLES STACK */
+
+.summary-container{
+flex-direction:column;
+align-items:stretch;
+gap:15px;
+}
+
+.summary-box{
+width:100%;
+}
+
+/* CHARTS STACK */
+
+.charts-container{
+flex-direction:column;
+align-items:stretch;
+gap:30px;
+}
+
+.chart-box{
+width:100%;
+height:auto;
+}
+
+.chart-box canvas{
+width:100% !important;
+height:260px !important;
+}
+
+/* BUTTONS FULL WIDTH */
+
+button{
+width:100%;
+margin:6px 0;
+}
+
+/* POPUP FIX */
+
+.modal-content{
+width:95%;
+margin:20% auto;
+}
+
+/* REPORT TABLE SCROLL */
+
+.report-table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+/* INPUTS BIGGER FOR MOBILE */
+
+input, select{
+font-size:16px;
+}
+
+/* DASHBOARD PADDING */
+
+.dashboard-container{
+padding:10px;
+}
+
+/* PERSONAL MONTHLY TABLE */
+
+#personalMonthlySummary table{
+font-size:14px;
+}
+
+}
+
+/* Mobile button spacing */
+
+@media screen and (max-width:768px){
+
+button{
+width:auto;
+padding:8px 14px;
+margin:6px 6px;
+font-size:14px;
+}
+
+.dashboard-container{
+padding:15px;
+}
+
+.summary-box{
+padding:12px;
+}
+
+}
+
+.summary-box td{
+text-align:right;
+}
+
+/* UNIVERSAL REPORT TABLE ALIGNMENT */
+
+/* Default center alignment */
+
+.report-table td{
+text-align:center;
+}
+
+/* Amount column always right aligned */
+
+.report-table td:nth-last-child(3){
+text-align:right;
+}
+
+/* Edit button column */
+
+.report-table td:nth-last-child(2){
+text-align:center;
+}
+
+/* Delete button column */
+
+.report-table td:nth-last-child(1){
+text-align:center;
+}
+
+
+/* SUMMARY TABLE ALIGNMENT */
+
+/* Headers stay centered */
+.summary-box th{
+text-align:center;
+}
+
+/* First column text left aligned */
+.summary-box td:first-child{
+text-align:left;
+}
+
+/* Numbers right aligned */
+.summary-box td:last-child{
+text-align:right;
+}
+
+/* Monthly personal expense table */
+
+#personalMonthlySummary th{
+text-align:center;
+}
+
+#personalMonthlySummary td:first-child{
+text-align:left;
+}
+
+#personalMonthlySummary td:last-child{
+text-align:right;
+}
+
+
+
+</style>
+
+</head>
+
+<body>
+
+<div id="login">
+<img src="https://blogger.googleusercontent.com/img/a/AVvXsEgrhrAFQX6OaTNBPA32oj3GDiUelxaelquewId4dNpGPJTsi0K8Wbs-k8K_3zN9tTMnulW1wtA_4xHAdcx0Taa3K-Cf0VxFrE43pvjYX1oIXenL2UYfbo0SiiIFjgcN6bP-GeTF62imCVsQb0zcP1ghvBTyQukr3RmCWwgKhaJFCr1KRMB_L7Bj7fphuEo=s1600" class="logo">
+
+<h3>Login</h3>
+<input type="email" id="username" placeholder="Login ID">
+<input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter'){login()}">
+<button onclick="login()">Login</button>
+</div>
+
+<div id="dashboard" style="display:none;">
+<div class="dashboard-container">
+
+<img src="https://blogger.googleusercontent.com/img/a/AVvXsEgrhrAFQX6OaTNBPA32oj3GDiUelxaelquewId4dNpGPJTsi0K8Wbs-k8K_3zN9tTMnulW1wtA_4xHAdcx0Taa3K-Cf0VxFrE43pvjYX1oIXenL2UYfbo0SiiIFjgcN6bP-GeTF62imCVsQb0zcP1ghvBTyQukr3RmCWwgKhaJFCr1KRMB_L7Bj7fphuEo=s1600" class="logo">
+
+<h2>Expense Tracker</h2>
+<div>
+<button onclick="showCurrentMonth()">Current Month</button>
+<button onclick="showLastMonth()">Last Month</button>
+<button onclick="showFullYear()">Full Year</button>
+<button onclick="showCustomSummary()">Custom Date Filter</button>
+<button onclick="exportSummaryExcel()">Export Dashboard</button>
+</div>
+
+
+<!-- FIRST ROW : 3 TABLES -->
+
+<div class="summary-container">
+
+<div id="closingSummary" class="summary-box"></div>
+
+<div id="expenseSummary" class="summary-box"></div>
+
+<div class="summary-box">
+<div class="summary-title">Monthly Personal Expense</div>
+<div id="personalMonthlySummary"></div>
+</div>
+
+</div>
+
+
+<!-- SECOND ROW : CHARTS -->
+
+<div class="charts-container">
+
+<div class="chart-box">
+<h3>Expense Distribution</h3>
+<canvas id="expensePieChart"></canvas>
+</div>
+
+<div class="chart-box">
+<h3>Personal Expense Trend</h3>
+<canvas id="personalExpenseChart"></canvas>
+</div>
+
+</div>
+
+
+<h2>Transactions</h2>
+
+<button onclick="showForm('receipt')">Receipts</button>
+<button onclick="showForm('payment')">Payments</button>
+<button onclick="showForm('contra')">Contra</button>
+<button onclick="showOpening()">Opening Balance</button>
+
+
+<h2>Reports</h2>
+
+<button onclick="showReceiptsReport()">Receipts Report</button>
+<button onclick="showPaymentsReport()">Payments Report</button>
+<button onclick="showContraReport()">Contra Report</button>
+<button onclick="showMiniStatement()">Mini Statement</button>
+<button onclick="exportCurrentReport()">Export Report</button>
+
+</div>
+</div>
+
+<div id="popupModal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closePopup()">&times;</span>
+<div id="popupContent"></div>
+</div>
+</div>
+
+<div id="reportOutput" style="margin-top:20px;"></div>
+
+
+
+<script>
+
+let currentReport = null;
+let currentReportCategory = null;
+let currentFromDate = null;
+let currentToDate = null;
+let expenseChart = null;
+let personalExpenseChart = null;
+
+
+//////////////////////////////////////////////////
+// AUTO FORMAT AMOUNTS (INDIAN + DECIMAL + RIGHT ALIGN)
+//////////////////////////////////////////////////
+
+function formatAllAmounts(){
+
+document.querySelectorAll("td").forEach((cell,index)=>{
+
+let column = cell.cellIndex;
+
+let value = cell.innerText.replace(/,/g,"").trim();
+
+/* Skip Serial Number column */
+if(column === 0) return;
+
+if(value === "0"){
+cell.innerText = "-";
+cell.style.textAlign = "right";
+return;
+}
+
+if(!isNaN(value) && value !== ""){
+
+let formatted = Number(value).toLocaleString("en-IN",{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+});
+
+if(cell.querySelector("b")){
+cell.querySelector("b").innerText = formatted;
+}else{
+cell.innerText = formatted;
+}
+
+cell.style.textAlign = "right";
+
+}
+
+});
+
+}
+
+//////////////////////////////////////////////////
+// Month Name Function
+//////////////////////////////////////////////////
+
+function getMonthName(monthIndex){
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  return months[monthIndex];
+}
+
+
+//////////////////////////////////////////////////
+// ADMIN
+//////////////////////////////////////////////////
+
+const ADMIN_ID = "admin";
+const ADMIN_PASS = "Admin@123";
+
+let openingBalances = {};
+let transactionsCache = [];
+
+//////////////////////////////////////////////////
+// SESSION LOGIN SYSTEM
+//////////////////////////////////////////////////
+
+
+function login(){
+
+let email = document.getElementById("username").value;
+let password = document.getElementById("password").value;
+
+auth.signInWithEmailAndPassword(email,password)
+.then(()=>{
+// dashboard will open automatically via auth listener
+})
+.catch(()=>{
+
+alert("Invalid Login");
+});
+
+}
+
+function showDashboard() {
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  loadOpeningBalance();
+  loadTransactions();
+
+
+//////////////////////////////////////////////////
+// ENTER KEY LOGIN
+//////////////////////////////////////////////////
+
+document.addEventListener("keydown", function(e){
+
+if(e.key === "Enter"){
+
+let loginVisible = document.getElementById("login").style.display !== "none";
+
+if(loginVisible){
+login();
+}
+
+}
+
+});
+
+
+
+//////////////////////////////////////////////////
+// RESTORE LAST SUMMARY
+//////////////////////////////////////////////////
+
+  setTimeout(function(){
+
+    let activeSummary = sessionStorage.getItem("activeSummary");
+
+    if(activeSummary === "currentMonth"){
+      showCurrentMonth();
+    }
+
+    else if(activeSummary === "lastMonth"){
+      showLastMonth();
+    }
+
+    else if(activeSummary === "fullYear"){
+      showFullYear();
+    }
+
+    else if(activeSummary === "customSummary"){
+
+      let fromDate = sessionStorage.getItem("summaryFromDate");
+      let toDate = sessionStorage.getItem("summaryToDate");
+
+      let balanceTitle = `Balance as on ${toDate}`;
+      let expenseTitle = `From ${fromDate} till ${toDate}`;
+
+      calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+
+    }
+
+    else{
+      showCurrentMonth(); // default
+    }
+
+  },600);
+
+
+  //////////////////////////////////////////////////
+  // RESTORE LAST REPORT
+  //////////////////////////////////////////////////
+
+  setTimeout(function(){
+
+    let savedReport = sessionStorage.getItem("currentReport");
+
+    if(savedReport === "receipts"){
+      refreshReceiptsReport();
+    }
+
+    if(savedReport === "payments"){
+      refreshPaymentReport();
+    }
+
+    if(savedReport === "contra"){
+      refreshContraReport();
+    }
+
+  }, 600);
+
+}
+
+
+//////////////////////////////////////////////////
+// POPUP
+//////////////////////////////////////////////////
+
+function openPopup(content) {
+  document.getElementById("popupContent").innerHTML = content;
+  document.getElementById("popupModal").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("popupModal").style.display = "none";
+}
+
+//////////////////////////////////////////////////
+// LOAD DATA
+//////////////////////////////////////////////////
+
+
+function loadTransactions() {
+  db.collection("transactions")
+    .onSnapshot(snapshot => {
+      transactionsCache = [];
+      snapshot.forEach(doc => {
+        transactionsCache.push({ id: doc.id, ...doc.data() });
+      });
+       calculateDashboard();
+    });
+}
+
+
+//////////////////////////////////////////////////
+// LOAD OPENING BALANCE (REAL TIME)
+//////////////////////////////////////////////////
+
+function loadOpeningBalance() {
+  db.collection("settings").doc("openingBalance")
+    .onSnapshot(doc => {
+
+      if (doc.exists) {
+        openingBalances = doc.data();
+      } else {
+        openingBalances = {};
+      }
+
+      calculateDashboard();   // ADD THIS LINE
+
+    });
+}
+
+//////////////////////////////////////////////////
+// SHOW OPENING BALANCE
+//////////////////////////////////////////////////
+
+function showOpening() {
+
+  // First Time Entry
+  if (!openingBalances.openingDate) {
+
+    openPopup(`
+      <h3>Enter Opening Balance</h3>
+
+      <label>Date</label>
+      <input type="date" id="openingDate">
+
+      <label>Cash</label>
+      <input type="number" id="cash">
+
+      <label>BOB5606</label>
+      <input type="number" id="bob5606">
+
+      <label>BOB9195</label>
+      <input type="number" id="bob9195">
+
+      <label>IDBI5391</label>
+      <input type="number" id="idbi5391">
+
+      <button onclick="saveOpening()">Save</button>
+    `);
+
+  } else {
+
+    openPopup(`
+      <h3>Opening Balance</h3>
+
+      <p><b>Date:</b> ${openingBalances.openingDate}</p>
+      <p>Cash:  ${openingBalances.Cash}</p>
+      <p>BOB5606:  ${openingBalances.BOB5606}</p>
+      <p>BOB9195:  ${openingBalances.BOB9195}</p>
+      <p>IDBI5391:  ${openingBalances.IDBI5391}</p>
+
+      <button onclick="editOpening()">Modify</button>
+    `);
+
+  }
+}
+
+//////////////////////////////////////////////////
+// SAVE OPENING BALANCE
+//////////////////////////////////////////////////
+
+async function saveOpening() {
+
+  await db.collection("settings").doc("openingBalance").set({
+    openingDate: document.getElementById("openingDate").value,
+    Cash: Number(document.getElementById("cash").value) || 0,
+    BOB5606: Number(document.getElementById("bob5606").value) || 0,
+    BOB9195: Number(document.getElementById("bob9195").value) || 0,
+    IDBI5391: Number(document.getElementById("idbi5391").value) || 0
+  });
+
+  closePopup();
+}
+
+//////////////////////////////////////////////////
+// EDIT OPENING (ADMIN LOGIN)
+//////////////////////////////////////////////////
+
+function editOpening() {
+
+  openPopup(`
+    <h3>Admin Login Required</h3>
+
+    <label>Admin ID</label>
+    <input type="text" id="adminId">
+
+    <label>Password</label>
+    <input type="password" id="adminPass" onkeydown="if(event.key==='Enter'){verifyAdmin()}">
+
+    <button onclick="verifyAdmin()">Login</button>
+  `);
+}
+
+function verifyAdmin() {
+
+  if (
+    document.getElementById("adminId").value === ADMIN_ID &&
+    document.getElementById("adminPass").value === ADMIN_PASS
+  ) {
+
+    openPopup(`
+      <h3>Modify Opening Balance</h3>
+
+      <label>Date</label>
+      <input type="date" id="openingDate" value="${openingBalances.openingDate}">
+
+      <label>Cash</label>
+      <input type="number" id="cash" value="${openingBalances.Cash}">
+
+      <label>BOB5606</label>
+      <input type="number" id="bob5606" value="${openingBalances.BOB5606}">
+
+      <label>BOB9195</label>
+      <input type="number" id="bob9195" value="${openingBalances.BOB9195}">
+
+      <label>IDBI5391</label>
+      <input type="number" id="idbi5391" value="${openingBalances.IDBI5391}">
+
+      <button onclick="saveOpening()">Update</button>
+    `);
+
+  } else {
+    alert("Invalid Admin Credentials");
+  }
+}
+
+
+//////////////////////////////////////////////////
+// Current Month Button
+//////////////////////////////////////////////////
+
+function showCurrentMonth(){
+
+sessionStorage.setItem("activeSummary","currentMonth");
+
+  let today = new Date();
+
+  let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  let todayDate = today.toISOString().split("T")[0];
+
+  let monthName = getMonthName(today.getMonth());
+
+  let balanceTitle = `Balance as on ${todayDate}`;
+  let expenseTitle = `For the month of ${monthName} ${today.getFullYear()}`;
+
+  calculateSummary(firstDay.toISOString().split("T")[0],todayDate,expenseTitle,balanceTitle);
+
+}
+
+
+//////////////////////////////////////////////////
+// Last Month Button
+//////////////////////////////////////////////////
+
+function showLastMonth(){
+
+sessionStorage.setItem("activeSummary","lastMonth");
+
+  let today = new Date();
+
+  let firstDay = new Date(today.getFullYear(), today.getMonth()-1, 1);
+  let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+
+  let monthName = getMonthName(firstDay.getMonth());
+
+  let balanceTitle = `Balance as on ${lastDay.toISOString().split("T")[0]}`;
+  let expenseTitle = `For the month of ${monthName} ${firstDay.getFullYear()}`;
+
+  calculateSummary(
+    firstDay.toISOString().split("T")[0],
+    lastDay.toISOString().split("T")[0],
+    expenseTitle,
+    balanceTitle
+  );
+
+}
+
+//////////////////////////////////////////////////
+// Full Year Button (Calendar Year)
+//////////////////////////////////////////////////
+
+function showFullYear(){
+
+sessionStorage.setItem("activeSummary","fullYear");
+
+  let today = new Date();
+
+  let start = new Date(today.getFullYear(),0,1);
+
+  let balanceTitle = `Balance as on ${today.toISOString().split("T")[0]}`;
+  let expenseTitle = `FY ${today.getFullYear()}`;
+
+  calculateSummary(
+    start.toISOString().split("T")[0],
+    today.toISOString().split("T")[0],
+    expenseTitle,
+    balanceTitle
+  );
+
+}
+
+
+//////////////////////////////////////////////////
+// Custom Date Filter Button
+//////////////////////////////////////////////////
+
+function runCustomSummary(){
+
+  let fromDate = document.getElementById("summaryFrom").value;
+  let toDate = document.getElementById("summaryTo").value;
+
+  if(!fromDate || !toDate){
+    alert("Both dates are mandatory");
+    return;
+  }
+
+sessionStorage.setItem("activeSummary","customSummary");
+sessionStorage.setItem("summaryFromDate",fromDate);
+sessionStorage.setItem("summaryToDate",toDate);
+
+  closePopup();
+
+  let balanceTitle = `Balance as on ${toDate}`;
+  let expenseTitle = `From ${fromDate} till ${toDate}`;
+
+  calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+
+}
+
+
+//////////////////////////////////////////////////
+// Custom Date Filter Popup
+//////////////////////////////////////////////////
+
+function showCustomSummary(){
+
+openPopup(`
+<h3>Custom Date Filter</h3>
+
+<label>From Date</label>
+<input type="date" id="summaryFrom">
+
+<label>To Date</label>
+<input type="date" id="summaryTo">
+
+<button onclick="runCustomSummary()">Run</button>
+`);
+
+}
+
+
+//////////////////////////////////////////////////
+// Summary Calculation Engine
+//////////////////////////////////////////////////
+
+function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
+
+  let balances = {
+    Cash: Number(openingBalances.Cash || 0),
+    BOB5606: Number(openingBalances.BOB5606 || 0),
+    BOB9195: Number(openingBalances.BOB9195 || 0),
+    IDBI5391: Number(openingBalances.IDBI5391 || 0)
+  };
+
+  let expenses = {
+    Personal:0,
+    Home:0,
+    "Office Reimbursement":0
+  };
+
+
+
+  transactionsCache.forEach(t=>{
+
+    // Closing Balance calculation (till TO date)
+    if(t.date <= toDate){
+
+      if (t.type === "receipt" || t.type === "inflow")
+        balances[t.account] += Number(t.amount);
+
+      if (t.type === "payment" || t.type === "outflow")
+        balances[t.account] -= Number(t.amount);
+
+      if (t.type === "contra"){
+        balances[t.from] -= Number(t.amount);
+        balances[t.to] += Number(t.amount);
+      }
+    }
+
+    // Expense summary (within selected range)
+    if(t.date >= fromDate && t.date <= toDate){
+
+      if (t.type === "payment" || t.type === "outflow"){
+        expenses[t.category] += Number(t.amount);
+      }
+
+    }
+
+  });
+
+let totalBalance = balances.Cash + balances.BOB5606 + balances.BOB9195 + balances.IDBI5391;
+
+let totalExpense = expenses.Personal + expenses.Home + expenses["Office Reimbursement"];
+
+  document.getElementById("closingSummary").innerHTML = `
+
+<div class="summary-title">${balanceTitle}</div>
+    <table>
+      <tr><th>Account</th><th>Balance</th></tr>
+      <tr><td>Cash</td><td> ${balances.Cash}</td></tr>
+      <tr><td>BOB5606</td><td> ${balances.BOB5606}</td></tr>
+      <tr><td>BOB9195</td><td> ${balances.BOB9195}</td></tr>
+      <tr><td>IDBI5391</td><td> ${balances.IDBI5391}</td></tr>
+<tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
+    </table>
+  `;
+
+  document.getElementById("expenseSummary").innerHTML = `
+ <div class="summary-title">${expenseTitle}</div>
+    <table>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+<tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
+    </table>
+  `;
+
+renderExpenseChart(
+  expenses.Personal,
+  expenses.Home,
+  expenses["Office Reimbursement"]
+);
+
+renderPersonalMonthlySummary();
+
+renderPersonalExpenseChart();
+
+formatAllAmounts();
+
+}
+
+
+
+//////////////////////////////////////////////////
+// Final Export Function
+//////////////////////////////////////////////////
+
+
+async function exportSummaryExcel(){
+
+//////////////////////////////////////////////////
+// GET TITLES
+//////////////////////////////////////////////////
+
+let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
+let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
+
+//////////////////////////////////////////////////
+// CREATE WORKBOOK
+//////////////////////////////////////////////////
+
+const workbook = new ExcelJS.Workbook();
+const sheet = workbook.addWorksheet("Dashboard");
+
+//////////////////////////////////////////////////
+// BALANCE TABLE
+//////////////////////////////////////////////////
+
+sheet.addRow([balanceTitle]);
+sheet.addRow([]);
+
+sheet.addRow(["Account","Balance"]);
+
+document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
+  if(i===0) return;
+  let cells = row.querySelectorAll("td");
+  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+});
+
+sheet.addRow([]);
+sheet.addRow([]);
+
+//////////////////////////////////////////////////
+// EXPENSE TABLE
+//////////////////////////////////////////////////
+
+sheet.addRow([expenseTitle]);
+sheet.addRow([]);
+
+sheet.addRow(["Category","Total"]);
+
+document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
+  if(i===0) return;
+  let cells = row.querySelectorAll("td");
+  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+});
+
+sheet.addRow([]);
+sheet.addRow([]);
+
+//////////////////////////////////////////////////
+// MONTHLY PERSONAL EXPENSE TABLE
+//////////////////////////////////////////////////
+
+sheet.addRow(["Monthly Personal Expense"]);
+sheet.addRow([]);
+
+document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
+  let cells = row.querySelectorAll("th,td");
+  let data = [];
+  cells.forEach(c=>data.push(c.innerText));
+  sheet.addRow(data);
+});
+
+//////////////////////////////////////////////////
+// CAPTURE CHART IMAGES
+//////////////////////////////////////////////////
+
+let pieCanvas = document.getElementById("expensePieChart");
+let barCanvas = document.getElementById("personalExpenseChart");
+
+let pieImage = pieCanvas.toDataURL("image/png");
+let barImage = barCanvas.toDataURL("image/png");
+
+//////////////////////////////////////////////////
+// ADD PIE CHART
+//////////////////////////////////////////////////
+
+const pieId = workbook.addImage({
+  base64: pieImage,
+  extension: 'png',
+});
+
+sheet.addImage(pieId,{
+  tl: { col: 5, row: 1 },
+  ext: { width: 400, height: 300 }
+});
+
+//////////////////////////////////////////////////
+// ADD BAR CHART
+//////////////////////////////////////////////////
+
+const barId = workbook.addImage({
+  base64: barImage,
+  extension: 'png',
+});
+
+sheet.addImage(barId,{
+  tl: { col: 5, row: 20 },
+  ext: { width: 400, height: 300 }
+});
+
+//////////////////////////////////////////////////
+// FILE NAME BASED ON PERIOD
+//////////////////////////////////////////////////
+
+let title = expenseTitle
+.replaceAll(" ","_")
+.replaceAll("/","-")
+.replaceAll(":","");
+
+let fileName = `Expense_Dashboard_${title}.xlsx`;
+
+//////////////////////////////////////////////////
+// ALIGN ALL CELLS RIGHT
+//////////////////////////////////////////////////
+
+sheet.eachRow(row=>{
+row.eachCell(cell=>{
+cell.alignment = { horizontal: "right" };
+});
+});
+
+//////////////////////////////////////////////////
+// DOWNLOAD FILE
+//////////////////////////////////////////////////
+
+const buffer = await workbook.xlsx.writeBuffer();
+saveAs(new Blob([buffer]), fileName);
+
+
+
+}
+
+
+//////////////////////////////////////////////////
+// DASHBOARD CALCULATION
+//////////////////////////////////////////////////
+
+function calculateDashboard() {
+
+  let balances = {
+    Cash: Number(openingBalances.Cash || 0),
+    BOB5606: Number(openingBalances.BOB5606 || 0),
+    BOB9195: Number(openingBalances.BOB9195 || 0),
+    IDBI5391: Number(openingBalances.IDBI5391 || 0)
+  };
+
+  let expenses = {
+    Personal: 0,
+    Home: 0,
+    "Office Reimbursement": 0
+  };
+
+  transactionsCache.forEach(t => {
+
+    // RECEIPTS
+    if (t.type === "receipt" || t.type === "inflow") {
+      balances[t.account] += Number(t.amount);
+    }
+
+    // PAYMENTS
+    if (t.type === "payment" || t.type === "outflow") {
+      balances[t.account] -= Number(t.amount);
+      expenses[t.category] += Number(t.amount);
+    }
+
+    // CONTRA
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
+    }
+
+  });
+
+  //////////////////////////////////////////////
+  // DISPLAY CLOSING BALANCE
+  //////////////////////////////////////////////
+
+  document.getElementById("closingSummary").innerHTML = `
+    <table>
+      <tr><th>Account</th><th>Balance</th></tr>
+      <tr><td>Cash</td><td> ${balances.Cash}</td></tr>
+      <tr><td>BOB5606</td><td> ${balances.BOB5606}</td></tr>
+      <tr><td>BOB9195</td><td> ${balances.BOB9195}</td></tr>
+      <tr><td>IDBI5391</td><td> ${balances.IDBI5391}</td></tr>
+    </table>
+  `;
+
+  //////////////////////////////////////////////
+  // EXPENSE SUMMARY
+  //////////////////////////////////////////////
+
+  document.getElementById("expenseSummary").innerHTML = `
+    <table>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+    </table>
+  `;
+}
+
+//////////////////////////////////////////////////
+// Balance Checker Function
+//////////////////////////////////////////////////
+
+
+function getCurrentBalance(account) {
+
+  let balances = {
+    Cash: Number(openingBalances.Cash || 0),
+    BOB5606: Number(openingBalances.BOB5606 || 0),
+    BOB9195: Number(openingBalances.BOB9195 || 0),
+    IDBI5391: Number(openingBalances.IDBI5391 || 0)
+  };
+
+  transactionsCache.forEach(t => {
+
+    if (t.type === "receipt" || t.type === "inflow")
+      balances[t.account] += Number(t.amount);
+
+    if (t.type === "payment" || t.type === "outflow")
+      balances[t.account] -= Number(t.amount);
+
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
+    }
+
+  });
+
+  return balances[account];
+}
+
+
+//////////////////////////////////////////////////
+// Pie Chart Function
+//////////////////////////////////////////////////
+
+function renderExpenseChart(personal, home, office){
+
+  const ctx = document.getElementById("expensePieChart");
+
+  if(expenseChart){
+    expenseChart.destroy();
+  }
+
+  expenseChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Personal","Home","Office Reimbursement"],
+      datasets: [{
+        data: [personal, home, office],
+        backgroundColor: [
+          "#4CAF50",
+          "#2196F3",
+          "#FF9800"
+        ]
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{
+          position:"bottom"
+        }
+      }
+    }
+  });
+
+}
+
+
+//////////////////////////////////////////////////
+// Personal Expense Chart Function
+//////////////////////////////////////////////////
+
+function renderPersonalExpenseChart(){
+
+  let currentYear = new Date().getFullYear();
+
+  let months = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  let personal = new Array(12).fill(0);
+
+  transactionsCache.forEach(t => {
+
+    if(t.type === "payment" && t.category === "Personal"){
+
+      let d = new Date(t.date);
+
+      if(d.getFullYear() === currentYear){
+
+        personal[d.getMonth()] += Number(t.amount);
+
+      }
+
+    }
+
+  });
+
+  const ctx = document.getElementById("personalExpenseChart");
+
+  if(personalExpenseChart){
+    personalExpenseChart.destroy();
+  }
+
+  personalExpenseChart = new Chart(ctx, {
+
+type: "bar",
+
+data: {
+
+labels: months,
+
+datasets: [
+
+{
+label: "Personal Expense",
+data: personal,
+backgroundColor: "#001d4c"
+},
+
+{
+type: "line",
+label: "Budget Limit (2000)",
+data: new Array(12).fill(2000),
+borderColor: "red",
+borderWidth: 2,
+pointRadius: 0,
+fill: false
+}
+
+]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+legend:{
+position:"bottom"
+}
+},
+
+scales:{
+y:{
+beginAtZero:true
+}
+}
+
+}
+
+});
+
+}
+
+
+//////////////////////////////////////////////////
+// Monthly Personal Expense Summary
+//////////////////////////////////////////////////
+
+function renderPersonalMonthlySummary(){
+
+  let currentYear = new Date().getFullYear();
+
+  let months = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  let monthly = new Array(12).fill(0);
+
+  transactionsCache.forEach(t => {
+
+    if(t.type === "payment" && t.category === "Personal"){
+
+      let d = new Date(t.date);
+
+      if(d.getFullYear() === currentYear){
+
+        monthly[d.getMonth()] += Number(t.amount);
+
+      }
+
+    }
+
+  });
+
+  let html = `
+  <div style="height:200px; overflow-y:auto;">
+  <table style="margin-top:0;">
+  <tr>
+    <th>Month</th>
+    <th>FY ${currentYear}</th>
+  </tr>
+  `;
+
+  months.forEach((m,i)=>{
+
+    let val = monthly[i] === 0 ? "-" : " "+monthly[i];
+
+    html += `
+    <tr>
+      <td>${m} ${currentYear}</td>
+      <td>${val}</td>
+    </tr>`;
+
+  });
+
+  html += "</table></div>";
+
+  document.getElementById("personalMonthlySummary").innerHTML = html;
+
+}
+
+
+//////////////////////////////////////////////////
+// TRANSACTION ENTRY FORMS
+//////////////////////////////////////////////////
+
+
+function showForm(type) {
+
+  if (type === "receipt") {
+    openPopup(`
+      <h3>Record Receipt</h3>
+      <label>Mode</label>
+      <select id="account">
+        <option>Cash</option>
+        <option>BOB5606</option>
+        <option>BOB9195</option>
+        <option>IDBI5391</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="date">
+
+      <label>Particular</label>
+      <input type="text" id="narration">
+
+      <label>Amount</label>
+      <input type="number" id="amount">
+
+      <button onclick="saveReceipt()">Save</button>
+    `);
+  }
+
+  if (type === "payment") {
+    openPopup(`
+      <h3>Record Payment</h3>
+      <label>Mode</label>
+      <select id="account">
+        <option>Cash</option>
+        <option>BOB5606</option>
+        <option>BOB9195</option>
+        <option>IDBI5391</option>
+      </select>
+
+      <label>Category</label>
+      <select id="category">
+        <option>Personal</option>
+        <option>Home</option>
+        <option>Office Reimbursement</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="date">
+
+      <label>Particular</label>
+      <input type="text" id="narration">
+
+      <label>Amount</label>
+      <input type="number" id="amount">
+
+      <button onclick="savePayment()">Save</button>
+    `);
+  }
+
+  if (type === "contra") {
+    openPopup(`
+      <h3>Record Contra</h3>
+
+      <label>From Account</label>
+      <select id="from">
+        <option>Cash</option>
+        <option>BOB5606</option>
+        <option>BOB9195</option>
+        <option>IDBI5391</option>
+      </select>
+
+      <label>To Account</label>
+      <select id="to">
+        <option>Cash</option>
+        <option>BOB5606</option>
+        <option>BOB9195</option>
+        <option>IDBI5391</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="date">
+
+      <label>Particular</label>
+      <input type="text" id="narration">
+
+      <label>Amount</label>
+      <input type="number" id="amount">
+
+      <button onclick="saveContra()">Save</button>
+    `);
+  }
+}
+
+
+
+
+//////////////////////////////////////////////////
+// SAVE RECEIPT
+//////////////////////////////////////////////////
+
+async function saveReceipt() {
+
+  let account = document.getElementById("account").value;
+  let date = document.getElementById("date").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
+
+  if (!account || !date || !narration || !amount) {
+    alert("All fields are mandatory");
+    return;
+  }
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  await db.collection("transactions").add({
+    type: "receipt",
+    account: account,
+    amount: amount,
+    date: date,
+    narration: narration
+  });
+
+  closePopup();
+}
+
+//////////////////////////////////////////////////
+// SAVE PAYMENT
+//////////////////////////////////////////////////
+
+async function savePayment() {
+
+  let account = document.getElementById("account").value;
+  let category = document.getElementById("category").value;
+  let date = document.getElementById("date").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
+
+  if (!account || !category || !date || !narration || !amount) {
+    alert("All fields are mandatory");
+    return;
+  }
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  let balance = getCurrentBalance(account);
+
+  if (balance < amount) {
+    alert("Insufficient balance in " + account);
+    return;
+  }
+
+  await db.collection("transactions").add({
+    type: "payment",
+    account: account,
+    category: category,
+    date: date,
+    narration: narration,
+    amount: amount
+  });
+
+  closePopup();
+}
+
+
+
+//////////////////////////////////////////////////
+// Apply Validation for Contra
+//////////////////////////////////////////////////
+
+async function saveContra() {
+
+  let from = document.getElementById("from").value;
+  let to = document.getElementById("to").value;
+  let date = document.getElementById("date").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
+
+  if (!from || !to || !date || !narration || !amount) {
+    alert("All fields are mandatory");
+    return;
+  }
+
+  if (from === to) {
+    alert("From and To account cannot be same");
+    return;
+  }
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  let balance = getCurrentBalance(from);
+
+  if (balance < amount) {
+    alert("Insufficient balance in " + from);
+    return;
+  }
+
+  await db.collection("transactions").add({
+    type: "contra",
+    from: from,
+    to: to,
+    date: date,
+    narration: narration,
+    amount: amount
+  });
+
+  closePopup();
+}
+
+
+//////////////////////////////////////////////////
+// RECEIPTS REPORT (DISPLAY BELOW)
+//////////////////////////////////////////////////
+
+function showReceiptsReport() {
+
+  openPopup(`
+    <h3>Receipts Report</h3>
+
+    <label>From Date</label>
+    <input type="date" id="fromDate">
+
+    <label>To Date</label>
+    <input type="date" id="toDate">
+
+    <button onclick="runReceiptsReport()">Run</button>
+  `);
+
+}
+
+//////////////////////////////////////////////////
+// RUN RECEIPTS REPORT
+//////////////////////////////////////////////////
+
+function runReceiptsReport() {
+
+let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
+
+if (!fromDate || !toDate) {
+  alert("Please select both From Date and To Date");
+  return;
+}
+
+  currentReport = "receipts";
+  sessionStorage.setItem("currentReport","receipts");
+sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  
+
+  closePopup();
+
+  let receipts = transactionsCache
+.filter(t => {
+
+  let isReceipt = (t.type === "receipt" || t.type === "inflow");
+
+  let isInRange = true;
+
+  if (fromDate)
+    isInRange = t.date >= fromDate;
+
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isReceipt && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+  let html = `
+    <h3>Receipts Report</h3>
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Mode</th>
+        <th>Particular</th>
+        <th>Amount</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  receipts.forEach((r, index) => {
+    html += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${r.date}</td>
+        <td>${r.account}</td>
+        <td>${r.narration}</td>
+        <td> ${r.amount}</td>
+        <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+
+}
+
+
+//////////////////////////////////////////////////
+// PAYMENT REPORT FILTER POPUP
+//////////////////////////////////////////////////
+
+function showPaymentsReport() {
+
+  openPopup(`
+    <h3>Select Expense Category</h3>
+
+    <label>Category</label>
+    <select id="paymentCategory">
+      <option>Personal</option>
+      <option>Home</option>
+      <option>Office Reimbursement</option>
+    </select>
+
+    <label>From Date</label>
+    <input type="date" id="fromDate">
+
+    <label>To Date</label>
+    <input type="date" id="toDate">
+
+    <button onclick="runPaymentReport()">Run</button>
+  `);
+}
+
+
+//////////////////////////////////////////////////
+// RUN PAYMENT REPORT
+//////////////////////////////////////////////////
+
+function runPaymentReport() {
+
+  let category = document.getElementById("paymentCategory").value;
+  let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
+
+if (!category || !fromDate || !toDate) {
+  alert("Please select Category and Date Range");
+  return;
+}
+
+  // remember current report
+  sessionStorage.setItem("currentReport","payments");
+sessionStorage.setItem("currentCategory",category);
+sessionStorage.setItem("currentFromDate",fromDate);
+sessionStorage.setItem("currentToDate",toDate);
+
+  currentReport = "payments";
+  currentReportCategory = category;
+  currentFromDate = fromDate;
+  currentToDate = toDate;
+
+  closePopup();
+
+  let payments = transactionsCache
+.filter(t => {
+
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
+
+  let isInRange = true;
+
+  if (fromDate)
+    isInRange = t.date >= fromDate;
+
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+  let html = `
+    <h3>${category} Payments Report</h3>
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Mode</th>
+        <th>Particular</th>
+        <th>Amount</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  payments.forEach((p, index) => {
+    html += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${p.date}</td>
+        <td>${p.account}</td>
+        <td>${p.narration}</td>
+        <td> ${p.amount}</td>
+        <td><button onclick="editPayment('${p.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+}
+
+//////////////////////////////////////////////////
+// EDIT PAYMENT (FULL OPTIONS)
+//////////////////////////////////////////////////
+
+function editPayment(id) {
+
+  let t = transactionsCache.find(x => x.id === id);
+
+  openPopup(`
+    <h3>Edit Payment</h3>
+
+    <label>Mode</label>
+    <select id="account">
+      <option ${t.account==="Cash"?"selected":""}>Cash</option>
+      <option ${t.account==="BOB5606"?"selected":""}>BOB5606</option>
+      <option ${t.account==="BOB9195"?"selected":""}>BOB9195</option>
+      <option ${t.account==="IDBI5391"?"selected":""}>IDBI5391</option>
+    </select>
+
+    <label>Category</label>
+    <select id="category">
+      <option ${t.category==="Personal"?"selected":""}>Personal</option>
+      <option ${t.category==="Home"?"selected":""}>Home</option>
+      <option ${t.category==="Office Reimbursement"?"selected":""}>Office Reimbursement</option>
+    </select>
+
+    <label>Date</label>
+    <input type="date" id="date" value="${t.date}">
+
+    <label>Particular</label>
+    <input type="text" id="narration" value="${t.narration}">
+
+    <label>Amount</label>
+    <input type="number" id="amount" value="${t.amount}">
+
+    <button onclick="updatePayment('${id}')">Update</button>
+  `);
+}
+
+//////////////////////////////////////////////////
+// UPDATE PAYMENT
+//////////////////////////////////////////////////
+
+async function updatePayment(id) {
+
+  let account = document.getElementById("account").value;
+  let amount = Number(document.getElementById("amount").value);
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  let balance = getBalanceExcludingTransaction(account, id);
+
+  if (balance < amount) {
+    alert("Insufficient balance in " + account);
+    return;
+  }
+
+  await db.collection("transactions").doc(id).update({
+    account: account,
+    category: document.getElementById("category").value,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
+  });
+
+  closePopup();
+
+  // reload report with same filter
+  setTimeout(refreshPaymentReport,300);
+}
+
+//////////////////////////////////////////////////
+// REFRESH PAYMENT REPORT WITH SAME FILTER
+//////////////////////////////////////////////////
+
+function refreshPaymentReport() {
+
+  let category = sessionStorage.getItem("currentCategory");
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  let payments = transactionsCache
+.filter(t => {
+
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
+
+  let isInRange = true;
+
+  if (fromDate)
+    isInRange = t.date >= fromDate;
+
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+  let html = `
+    <h3>${category} Payments Report</h3>
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Mode</th>
+        <th>Particular</th>
+        <th>Amount</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  payments.forEach((p, index) => {
+    html += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${p.date}</td>
+        <td>${p.account}</td>
+        <td>${p.narration}</td>
+        <td> ${p.amount}</td>
+        <td><button onclick="editPayment('${p.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+}
+
+
+//////////////////////////////////////////////////
+// CONTRA REPORT FILTER POPUP
+//////////////////////////////////////////////////
+
+function showContraReport() {
+
+  openPopup(`
+    <h3>Contra Report</h3>
+
+    <label>From Date</label>
+    <input type="date" id="fromDate">
+
+    <label>To Date</label>
+    <input type="date" id="toDate">
+
+    <button onclick="runContraReport()">Run</button>
+  `);
+
+}
+
+
+//////////////////////////////////////////////////
+// RUN CONTRA REPORT
+//////////////////////////////////////////////////
+
+function runContraReport(){
+
+  let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
+
+if (!fromDate || !toDate) {
+    alert("Please select both From Date and To Date");
+    return;
+  }
+
+  sessionStorage.setItem("currentReport","contra");
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  refreshContraReport();
+
+}
+
+
+
+//////////////////////////////////////////////////
+// EDIT CONTRA (FULL ENTRY OPTIONS)
+//////////////////////////////////////////////////
+
+function editContra(id) {
+
+  let t = transactionsCache.find(x => x.id === id);
+
+  openPopup(`
+    <h3>Edit Contra</h3>
+
+    <label>From Account</label>
+    <select id="from">
+      <option ${t.from==="Cash"?"selected":""}>Cash</option>
+      <option ${t.from==="BOB5606"?"selected":""}>BOB5606</option>
+      <option ${t.from==="BOB9195"?"selected":""}>BOB9195</option>
+      <option ${t.from==="IDBI5391"?"selected":""}>IDBI5391</option>
+    </select>
+
+    <label>To Account</label>
+    <select id="to">
+      <option ${t.to==="Cash"?"selected":""}>Cash</option>
+      <option ${t.to==="BOB5606"?"selected":""}>BOB5606</option>
+      <option ${t.to==="BOB9195"?"selected":""}>BOB9195</option>
+      <option ${t.to==="IDBI5391"?"selected":""}>IDBI5391</option>
+    </select>
+
+    <label>Date</label>
+    <input type="date" id="date" value="${t.date}">
+
+    <label>Particular</label>
+    <input type="text" id="narration" value="${t.narration}">
+
+    <label>Amount</label>
+    <input type="number" id="amount" value="${t.amount}">
+
+    <button onclick="updateContra('${id}')">Update</button>
+  `);
+}
+
+//////////////////////////////////////////////////
+// UPDATE CONTRA
+//////////////////////////////////////////////////
+
+async function updateContra(id) {
+
+  let from = document.getElementById("from").value;
+  let to = document.getElementById("to").value;
+  let amount = Number(document.getElementById("amount").value);
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  if (from === to) {
+    alert("From and To account cannot be the same");
+    return;
+  }
+
+  let balance = getBalanceExcludingTransaction(from, id);
+
+  if (balance < amount) {
+    alert("Insufficient balance in " + from);
+    return;
+  }
+
+  await db.collection("transactions").doc(id).update({
+    from: from,
+    to: to,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
+  });
+
+  closePopup();
+
+  // refresh contra report automatically
+  if(sessionStorage.getItem("currentReport") === "contra"){
+    setTimeout(refreshContraReport,300);
+  }
+
+}
+
+
+//////////////////////////////////////////////////
+// REFRESH CONTRA REPORT WITH SAME FILTER
+//////////////////////////////////////////////////
+
+function refreshContraReport(){
+
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  let contra = transactionsCache
+.filter(t => {
+
+  let isContra = t.type === "contra";
+
+  let isInRange = true;
+
+  if(fromDate)
+    isInRange = t.date >= fromDate;
+
+  if(toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isContra && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+  let html = `
+    <h3>Contra Report</h3>
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>From Account</th>
+        <th>To Account</th>
+        <th>Particular</th>
+        <th>Amount</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  contra.forEach((c,index)=>{
+
+    html += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${c.date}</td>
+        <td>${c.from}</td>
+        <td>${c.to}</td>
+        <td>${c.narration}</td>
+        <td> ${c.amount}</td>
+        <td><button onclick="editContra('${c.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${c.id}')">Delete</button></td>
+      </tr>
+    `;
+
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+}
+
+
+//////////////////////////////////////////////////
+// EDIT TRANSACTION (FULL EDIT)
+//////////////////////////////////////////////////
+
+function editTransaction(id) {
+
+  let t = transactionsCache.find(x => x.id === id);
+
+  openPopup(`
+    <h3>Edit Receipt</h3>
+
+    <label>Mode</label>
+    <select id="account">
+      <option ${t.account==="Cash"?"selected":""}>Cash</option>
+      <option ${t.account==="BOB5606"?"selected":""}>BOB5606</option>
+      <option ${t.account==="BOB9195"?"selected":""}>BOB9195</option>
+      <option ${t.account==="IDBI5391"?"selected":""}>IDBI5391</option>
+    </select>
+
+    <label>Date</label>
+    <input type="date" id="date" value="${t.date}">
+
+    <label>Particular</label>
+    <input type="text" id="narration" value="${t.narration}">
+
+    <label>Amount</label>
+    <input type="number" id="amount" value="${t.amount}">
+
+    <button onclick="updateTransaction('${id}')">Update</button>
+  `);
+}
+
+//////////////////////////////////////////////////
+// UPDATE RECEIPT
+//////////////////////////////////////////////////
+
+async function updateTransaction(id) {
+
+  let amount = Number(document.getElementById("amount").value);
+
+  if (amount <= 0) {
+    alert("Amount must be greater than 0");
+    return;
+  }
+
+  await db.collection("transactions").doc(id).update({
+    account: document.getElementById("account").value,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
+  });
+
+  closePopup();
+
+  // refresh receipts report automatically
+  if(sessionStorage.getItem("currentReport") === "receipts"){
+    setTimeout(refreshReceiptsReport,300);
+  }
+
+}
+
+//////////////////////////////////////////////////
+// REFRESH RECEIPTS REPORT WITH SAME FILTER
+//////////////////////////////////////////////////
+
+function refreshReceiptsReport(){
+
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  let receipts = transactionsCache
+.filter(t => {
+
+  let isReceipt = (t.type === "receipt" || t.type === "inflow");
+
+  let isInRange = true;
+
+  if(fromDate)
+    isInRange = t.date >= fromDate;
+
+  if(toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isReceipt && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+  let html = `
+    <h3>Receipts Report</h3>
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Mode</th>
+        <th>Particular</th>
+        <th>Amount</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  receipts.forEach((r,index)=>{
+    html += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${r.date}</td>
+        <td>${r.account}</td>
+        <td>${r.narration}</td>
+        <td> ${r.amount}</td>
+        <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+}
+
+
+//////////////////////////////////////////////////
+// DELETE TRANSACTION
+//////////////////////////////////////////////////
+
+async function deleteTransaction(id) {
+
+  if (!confirm("Are you sure you want to delete this transaction?"))
+    return;
+
+  await db.collection("transactions").doc(id).delete();
+
+  let currentReport = sessionStorage.getItem("currentReport");
+
+  if(currentReport === "receipts"){
+    setTimeout(refreshReceiptsReport,300);
+  }
+
+  if(currentReport === "payments"){
+    setTimeout(refreshPaymentReport,300);
+  }
+
+  if(currentReport === "contra"){
+    setTimeout(refreshContraReport,300);
+  }
+
+}
+
+//////////////////////////////////////////////////
+// Function That Reopens Last Report
+//////////////////////////////////////////////////
+
+function refreshCurrentReport(){
+
+  if(currentReport === "receipts"){
+    showReceiptsReport();
+  }
+
+  if(currentReport === "payments"){
+
+    let payments = transactionsCache
+.filter(t => {
+
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
+
+  let isInRange = true;
+
+  if (fromDate)
+    isInRange = t.date >= fromDate;
+
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+    renderPaymentReport(payments, currentReportCategory);
+  }
+
+  if(currentReport === "contra"){
+    showContraReport();
+  }
+
+}
+
+
+
+//////////////////////////////////////////////////
+// GET BALANCE EXCLUDING CURRENT TRANSACTION
+//////////////////////////////////////////////////
+
+function getBalanceExcludingTransaction(account, transactionId) {
+
+  let balances = {
+    Cash: Number(openingBalances.Cash || 0),
+    BOB5606: Number(openingBalances.BOB5606 || 0),
+    BOB9195: Number(openingBalances.BOB9195 || 0),
+    IDBI5391: Number(openingBalances.IDBI5391 || 0)
+  };
+
+  transactionsCache.forEach(t => {
+
+    if (t.id === transactionId) return;
+
+    if (t.type === "receipt" || t.type === "inflow")
+      balances[t.account] += Number(t.amount);
+
+    if (t.type === "payment" || t.type === "outflow")
+      balances[t.account] -= Number(t.amount);
+
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
+    }
+
+  });
+
+  return balances[account];
+}
+
+
+//////////////////////////////////////////////////
+// EXPORT REPORTS
+//////////////////////////////////////////////////
+
+function exportCurrentReport(){
+
+let reportType = sessionStorage.getItem("currentReport");
+
+if(!reportType){
+alert("Please run a report first");
+return;
+}
+
+let rows = [];
+let title = "";
+let total = 0;
+
+let fromDate = sessionStorage.getItem("currentFromDate");
+let toDate = sessionStorage.getItem("currentToDate");
+
+//////////////////////////////////////////////////
+// RECEIPTS REPORT
+//////////////////////////////////////////////////
+
+if(reportType === "receipts"){
+
+title = "Receipts_Report";
+
+rows.push(["Serial No","Date","Mode","Particular","Amount"]);
+
+let receipts = transactionsCache
+.filter(t=>{
+
+let isReceipt = (t.type === "receipt" || t.type === "inflow");
+
+return isReceipt && t.date >= fromDate && t.date <= toDate;
+
+})
+.sort((a,b)=>{
+
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
+
+return new Date(a.date) - new Date(b.date);
+
+});
+
+receipts.forEach((r,i)=>{
+
+total += Number(r.amount);
+
+rows.push([
+i+1,
+r.date,
+r.account,
+r.narration,
+Number(r.amount)
+]);
+
+});
+
+}
+
+//////////////////////////////////////////////////
+// PAYMENT REPORT
+//////////////////////////////////////////////////
+
+if(reportType === "payments"){
+
+let category = sessionStorage.getItem("currentCategory");
+
+title = category+"_Payments_Report";
+
+rows.push(["Serial No","Date","Mode","Particular","Amount"]);
+
+let payments = transactionsCache
+.filter(t=>{
+
+let isPayment = (t.type === "payment" || t.type === "outflow");
+let isCategory = t.category === category;
+
+return isPayment && isCategory && t.date >= fromDate && t.date <= toDate;
+
+})
+.sort((a,b)=>{
+
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
+
+return new Date(a.date) - new Date(b.date);
+
+});
+
+payments.forEach((p,i)=>{
+
+total += Number(p.amount);
+
+rows.push([
+i+1,
+p.date,
+p.account,
+p.narration,
+Number(p.amount)
+]);
+
+});
+
+}
+
+//////////////////////////////////////////////////
+// CONTRA REPORT
+//////////////////////////////////////////////////
+
+if(reportType === "contra"){
+
+title = "Contra_Report";
+
+rows.push(["Serial No","Date","From Account","To Account","Particular","Amount"]);
+
+let contra = transactionsCache
+.filter(t=>{
+
+return t.type === "contra" && t.date >= fromDate && t.date <= toDate;
+
+})
+.sort((a,b)=>{
+
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
+
+return new Date(a.date) - new Date(b.date);
+
+});
+
+contra.forEach((c,i)=>{
+
+total += Number(c.amount);
+
+rows.push([
+i+1,
+c.date,
+c.from,
+c.to,
+c.narration,
+Number(c.amount)
+]);
+
+});
+
+}
+
+//////////////////////////////////////////////////
+// ADD TOTAL ROW
+//////////////////////////////////////////////////
+
+rows.push([]);
+rows.push(["","","","Total Amount",total]);
+
+//////////////////////////////////////////////////
+// CREATE SHEET
+//////////////////////////////////////////////////
+
+let worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+//////////////////////////////////////////////////
+// AUTO COLUMN WIDTH
+//////////////////////////////////////////////////
+
+worksheet["!cols"] = [
+{wch:10},
+{wch:12},
+{wch:15},
+{wch:30},
+{wch:15}
+];
+
+//////////////////////////////////////////////////
+// BOLD HEADER STYLE
+//////////////////////////////////////////////////
+
+let headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
+
+for(let C = headerRange.s.c; C <= headerRange.e.c; ++C){
+
+let cell = worksheet[XLSX.utils.encode_cell({r:0,c:C})];
+
+if(cell){
+cell.s = {
+font:{bold:true}
+};
+}
+
+}
+
+//////////////////////////////////////////////////
+// CURRENCY FORMAT
+//////////////////////////////////////////////////
+
+for(let i=1;i<rows.length;i++){
+
+let cellRef = XLSX.utils.encode_cell({r:i,c:4});
+
+if(worksheet[cellRef]){
+
+worksheet[cellRef].z = '#,##0.00';
+worksheet[cellRef].s = {
+alignment:{horizontal:"right"}
+};
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// BOLD TOTAL ROW
+//////////////////////////////////////////////////
+
+let totalRowIndex = rows.length - 1;
+
+for(let c=0;c<5;c++){
+
+let cellRef = XLSX.utils.encode_cell({r:totalRowIndex,c:c});
+
+if(worksheet[cellRef]){
+
+worksheet[cellRef].s = {
+font:{bold:true}
+};
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// CREATE WORKBOOK
+//////////////////////////////////////////////////
+
+let workbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+//////////////////////////////////////////////////
+// FILE NAME
+//////////////////////////////////////////////////
+
+let fileName = `${title}_${fromDate}_to_${toDate}.xlsx`;
+
+//////////////////////////////////////////////////
+// DOWNLOAD
+//////////////////////////////////////////////////
+
+XLSX.writeFile(workbook,fileName);
+
+}
+
+
+//////////////////////////////////////////////////
+// Mini Statement Popup Form
+//////////////////////////////////////////////////
+
+function showMiniStatement(){
+
+openPopup(`
+<h3>Mini Statement</h3>
+
+<label>From Date</label>
+<input type="date" id="miniFrom">
+
+<label>To Date</label>
+<input type="date" id="miniTo">
+
+<button onclick="exportMiniStatement()">Export</button>
+`);
+
+}
+
+//////////////////////////////////////////////////
+// Full Mini Statement Export Function
+//////////////////////////////////////////////////
+
+async function exportMiniStatement(){
+
+let fromDate = document.getElementById("miniFrom").value;
+let toDate = document.getElementById("miniTo").value;
+
+if(!fromDate || !toDate){
+alert("Both dates required");
+return;
+}
+
+closePopup();
+
+const workbook = new ExcelJS.Workbook();
+
+//////////////////////////////////////////////////
+// CALCULATE EXPENSE SUMMARY
+//////////////////////////////////////////////////
+
+let expenses = {
+Personal:0,
+Home:0,
+"Office Reimbursement":0
+};
+
+transactionsCache.forEach(t=>{
+
+if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
+
+expenses[t.category]+=Number(t.amount);
+
+}
+
+});
+
+//////////////////////////////////////////////////
+// SHEET 1 : SUMMARY
+//////////////////////////////////////////////////
+
+const summarySheet = workbook.addWorksheet("Summary");
+
+summarySheet.addRow(["Expense Summary"]);
+summarySheet.addRow([]);
+
+summarySheet.addRow(["Category","Amount"]);
+summarySheet.addRow(["Personal",expenses.Personal]);
+summarySheet.addRow(["Home",expenses.Home]);
+summarySheet.addRow(["Office Reimbursement",expenses["Office Reimbursement"]]);
+
+//////////////////////////////////////////////////
+// PIE CHART IMAGE
+//////////////////////////////////////////////////
+
+let pieCanvas = document.getElementById("expensePieChart");
+let pieImage = pieCanvas.toDataURL("image/png");
+
+const pieId = workbook.addImage({
+base64: pieImage,
+extension:'png'
+});
+
+summarySheet.addImage(pieId,{
+tl:{col:4,row:1},
+ext:{width:400,height:300}
+});
+
+//////////////////////////////////////////////////
+// FUNCTION TO CREATE ACCOUNT STATEMENT
+//////////////////////////////////////////////////
+
+function createAccountSheet(name){
+
+let sheet = workbook.addWorksheet(name);
+
+sheet.addRow(["Serial No","Date","Type","Category","Particular","Amount","Balance"]);
+
+//////////////////////////////////////////////////
+// CALCULATE OPENING BALANCE AS ON FROM DATE
+//////////////////////////////////////////////////
+
+let runningBalance = Number(openingBalances[name] || 0);
+
+transactionsCache.forEach(t=>{
+
+if(t.date < fromDate){
+
+if(t.type === "receipt" && t.account === name){
+runningBalance += Number(t.amount);
+}
+
+if(t.type === "payment" && t.account === name){
+runningBalance -= Number(t.amount);
+}
+
+if(t.type === "contra"){
+
+if(t.from === name){
+runningBalance -= Number(t.amount);
+}
+
+if(t.to === name){
+runningBalance += Number(t.amount);
+}
+
+}
+
+}
+
+});
+
+sheet.addRow(["","", "", "", "Opening Balance","",runningBalance]);
+
+let serial = 1;
+
+transactionsCache
+.filter(t=>t.date>=fromDate && t.date<=toDate)
+.sort((a,b)=> new Date(a.date) - new Date(b.date))
+.forEach(t=>{
+
+let type="";
+let category="";
+let amount=0;
+
+if(t.type==="receipt" && t.account===name){
+
+type="Inflow";
+amount=Number(t.amount);
+runningBalance+=amount;
+
+}
+
+if(t.type==="payment" && t.account===name){
+
+type="Outflow";
+category=t.category;
+amount=Number(t.amount);
+runningBalance-=amount;
+
+}
+
+if(t.type==="contra"){
+
+if(t.from===name){
+type="Contra";
+amount=Number(t.amount);
+runningBalance-=amount;
+}
+
+if(t.to===name){
+type="Contra";
+amount=Number(t.amount);
+runningBalance+=amount;
+}
+
+}
+
+if(type!==""){
+
+let row = sheet.addRow([
+serial,
+t.date,
+type,
+category,
+t.narration,
+amount,
+runningBalance
+]);
+
+// Format Amount & Balance Columns
+
+row.getCell(6).numFmt = '#,##0.00';
+row.getCell(7).numFmt = '#,##0.00';
+
+row.getCell(6).alignment = { horizontal: "right" };
+row.getCell(7).alignment = { horizontal: "right" };
+
+//////////////////////////////////////////////////
+// COLOR TEXT
+//////////////////////////////////////////////////
+
+if(type==="Inflow"){
+row.getCell(6).font={color:{argb:"FF008000"}};
+}
+
+if(type==="Outflow"){
+row.getCell(6).font={color:{argb:"FFFF0000"}};
+}
+
+if(type==="Contra"){
+row.getCell(6).font={color:{argb:"FF000000"}};
+}
+
+serial++;
+
+}
+
+});
+
+sheet.addRow(["","","","","Closing Balance","",runningBalance]);
+
+}
+
+//////////////////////////////////////////////////
+// SHEET 2 : CASH
+//////////////////////////////////////////////////
+
+createAccountSheet("Cash");
+
+//////////////////////////////////////////////////
+// SHEET 3 : BOB5606
+//////////////////////////////////////////////////
+
+createAccountSheet("BOB5606");
+
+//////////////////////////////////////////////////
+// SHEET 4 : BOB9195
+//////////////////////////////////////////////////
+
+createAccountSheet("BOB9195");
+
+//////////////////////////////////////////////////
+// SHEET 5 : IDBI5391
+//////////////////////////////////////////////////
+
+createAccountSheet("IDBI5391");
+
+//////////////////////////////////////////////////
+// EXPORT FILE
+//////////////////////////////////////////////////
+
+let fileName = `Mini_Statement_${fromDate}_to_${toDate}.xlsx`;
+
+const buffer = await workbook.xlsx.writeBuffer();
+
+saveAs(new Blob([buffer]),fileName);
+
+}
+
+
+
+</script>
+
+</body>
+
+</html>
+
+
