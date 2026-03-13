@@ -71,20 +71,27 @@ font-weight:600;
 white-space:nowrap;
 }
 
-/* RESPONSIVE */
+/* TABLET */
 
-@media(max-width:992px){
+@media (max-width:1024px){
 .tools-grid{
 grid-template-columns:repeat(2,1fr);
 }
 }
 
-@media(max-width:600px){
+/* MOBILE */
+
+@media (max-width:768px){
 .tools-grid{
 grid-template-columns:1fr;
-}
+gap:18px;
 }
 
+.tool-card{
+height:230px;
+}
+}
+  
 /* HEADER LOGO */
 
 .logo-header{
@@ -247,4 +254,5 @@ margin-top:10px;
 
 </body>
 </html>
+
 
