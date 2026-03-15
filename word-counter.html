@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Word Counter | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png" type="image/png">
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:10px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* TEXTAREA */
+
+textarea{
+width:100%;
+height:220px;
+padding:15px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+resize:vertical;
+}
+
+/* BUTTON */
+
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:12px 20px;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+margin-top:10px;
+}
+
+/* STATS GRID */
+
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-top:20px;
+}
+
+/* STAT BOX */
+
+.stat-box{
+background:white;
+padding:15px;
+border-left:5px solid #001d4c;
+border-radius:6px;
+}
+
+.stat-box h3{
+margin:0;
+font-size:16px;
+color:#001d4c;
+}
+
+.stat-box p{
+margin:5px 0 0;
+font-size:20px;
+font-weight:600;
+}
+
+/* KEYWORD LIST */
+
+.keyword-box{
+margin-top:25px;
+background:white;
+padding:20px;
+border-radius:8px;
+}
+
+.keyword-box h3{
+margin-top:0;
+color:#001d4c;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.stats{
+grid-template-columns:1fr;
+}
+
+.page-title{
+font-size:26px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">Word Counter Tool</h1>
+
+<div class="container">
+
+<div class="card">
+
+<textarea id="textInput" placeholder="Paste or type your text here..." oninput="analyzeText()"></textarea>
+
+<button onclick="clearText()">Clear Text</button>
+
+<div class="stats">
+
+<div class="stat-box">
+<h3>Words</h3>
+<p id="words">0</p>
+</div>
+
+<div class="stat-box">
+<h3>Characters</h3>
+<p id="characters">0</p>
+</div>
+
+<div class="stat-box">
+<h3>Characters (No Spaces)</h3>
+<p id="charactersNoSpace">0</p>
+</div>
+
+<div class="stat-box">
+<h3>Sentences</h3>
+<p id="sentences">0</p>
+</div>
+
+<div class="stat-box">
+<h3>Paragraphs</h3>
+<p id="paragraphs">0</p>
+</div>
+
+<div class="stat-box">
+<h3>Reading Time</h3>
+<p id="reading">0 min</p>
+</div>
+
+<div class="stat-box">
+<h3>Speaking Time</h3>
+<p id="speaking">0 min</p>
+</div>
+
+</div>
+
+<div class="keyword-box">
+
+<h3>Top Keywords</h3>
+
+<ul id="keywords"></ul>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function analyzeText(){
+
+let text=document.getElementById("textInput").value;
+
+let words=text.trim().split(/\s+/).filter(word=>word.length>0);
+
+let wordCount=words.length;
+
+let characters=text.length;
+
+let charactersNoSpace=text.replace(/\s/g,'').length;
+
+let sentences=text.split(/[.!?]+/).filter(Boolean).length;
+
+let paragraphs=text.split(/\n+/).filter(Boolean).length;
+
+/* reading time */
+
+let reading=Math.ceil(wordCount/200);
+
+/* speaking time */
+
+let speaking=Math.ceil(wordCount/130);
+
+/* display */
+
+document.getElementById("words").innerText=wordCount;
+document.getElementById("characters").innerText=characters;
+document.getElementById("charactersNoSpace").innerText=charactersNoSpace;
+document.getElementById("sentences").innerText=sentences;
+document.getElementById("paragraphs").innerText=paragraphs;
+document.getElementById("reading").innerText=reading+" min";
+document.getElementById("speaking").innerText=speaking+" min";
+
+/* keyword density */
+
+let freq={};
+
+words.forEach(word=>{
+word=word.toLowerCase().replace(/[^\w]/g,'');
+if(word.length>3){
+freq[word]=(freq[word]||0)+1;
+}
+});
+
+let sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+let keywordList=document.getElementById("keywords");
+
+keywordList.innerHTML="";
+
+sorted.forEach(item=>{
+
+let li=document.createElement("li");
+
+li.textContent=item[0]+" ("+item[1]+")";
+
+keywordList.appendChild(li);
+
+});
+
+}
+
+/* clear */
+
+function clearText(){
+
+document.getElementById("textInput").value="";
+analyzeText();
+
+}
+
+</script>
+
+</body>
+</html>
