@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Scientific Calculator | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png" type="image/png">
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:420px;
+margin:auto;
+padding:20px;
+}
+
+/* CALCULATOR */
+
+.calculator{
+background:#f8f9fb;
+padding:20px;
+border-radius:12px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* DISPLAY */
+
+#display{
+width:100%;
+height:55px;
+font-size:22px;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+margin-bottom:15px;
+text-align:right;
+}
+
+/* BUTTON GRID */
+
+.buttons{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+}
+
+/* BUTTON */
+
+button{
+padding:14px;
+font-size:16px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+background:#e9ecef;
+}
+
+button:hover{
+background:#dfe3e7;
+}
+
+/* OPERATOR */
+
+.operator{
+background:#001d4c;
+color:white;
+}
+
+/* EQUAL */
+
+.equal{
+background:#28a745;
+color:white;
+}
+
+/* CLEAR */
+
+.clear{
+background:#dc3545;
+color:white;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.container{
+padding:10px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">Scientific Calculator</h1>
+
+<div class="container">
+
+<div class="calculator">
+
+<input type="text" id="display" readonly>
+
+<div class="buttons">
+
+<button onclick="clearDisplay()" class="clear">C</button>
+<button onclick="backspace()">⌫</button>
+<button onclick="append('(')">(</button>
+<button onclick="append(')')">)</button>
+<button onclick="append('/')">÷</button>
+
+<button onclick="append('7')">7</button>
+<button onclick="append('8')">8</button>
+<button onclick="append('9')">9</button>
+<button onclick="append('*')">×</button>
+<button onclick="sqrt()">√</button>
+
+<button onclick="append('4')">4</button>
+<button onclick="append('5')">5</button>
+<button onclick="append('6')">6</button>
+<button onclick="append('-')">−</button>
+<button onclick="power()">x²</button>
+
+<button onclick="append('1')">1</button>
+<button onclick="append('2')">2</button>
+<button onclick="append('3')">3</button>
+<button onclick="append('+')" class="operator">+</button>
+<button onclick="append('%')">%</button>
+
+<button onclick="append('0')">0</button>
+<button onclick="append('.')">.</button>
+<button onclick="calculate()" class="equal">=</button>
+<button onclick="append(Math.PI)">π</button>
+<button onclick="log()">log</button>
+
+<button onclick="sin()">sin</button>
+<button onclick="cos()">cos</button>
+<button onclick="tan()">tan</button>
+<button onclick="ln()">ln</button>
+<button onclick="append('**')">xʸ</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let display=document.getElementById("display")
+
+function append(value){
+display.value+=value
+}
+
+function clearDisplay(){
+display.value=""
+}
+
+function backspace(){
+display.value=display.value.slice(0,-1)
+}
+
+function calculate(){
+
+try{
+display.value=eval(display.value)
+}
+catch{
+display.value="Error"
+}
+
+}
+
+function sqrt(){
+display.value=Math.sqrt(eval(display.value))
+}
+
+function power(){
+display.value=Math.pow(eval(display.value),2)
+}
+
+function log(){
+display.value=Math.log10(eval(display.value))
+}
+
+function ln(){
+display.value=Math.log(eval(display.value))
+}
+
+function sin(){
+display.value=Math.sin(eval(display.value))
+}
+
+function cos(){
+display.value=Math.cos(eval(display.value))
+}
+
+function tan(){
+display.value=Math.tan(eval(display.value))
+}
+
+/* keyboard support */
+
+document.addEventListener("keydown",function(e){
+
+let key=e.key
+
+if((key>="0"&&key<="9")||["+","-","*","/","."].includes(key)){
+append(key)
+}
+
+if(key==="Enter"){
+calculate()
+}
+
+if(key==="Backspace"){
+backspace()
+}
+
+})
+
+</script>
+
+</body>
+</html>
