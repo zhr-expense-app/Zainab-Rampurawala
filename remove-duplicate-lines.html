@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Remove Duplicate Lines | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png" type="image/png">
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:10px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* TEXTAREA */
+
+textarea{
+width:100%;
+height:200px;
+padding:15px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+resize:vertical;
+}
+
+/* OPTIONS */
+
+.options{
+margin-top:15px;
+display:flex;
+flex-wrap:wrap;
+gap:15px;
+}
+
+/* BUTTON */
+
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:12px 18px;
+font-size:15px;
+border-radius:6px;
+cursor:pointer;
+margin-top:10px;
+}
+
+/* RESULT */
+
+.result-area{
+margin-top:20px;
+}
+
+/* STATS */
+
+.stats{
+margin-top:10px;
+font-weight:500;
+color:#001d4c;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.page-title{
+font-size:26px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">Remove Duplicate Lines</h1>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Input Text</h3>
+
+<textarea id="inputText" placeholder="Paste lines here..."></textarea>
+
+<div class="options">
+
+<label><input type="checkbox" id="caseSensitive"> Case Sensitive</label>
+
+<label><input type="checkbox" id="trimSpaces"> Trim Spaces</label>
+
+<label><input type="checkbox" id="removeEmpty"> Remove Empty Lines</label>
+
+</div>
+
+<button onclick="removeDuplicates()">Remove Duplicate Lines</button>
+
+<button onclick="sortAZ()">Sort A → Z</button>
+
+<button onclick="sortZA()">Sort Z → A</button>
+
+<button onclick="copyText()">Copy Result</button>
+
+<button onclick="downloadText()">Download Result</button>
+
+<div class="result-area">
+
+<h3>Result</h3>
+
+<textarea id="outputText"></textarea>
+
+<div class="stats">
+
+<span id="lineCount">Lines: 0</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function getLines(){
+
+let text=document.getElementById("inputText").value;
+
+let lines=text.split("\n");
+
+let trim=document.getElementById("trimSpaces").checked;
+let removeEmpty=document.getElementById("removeEmpty").checked;
+
+if(trim){
+lines=lines.map(l=>l.trim());
+}
+
+if(removeEmpty){
+lines=lines.filter(l=>l!=="");
+}
+
+return lines;
+
+}
+
+function removeDuplicates(){
+
+let lines=getLines();
+
+let caseSensitive=document.getElementById("caseSensitive").checked;
+
+let seen=new Set();
+
+let result=[];
+
+lines.forEach(line=>{
+
+let key=caseSensitive?line:line.toLowerCase();
+
+if(!seen.has(key)){
+seen.add(key);
+result.push(line);
+}
+
+});
+
+showResult(result);
+
+}
+
+function sortAZ(){
+
+let lines=getLines().sort();
+
+showResult(lines);
+
+}
+
+function sortZA(){
+
+let lines=getLines().sort().reverse();
+
+showResult(lines);
+
+}
+
+function showResult(lines){
+
+let output=lines.join("\n");
+
+document.getElementById("outputText").value=output;
+
+document.getElementById("lineCount").innerText="Lines: "+lines.length;
+
+}
+
+function copyText(){
+
+let text=document.getElementById("outputText");
+
+text.select();
+
+document.execCommand("copy");
+
+alert("Copied to clipboard");
+
+}
+
+function downloadText(){
+
+let text=document.getElementById("outputText").value;
+
+let blob=new Blob([text],{type:"text/plain"});
+
+let link=document.createElement("a");
+
+link.href=URL.createObjectURL(blob);
+
+link.download="cleaned-lines.txt";
+
+link.click();
+
+}
+
+</script>
+
+</body>
+</html>
