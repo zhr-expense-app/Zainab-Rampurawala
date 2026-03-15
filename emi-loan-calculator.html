@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>EMI Loan Calculator | ZHR Tools</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:700px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:10px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* INPUT */
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+font-size:16px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+input[type=range]{
+width:100%;
+}
+
+/* BUTTON */
+
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:14px;
+font-size:18px;
+border-radius:6px;
+width:100%;
+cursor:pointer;
+margin-top:10px;
+}
+
+/* RESULT */
+
+.result{
+margin-top:20px;
+background:white;
+padding:15px;
+border-left:5px solid #001d4c;
+border-radius:6px;
+font-size:16px;
+}
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+font-size:14px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#001d4c;
+color:white;
+}
+
+/* CHART */
+
+.chart-box{
+width:320px;
+margin:25px auto;
+}
+
+.chart-box canvas{
+width:100% !important;
+height:auto !important;
+}
+
+/* MOBILE */
+
+@media (max-width:768px){
+
+.chart-box{
+width:220px;
+}
+
+.card{
+padding:20px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">EMI Loan Calculator</h1>
+
+<div class="container">
+
+<div class="card">
+
+<label>Loan Amount</label>
+
+<input type="number" id="loan" value="100000">
+<input type="range" min="10000" max="5000000" value="100000" id="loanSlider">
+
+<label>Interest Rate (%)</label>
+
+<input type="number" id="rate" value="10">
+<input type="range" min="1" max="30" value="10" id="rateSlider">
+
+<label>Tenure (Months)</label>
+
+<input type="number" id="months" value="12">
+<input type="range" min="1" max="360" value="12" id="monthSlider">
+
+<label>Monthly Prepayment (Optional)</label>
+
+<input type="number" id="prepay" value="0">
+
+<button onclick="calculateEMI()">Calculate EMI</button>
+
+<div class="result" id="result"></div>
+
+<div class="chart-box">
+<canvas id="chart"></canvas>
+</div>
+
+<h3>Amortization Schedule</h3>
+
+<table id="table">
+
+<thead>
+<tr>
+<th>Month</th>
+<th>EMI</th>
+<th>Principal</th>
+<th>Interest</th>
+<th>Balance</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+/* INDIAN NUMBER FORMAT */
+
+function formatINR(num){
+return num.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})
+}
+
+/* SLIDER ELEMENTS */
+
+let loanSlider=document.getElementById("loanSlider")
+let rateSlider=document.getElementById("rateSlider")
+let monthSlider=document.getElementById("monthSlider")
+
+/* SLIDER → INPUT */
+
+loanSlider.oninput=()=>loan.value=loanSlider.value
+rateSlider.oninput=()=>rate.value=rateSlider.value
+monthSlider.oninput=()=>months.value=monthSlider.value
+
+/* INPUT → SLIDER */
+
+loan.oninput=()=>loanSlider.value=loan.value
+rate.oninput=()=>rateSlider.value=rate.value
+months.oninput=()=>monthSlider.value=months.value
+
+let chartInstance=null
+
+function calculateEMI(){
+
+let P=parseFloat(loan.value)
+let annualRate=parseFloat(rate.value)
+let months=parseInt(document.getElementById("months").value)
+let prepay=parseFloat(document.getElementById("prepay").value)
+
+let r=annualRate/12/100
+
+let emi=(P*r*Math.pow(1+r,months))/(Math.pow(1+r,months)-1)
+
+let balance=P
+
+let totalInterest=0
+let totalPrincipal=0
+
+let tableBody=document.querySelector("#table tbody")
+
+tableBody.innerHTML=""
+
+for(let i=1;i<=months;i++){
+
+let interest=balance*r
+let principal=emi-interest
+
+principal+=prepay
+
+balance-=principal
+
+if(balance<0){
+balance=0
+}
+
+totalInterest+=interest
+totalPrincipal+=principal
+
+let row=
+
+`<tr>
+<td>${i}</td>
+<td>${formatINR(emi)}</td>
+<td>${formatINR(principal)}</td>
+<td>${formatINR(interest)}</td>
+<td>${formatINR(balance)}</td>
+</tr>`
+
+tableBody.innerHTML+=row
+
+if(balance<=0)break
+
+}
+
+document.getElementById("result").innerHTML=
+
+`Monthly EMI: <b>${formatINR(emi)}</b><br>
+Total Interest: ${formatINR(totalInterest)}<br>
+Total Payment: ${formatINR(totalInterest+P)}`
+
+drawChart(totalPrincipal,totalInterest)
+
+}
+
+function drawChart(principal,interest){
+
+if(chartInstance){
+chartInstance.destroy()
+}
+
+const data={
+labels:["Principal","Interest"],
+datasets:[{
+data:[principal,interest],
+backgroundColor:["#001d4c","#6c757d"]
+}]
+}
+
+chartInstance=new Chart(document.getElementById("chart"),{
+type:"pie",
+data:data,
+options:{
+responsive:true,
+maintainAspectRatio:true,
+plugins:{
+legend:{
+position:"bottom"
+}
+}
+}
+})
+
+}
+
+</script>
+
+</body>
+</html>
