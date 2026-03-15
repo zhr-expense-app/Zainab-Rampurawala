@@ -58,39 +58,61 @@ border-radius:10px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 
+/* ROW LAYOUT */
+
+.form-row{
+display:flex;
+align-items:center;
+margin-top:18px;
+gap:15px;
+}
+
 /* LABEL */
 
-label{
-display:block;
-margin-top:18px;
-margin-bottom:6px;
+.form-row label{
+width:160px;
 font-weight:500;
+}
+
+/* INPUT GROUP */
+
+.input-group{
+display:flex;
+gap:10px;
+flex:1;
 }
 
 /* INPUT */
 
 input,select{
-width:100%;
-padding:12px;
+padding:10px;
 font-size:16px;
 border-radius:6px;
 border:1px solid #ccc;
 }
 
-/* HEIGHT GRID */
+/* AGE INPUT */
 
-.height-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
+.age-input{
+width:120px;
 }
 
-/* WEIGHT GRID */
+/* HEIGHT INPUTS */
 
-.weight-grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:15px;
+.height-input{
+width:100px;
+}
+
+/* WEIGHT INPUT */
+
+.weight-input{
+width:150px;
+}
+
+/* SELECT */
+
+select{
+width:160px;
 }
 
 /* BUTTON */
@@ -101,7 +123,7 @@ color:white;
 border:none;
 padding:14px;
 width:100%;
-margin-top:20px;
+margin-top:25px;
 font-size:18px;
 border-radius:6px;
 cursor:pointer;
@@ -117,12 +139,7 @@ border-left:5px solid #001d4c;
 border-radius:6px;
 }
 
-.result h3{
-margin-top:0;
-color:#001d4c;
-}
-
-/* BMI RANGE BAR */
+/* RANGE BAR */
 
 .range-bar{
 margin-top:20px;
@@ -141,8 +158,6 @@ border-radius:10px;
 position:relative;
 }
 
-/* MARKER */
-
 .marker{
 position:absolute;
 top:-5px;
@@ -155,16 +170,17 @@ background:black;
 
 @media(max-width:768px){
 
-.height-grid{
-grid-template-columns:1fr;
+.form-row{
+flex-direction:column;
+align-items:flex-start;
 }
 
-.weight-grid{
-grid-template-columns:1fr;
+.form-row label{
+width:auto;
 }
 
-.page-title{
-font-size:26px;
+.input-group{
+width:100%;
 }
 
 }
@@ -185,24 +201,38 @@ font-size:26px;
 
 <div class="card">
 
+<!-- AGE -->
+
+<div class="form-row">
 <label>Age</label>
-<input type="number" id="age" placeholder="Enter Age">
-
-<label>Height</label>
-
-<div class="height-grid">
-<input type="number" id="feet" placeholder="Feet">
-<input type="number" id="inches" placeholder="Inches">
+<input type="number" id="age" class="age-input" value="28">
 </div>
 
+<!-- HEIGHT -->
+
+<div class="form-row">
+<label>Height</label>
+
+<div class="input-group">
+<input type="number" id="feet" class="height-input" placeholder="Feet">
+<input type="number" id="inches" class="height-input" placeholder="Inches">
+</div>
+
+</div>
+
+<!-- WEIGHT -->
+
+<div class="form-row">
 <label>Current Weight</label>
 
-<div class="weight-grid">
-<input type="number" id="weight" placeholder="Enter Weight">
+<div class="input-group">
+<input type="number" id="weight" class="weight-input">
 <select id="unit">
 <option value="kg">Kilograms (kg)</option>
 <option value="lbs">Pounds (lbs)</option>
 </select>
+</div>
+
 </div>
 
 <button onclick="calculateBMI()">Calculate</button>
@@ -210,10 +240,12 @@ font-size:26px;
 <div class="result" id="result" style="display:none">
 
 <h3>Healthy Weight Range</h3>
+
 <p id="kgRange"></p>
 <p id="lbRange"></p>
 
 <h3>Your Status</h3>
+
 <p id="status"></p>
 
 <div class="range-bar">
@@ -241,12 +273,12 @@ alert("Please enter height and weight");
 return;
 }
 
-/* Convert height */
+/* height convert */
 
 let totalInches=(feet*12)+inches;
 let heightMeters=totalInches*0.0254;
 
-/* Convert weight */
+/* weight convert */
 
 let weightKg=weight;
 
@@ -254,21 +286,21 @@ if(unit==="lbs"){
 weightKg=weight*0.453592;
 }
 
-/* BMI */
+/* bmi */
 
 let bmi=weightKg/(heightMeters*heightMeters);
 
-/* Healthy range */
+/* healthy range */
 
 let minWeight=18.5*(heightMeters*heightMeters);
 let maxWeight=24.9*(heightMeters*heightMeters);
 
-/* Convert to pounds */
+/* pounds */
 
 let minLb=minWeight*2.20462;
 let maxLb=maxWeight*2.20462;
 
-/* Status */
+/* status */
 
 let status="";
 
@@ -282,7 +314,7 @@ else{
 status="Overweight";
 }
 
-/* Display ranges */
+/* display */
 
 document.getElementById("kgRange").innerHTML=
 "Healthy Range: "+minWeight.toFixed(1)+" kg – "+maxWeight.toFixed(1)+" kg";
@@ -292,7 +324,7 @@ document.getElementById("lbRange").innerHTML=
 
 document.getElementById("status").innerHTML=status;
 
-/* Marker position */
+/* marker */
 
 let position=(weightKg/(maxWeight*1.5))*100;
 
