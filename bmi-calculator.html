@@ -58,12 +58,13 @@ border-radius:10px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* INPUT GRID */
+/* LABEL */
 
-.input-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
+label{
+display:block;
+margin-top:18px;
+margin-bottom:6px;
+font-weight:500;
 }
 
 /* INPUT */
@@ -76,6 +77,22 @@ border-radius:6px;
 border:1px solid #ccc;
 }
 
+/* HEIGHT GRID */
+
+.height-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+}
+
+/* WEIGHT GRID */
+
+.weight-grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:15px;
+}
+
 /* BUTTON */
 
 button{
@@ -84,7 +101,7 @@ color:white;
 border:none;
 padding:14px;
 width:100%;
-margin-top:15px;
+margin-top:20px;
 font-size:18px;
 border-radius:6px;
 cursor:pointer;
@@ -100,7 +117,12 @@ border-left:5px solid #001d4c;
 border-radius:6px;
 }
 
-/* RANGE BAR */
+.result h3{
+margin-top:0;
+color:#001d4c;
+}
+
+/* BMI RANGE BAR */
 
 .range-bar{
 margin-top:20px;
@@ -126,14 +148,18 @@ position:absolute;
 top:-5px;
 width:4px;
 height:35px;
-background:#000;
+background:black;
 }
 
 /* MOBILE */
 
 @media(max-width:768px){
 
-.input-grid{
+.height-grid{
+grid-template-columns:1fr;
+}
+
+.weight-grid{
 grid-template-columns:1fr;
 }
 
@@ -144,6 +170,7 @@ font-size:26px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -159,19 +186,19 @@ font-size:26px;
 <div class="card">
 
 <label>Age</label>
-<input type="number" id="age">
+<input type="number" id="age" placeholder="Enter Age">
 
 <label>Height</label>
 
-<div class="input-grid">
+<div class="height-grid">
 <input type="number" id="feet" placeholder="Feet">
 <input type="number" id="inches" placeholder="Inches">
 </div>
 
 <label>Current Weight</label>
 
-<div class="input-grid">
-<input type="number" id="weight">
+<div class="weight-grid">
+<input type="number" id="weight" placeholder="Enter Weight">
 <select id="unit">
 <option value="kg">Kilograms (kg)</option>
 <option value="lbs">Pounds (lbs)</option>
@@ -210,17 +237,16 @@ let weight=parseFloat(document.getElementById("weight").value);
 let unit=document.getElementById("unit").value;
 
 if(!feet || !weight){
-alert("Enter height and weight");
+alert("Please enter height and weight");
 return;
 }
 
-/* convert height */
+/* Convert height */
 
 let totalInches=(feet*12)+inches;
-
 let heightMeters=totalInches*0.0254;
 
-/* convert weight */
+/* Convert weight */
 
 let weightKg=weight;
 
@@ -228,19 +254,21 @@ if(unit==="lbs"){
 weightKg=weight*0.453592;
 }
 
-/* bmi */
+/* BMI */
 
 let bmi=weightKg/(heightMeters*heightMeters);
 
-/* healthy range */
+/* Healthy range */
 
 let minWeight=18.5*(heightMeters*heightMeters);
 let maxWeight=24.9*(heightMeters*heightMeters);
 
+/* Convert to pounds */
+
 let minLb=minWeight*2.20462;
 let maxLb=maxWeight*2.20462;
 
-/* status */
+/* Status */
 
 let status="";
 
@@ -254,19 +282,17 @@ else{
 status="Overweight";
 }
 
-/* display */
+/* Display ranges */
 
 document.getElementById("kgRange").innerHTML=
-
 "Healthy Range: "+minWeight.toFixed(1)+" kg – "+maxWeight.toFixed(1)+" kg";
 
 document.getElementById("lbRange").innerHTML=
-
 "Healthy Range: "+minLb.toFixed(1)+" lbs – "+maxLb.toFixed(1)+" lbs";
 
 document.getElementById("status").innerHTML=status;
 
-/* marker */
+/* Marker position */
 
 let position=(weightKg/(maxWeight*1.5))*100;
 
