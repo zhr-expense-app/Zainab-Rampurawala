@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Time Duration & Date Difference Calculator | ZHR Tools</title>
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+/* GRID */
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:30px;
+}
+
+/* CARD */
+
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:10px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* INPUT */
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+font-size:16px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+/* BUTTON */
+
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:14px;
+font-size:16px;
+border-radius:6px;
+width:100%;
+cursor:pointer;
+margin-top:10px;
+}
+
+/* RESULT */
+
+.result{
+margin-top:15px;
+background:white;
+padding:15px;
+border-left:5px solid #001d4c;
+border-radius:6px;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.page-title{
+font-size:26px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">Time & Date Duration Calculator</h1>
+
+<div class="container">
+
+<div class="grid">
+
+<!-- TIME DIFFERENCE -->
+
+<div class="card">
+
+<h3>Time Difference Calculator</h3>
+
+<label>Start Time</label>
+<input type="time" id="startTime">
+
+<label>End Time</label>
+<input type="time" id="endTime">
+
+<label>Break Time (minutes)</label>
+<input type="number" id="breakTime" value="0">
+
+<button onclick="calculateTime()">Calculate Duration</button>
+
+<div class="result" id="timeResult"></div>
+
+</div>
+
+<!-- DATE DIFFERENCE -->
+
+<div class="card">
+
+<h3>Date Difference Calculator</h3>
+
+<label>Start Date</label>
+<input type="date" id="startDate">
+
+<label>End Date</label>
+<input type="date" id="endDate">
+
+<button onclick="calculateDate()">Calculate Difference</button>
+
+<div class="result" id="dateResult"></div>
+
+</div>
+
+<!-- ADD TIME -->
+
+<div class="card">
+
+<h3>Add Time</h3>
+
+<label>Base Time</label>
+<input type="time" id="addBase">
+
+<label>Add Hours</label>
+<input type="number" id="addHours" value="0">
+
+<label>Add Minutes</label>
+<input type="number" id="addMinutes" value="0">
+
+<button onclick="addTime()">Add Time</button>
+
+<div class="result" id="addResult"></div>
+
+</div>
+
+<!-- SUBTRACT TIME -->
+
+<div class="card">
+
+<h3>Subtract Time</h3>
+
+<label>Base Time</label>
+<input type="time" id="subBase">
+
+<label>Subtract Hours</label>
+<input type="number" id="subHours" value="0">
+
+<label>Subtract Minutes</label>
+<input type="number" id="subMinutes" value="0">
+
+<button onclick="subtractTime()">Subtract Time</button>
+
+<div class="result" id="subResult"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* TIME DIFFERENCE */
+
+function calculateTime(){
+
+let start=document.getElementById("startTime").value;
+let end=document.getElementById("endTime").value;
+let breakMin=parseInt(document.getElementById("breakTime").value)||0;
+
+if(!start || !end){
+alert("Enter start and end time");
+return;
+}
+
+let startDate=new Date("1970-01-01T"+start+":00");
+let endDate=new Date("1970-01-01T"+end+":00");
+
+let diff=(endDate-startDate)/1000;
+
+diff-=breakMin*60;
+
+let hours=Math.floor(diff/3600);
+let minutes=Math.floor((diff%3600)/60);
+let seconds=Math.floor(diff%60);
+
+let totalMinutes=Math.floor(diff/60);
+
+document.getElementById("timeResult").innerHTML=
+
+`Duration: <b>${hours} Hours ${minutes} Minutes ${seconds} Seconds</b><br>
+Total Minutes: ${totalMinutes}`;
+
+}
+
+/* DATE DIFFERENCE */
+
+function calculateDate(){
+
+let start=new Date(document.getElementById("startDate").value);
+let end=new Date(document.getElementById("endDate").value);
+
+let diff=end-start;
+
+let days=Math.floor(diff/(1000*60*60*24));
+let weeks=Math.floor(days/7);
+
+document.getElementById("dateResult").innerHTML=
+
+`Total Days: <b>${days}</b><br>
+Total Weeks: ${weeks}`;
+
+}
+
+/* ADD TIME */
+
+function addTime(){
+
+let base=document.getElementById("addBase").value;
+
+let h=parseInt(document.getElementById("addHours").value);
+let m=parseInt(document.getElementById("addMinutes").value);
+
+let t=new Date("1970-01-01T"+base+":00");
+
+t.setHours(t.getHours()+h);
+t.setMinutes(t.getMinutes()+m);
+
+document.getElementById("addResult").innerHTML=
+
+`Result Time: <b>${t.toTimeString().substring(0,5)}</b>`;
+
+}
+
+/* SUBTRACT TIME */
+
+function subtractTime(){
+
+let base=document.getElementById("subBase").value;
+
+let h=parseInt(document.getElementById("subHours").value);
+let m=parseInt(document.getElementById("subMinutes").value);
+
+let t=new Date("1970-01-01T"+base+":00");
+
+t.setHours(t.getHours()-h);
+t.setMinutes(t.getMinutes()-m);
+
+document.getElementById("subResult").innerHTML=
+
+`Result Time: <b>${t.toTimeString().substring(0,5)}</b>`;
+
+}
+
+</script>
+
+</body>
+</html>
