@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>BMI Calculator | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png" type="image/png">
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:white;
+margin:0;
+}
+
+/* HEADER */
+
+.logo-header{
+position:sticky;
+top:0;
+z-index:1000;
+background:white;
+text-align:center;
+padding:15px 5px 10px;
+}
+
+.logo-header img{
+max-width:400px;
+height:50px;
+}
+
+/* TITLE */
+
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:30px 0;
+font-weight:700;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:700px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:10px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* INPUT */
+
+input,select{
+width:100%;
+padding:12px;
+font-size:16px;
+margin-top:10px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+/* BUTTON */
+
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:14px;
+width:100%;
+margin-top:15px;
+font-size:18px;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* RESULT */
+
+.result{
+margin-top:25px;
+background:white;
+padding:15px;
+border-left:5px solid #001d4c;
+border-radius:6px;
+}
+
+.result h3{
+margin:0;
+color:#001d4c;
+}
+
+.result p{
+font-size:18px;
+font-weight:600;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo-header">
+<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+</div>
+
+<h1 class="page-title">BMI Calculator</h1>
+
+<div class="container">
+
+<div class="card">
+
+<label>Unit System</label>
+<select id="unit">
+<option value="metric">Metric (kg, cm)</option>
+<option value="imperial">Imperial (lb, inches)</option>
+</select>
+
+<label>Weight</label>
+<input type="number" id="weight">
+
+<label>Height</label>
+<input type="number" id="height">
+
+<button onclick="calculateBMI()">Calculate BMI</button>
+
+<div class="result" id="result" style="display:none">
+
+<h3>Your BMI</h3>
+<p id="bmiValue"></p>
+
+<h3>Category</h3>
+<p id="bmiCategory"></p>
+
+<h3>Healthy Weight Range</h3>
+<p id="healthyRange"></p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function calculateBMI(){
+
+let weight=parseFloat(document.getElementById("weight").value);
+let height=parseFloat(document.getElementById("height").value);
+let unit=document.getElementById("unit").value;
+
+if(!weight || !height){
+alert("Enter weight and height");
+return;
+}
+
+let bmi;
+
+if(unit==="metric"){
+
+height=height/100;
+bmi=weight/(height*height);
+
+}else{
+
+bmi=(weight/(height*height))*703;
+
+}
+
+bmi=bmi.toFixed(2);
+
+/* category */
+
+let category="";
+
+if(bmi<18.5){
+category="Underweight";
+}
+else if(bmi<24.9){
+category="Normal weight";
+}
+else if(bmi<29.9){
+category="Overweight";
+}
+else{
+category="Obese";
+}
+
+/* healthy range */
+
+let minWeight=(18.5*(height*height)).toFixed(1);
+let maxWeight=(24.9*(height*height)).toFixed(1);
+
+document.getElementById("bmiValue").innerHTML=bmi;
+document.getElementById("bmiCategory").innerHTML=category;
+
+if(unit==="metric"){
+document.getElementById("healthyRange").innerHTML=minWeight+" kg - "+maxWeight+" kg";
+}else{
+document.getElementById("healthyRange").innerHTML="Use metric for range";
+}
+
+document.getElementById("result").style.display="block";
+
+}
+
+</script>
+
+</body>
+</html>
