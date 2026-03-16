@@ -120,3 +120,16 @@ background:rgba(0,0,0,0.5);
 display:none;
 z-index:1500;
 }
+
+@media (max-width:768px){
+
+.logo-header img{
+height:40px;
+}
+
+.menu-icon{
+top:18px;
+}
+
+}
+
