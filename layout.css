@@ -4,6 +4,10 @@ background:#f8f9fb;
 margin:0;
 }
 
+body{
+padding-top:80px;
+}
+
 /* HEADER */
 
 .logo-header{
