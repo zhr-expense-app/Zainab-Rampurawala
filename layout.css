@@ -8,7 +8,7 @@ padding-top:80px;
 /* HEADER */
 
 .logo-header{
-position:fixed;
+position:sticky;
 top:0;
 left:0;
 width:100%;
@@ -16,7 +16,6 @@ z-index:1000;
 background:white;
 text-align:center;
 padding:15px 0 10px;
-border-bottom:1px solid #eee;
 }
 
 .logo-header img{
