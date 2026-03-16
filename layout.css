@@ -2,7 +2,11 @@ body{
 font-family:'Segoe UI',sans-serif;
 background:#f8f9fb;
 margin:0;
-padding-top:70px;
+
+}
+
+.tools-section{
+margin-top:90px;
 }
 
 /* HEADER */
