@@ -2,9 +2,6 @@ body{
 font-family:'Segoe UI',sans-serif;
 background:#f8f9fb;
 margin:0;
-}
-
-body{
 padding-top:80px;
 }
 
@@ -31,7 +28,7 @@ height:50px;
 .menu-icon{
 position:absolute;
 left:20px;
-top:18px;
+top:22px;
 cursor:pointer;
 color:#001d4c;
 }
