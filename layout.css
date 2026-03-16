@@ -129,5 +129,13 @@ height:50px;
 top:18px;
 }
 
+body{
+font-family:'Segoe UI',sans-serif;
+background:#f8f9fb;
+margin:0;
+padding-top:90px;
+}
+  
+
 }
 
