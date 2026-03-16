@@ -86,13 +86,15 @@ display:none;
 /* SEARCH */
 
 .sidebar-search{
-padding:20px 20px 40px 40px;
+padding:15px 20px 25px 20px;
+display:flex;
+justify-content:center;
 }
 
 .sidebar-search input{
-width:100%;
-padding:8px;
-border-radius:5px;
+width:90%;
+padding:10px;
+border-radius:6px;
 border:none;
 }
 
