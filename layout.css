@@ -1,8 +1,8 @@
 body{
 font-family:'Segoe UI',sans-serif;
 background:#f8f9fb;
-margin:100px;
-
+margin:0;
+top:100px;
 }
 
 .tools-section{
