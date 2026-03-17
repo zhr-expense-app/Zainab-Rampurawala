@@ -25,10 +25,11 @@ margin:0;
 
 .page-title{
 text-align:center;
-font-size:30px;
+font-size:32px;
 color:#001d4c;
 margin-top:50px;
 font-weight:700;
+letter-spacing:0.5px;
 }
 
 /* CONTAINER */
@@ -44,44 +45,108 @@ padding:20px;
 .card{
 background:#f8f9fb;
 padding:30px;
-border-radius:10px;
-box-shadow:0 6px 20px rgba(0,0,0,0.08);
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.08);
+transition:all 0.3s ease;
 }
 
 /* DROP AREA */
 
 .drop-area{
 border:2px dashed #001d4c;
-padding:40px;
+padding:45px;
 text-align:center;
-border-radius:10px;
+border-radius:12px;
 cursor:pointer;
+transition:all 0.3s ease;
+background:white;
 }
 
 .drop-area:hover{
 background:#eef3ff;
+border-color:#003080;
+transform:translateY(-2px);
 }
 
 /* IMAGE PREVIEW */
 
 .preview{
-margin-top:20px;
+margin-top:25px;
 text-align:center;
 }
 
 .preview img{
 max-width:100%;
-border-radius:10px;
+border-radius:12px;
+box-shadow:0 6px 15px rgba(0,0,0,0.1);
 }
 
 /* OPTIONS */
 
 .options{
-margin-top:20px;
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+justify-content:space-between;
+gap:20px;
+margin-top:25px;
 }
 
-.options label{
+/* OPTION GROUP */
+
+.option-group{
+display:flex;
+flex-direction:column;
+flex:1;
+min-width:220px;
+}
+
+/* LABEL */
+
+.option-group label{
+font-size:14px;
 font-weight:600;
+color:#001d4c;
+margin-bottom:6px;
+}
+
+/* RANGE SLIDER */
+
+input[type="range"]{
+width:100%;
+appearance:none;
+height:6px;
+border-radius:5px;
+background:#d9dee6;
+outline:none;
+}
+
+input[type="range"]::-webkit-slider-thumb{
+appearance:none;
+width:16px;
+height:16px;
+border-radius:50%;
+background:#001d4c;
+cursor:pointer;
+}
+
+input[type="range"]::-moz-range-thumb{
+width:16px;
+height:16px;
+border-radius:50%;
+background:#001d4c;
+cursor:pointer;
+}
+
+/* SELECT */
+
+select{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+background:white;
+font-size:14px;
 }
 
 /* STATS */
@@ -89,8 +154,18 @@ font-weight:600;
 .stats{
 display:flex;
 justify-content:space-between;
-margin-top:15px;
+align-items:center;
+margin-top:25px;
+padding:14px 18px;
+background:white;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.06);
 font-weight:600;
+color:#001d4c;
+}
+
+.stats span{
+font-size:15px;
 }
 
 /* BUTTON */
@@ -99,13 +174,42 @@ button{
 background:#001d4c;
 color:white;
 border:none;
-padding:12px;
+padding:14px;
 width:100%;
-margin-top:20px;
-border-radius:6px;
+margin-top:25px;
+border-radius:8px;
+font-size:16px;
+font-weight:600;
 cursor:pointer;
+transition:all 0.3s ease;
 }
 
+button:hover{
+background:#003080;
+transform:translateY(-2px);
+box-shadow:0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.options{
+flex-direction:column;
+align-items:stretch;
+}
+
+.stats{
+flex-direction:column;
+gap:10px;
+text-align:center;
+}
+
+.page-title{
+font-size:26px;
+}
+
+}
 </style>
 
 </head>
@@ -132,16 +236,18 @@ cursor:pointer;
 
 <div class="options">
 
+<div class="option-group">
 <label>Compression Quality</label>
 <input type="range" id="quality" min="10" max="100" value="70">
+</div>
 
+<div class="option-group">
 <label>Output Format</label>
 <select id="format">
 <option value="webp">WebP (Best Compression)</option>
 <option value="jpeg">JPG (Compatible)</option>
 
 </select>
-
 </div>
 
 <div class="stats">
