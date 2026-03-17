@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="layout.css">
 
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -82,7 +82,13 @@ cursor:pointer;
 width:100%;
 }
 
-.output{text-align:center;margin-top:25px;}
+.output{
+text-align:center;
+margin-top:25px;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
 
 .download-buttons{
 margin-top:15px;
@@ -118,6 +124,8 @@ cursor:pointer;
 <button onclick="switchTab('vcard')">vCard</button>
 <button onclick="switchTab('social')">Social</button>
 <button onclick="switchTab('email')">Email</button>
+<button onclick="switchTab('sms')">SMS</button>
+<button onclick="switchTab('call')">Call</button>  
 <button onclick="switchTab('maps')">Maps</button>
 </div>
 
@@ -139,6 +147,8 @@ cursor:pointer;
 <input id="vc_phone" placeholder="Phone">
 <input id="vc_email" placeholder="Email">
 <input id="vc_company" placeholder="Company">
+<input id="vc_title" placeholder="Job Title">
+<input id="vc_dept" placeholder="Department">  
 <input id="vc_website" placeholder="Website">
 <button class="generate-btn" onclick="generateVCard()">Generate QR</button>
 </div>
@@ -164,12 +174,38 @@ cursor:pointer;
 <button class="generate-btn" onclick="generateEmail()">Generate QR</button>
 </div>
 
+<!-- CALL -->  
+<div id="call" class="tab-content">
+<input id="callNumber" placeholder="Enter phone number">
+<button class="generate-btn" onclick="generateCall()">Generate QR</button>
+</div>
+
+<!-- SMS -->  
+<div id="sms" class="tab-content">
+<input id="smsNumber" placeholder="Phone number">
+<textarea id="smsMessage" placeholder="Message"></textarea>
+<button class="generate-btn" onclick="generateSMS()">Generate QR</button>
+</div>
+  
+  
 <!-- MAP -->
 <div id="maps" class="tab-content">
 <input id="location" placeholder="Enter location or paste Google Maps link">
 <button class="generate-btn" onclick="generateMap()">Generate QR</button>
 </div>
 
+<!-- QR CUSTOMIZATION OPTIONS -->
+
+<div style="margin-top:20px;">
+
+<label>QR Color</label>
+<input type="color" id="qrColor" value="#000000">
+
+<label style="margin-top:10px; display:block;">Upload Logo (optional)</label>
+<input type="file" id="logoUpload" accept="image/*">
+
+</div>
+  
 <div class="output">
 <div id="qrcode"></div>
 
@@ -194,13 +230,36 @@ document.getElementById("qrcode").innerHTML=""
 
 /* GENERATE QR */
 
+let qrCode;
+
 function generateQR(data){
-document.getElementById("qrcode").innerHTML=""
-new QRCode(document.getElementById("qrcode"),{
-text:data,
-width:220,
-height:220
-})
+
+let color=document.getElementById("qrColor").value;
+let logoInput=document.getElementById("logoUpload").files[0];
+
+let logoURL = logoInput ? URL.createObjectURL(logoInput) : null;
+
+document.getElementById("qrcode").innerHTML="";
+
+qrCode = new QRCodeStyling({
+width:250,
+height:250,
+data:data,
+image:logoURL,
+dotsOptions:{
+color:color,
+type:"rounded"
+},
+backgroundOptions:{
+color:"#ffffff"
+},
+imageOptions:{
+crossOrigin:"anonymous",
+margin:5
+}
+});
+
+qrCode.append(document.getElementById("qrcode"));
 }
 
 /* VCARD */
@@ -212,13 +271,17 @@ let phone=document.getElementById("vc_phone").value;
 let email=document.getElementById("vc_email").value;
 let company=document.getElementById("vc_company").value;
 let website=document.getElementById("vc_website").value;
+let title=document.getElementById("vc_title").value;
+let dept=document.getElementById("vc_dept").value;
 
 let data=`BEGIN:VCARD
 VERSION:3.0
 FN:${name}
+TITLE:${title}
+ORG:${company}
+DEPT:${dept}
 TEL:${phone}
 EMAIL:${email}
-ORG:${company}
 URL:${website}
 END:VCARD`;
 
@@ -230,7 +293,7 @@ generateQR(data);
 function generateSocial(){
 
 let type=document.getElementById("socialType").value;
-let input=document.getElementById("socialInput").value;
+let input=document.getElementById("socialInput").value.trim();
 
 let url="";
 
@@ -238,7 +301,11 @@ if(type==="instagram"){
 url="https://instagram.com/"+input;
 }
 else if(type==="whatsapp"){
-url="https://wa.me/"+input;
+
+// Remove spaces, +, - etc
+let clean=input.replace(/\D/g,'');
+
+url="https://wa.me/"+clean;
 }
 else if(type==="linkedin"){
 url=input;
@@ -255,6 +322,28 @@ let data=`mailto:${emailTo.value}?subject=${subject.value}&body=${bodyMail.value
 generateQR(data);
 }
 
+/* CALL */
+function generateCall(){
+
+let num=document.getElementById("callNumber").value.trim();
+
+generateQR("tel:"+num);
+
+}  
+
+
+/* SMS */
+
+function generateSMS(){
+
+let num=document.getElementById("smsNumber").value.trim();
+let msg=document.getElementById("smsMessage").value;
+
+generateQR(`sms:${num}?body=${encodeURIComponent(msg)}`);
+
+}  
+  
+  
 /* MAP */
 
 function generateMap(){
