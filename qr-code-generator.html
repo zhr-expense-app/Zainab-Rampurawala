@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -17,13 +16,7 @@
 
 <style>
 
-body{
-font-family:'Segoe UI',sans-serif;
-
-margin:0;
-}
-
-/* TITLE */
+body{background:white;}
 
 .page-title{
 text-align:center;
@@ -33,15 +26,11 @@ margin-top:50px;
 font-weight:700;
 }
 
-/* CONTAINER */
-
 .container{
 max-width:1100px;
 margin:auto;
 padding:20px;
 }
-
-/* TABS */
 
 .tabs{
 display:flex;
@@ -60,8 +49,6 @@ border-radius:5px;
 cursor:pointer;
 }
 
-/* TAB CONTENT */
-
 .tab-content{
 display:none;
 background:#f8f9fb;
@@ -70,21 +57,15 @@ border-radius:8px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 
-.tab-content.active{
-display:block;
-}
+.tab-content.active{display:block;}
 
-/* INPUT */
-
-input, textarea{
+input, textarea, select{
 width:100%;
 padding:10px;
 margin-top:10px;
 border-radius:5px;
 border:1px solid #ccc;
 }
-
-/* BUTTON */
 
 .generate-btn{
 background:#001d4c;
@@ -97,40 +78,25 @@ cursor:pointer;
 width:100%;
 }
 
-/* OUTPUT */
-
-.output{
-text-align:center;
-margin-top:25px;
-}
+.output{text-align:center;margin-top:25px;}
 
 .download-buttons{
 margin-top:15px;
 display:flex;
 gap:10px;
 justify-content:center;
-flex-wrap:wrap;
 }
 
 .download-buttons button{
 background:#001d4c;
 color:white;
 border:none;
-padding:10px 15px;
+padding:10px;
 border-radius:5px;
 cursor:pointer;
 }
 
-/* MOBILE */
-
-@media(max-width:768px){
-.tabs{
-flex-direction:column;
-}
-}
-
 </style>
-
 </head>
 
 <body>
@@ -143,13 +109,12 @@ flex-direction:column;
 <div class="container">
 
 <div class="tabs">
-<button onclick="showTab('text')">Text</button>
-<button onclick="showTab('url')">URL</button>
-<button onclick="showTab('vcard')">vCard</button>
-<button onclick="showTab('business')">Business</button>
-<button onclick="showTab('social')">Social</button>
-<button onclick="showTab('email')">Email</button>
-<button onclick="showTab('maps')">Maps</button>
+<button onclick="switchTab('text')">Text</button>
+<button onclick="switchTab('url')">URL</button>
+<button onclick="switchTab('vcard')">vCard</button>
+<button onclick="switchTab('social')">Social</button>
+<button onclick="switchTab('email')">Email</button>
+<button onclick="switchTab('maps')">Maps</button>
 </div>
 
 <!-- TEXT -->
@@ -166,29 +131,24 @@ flex-direction:column;
 
 <!-- VCARD -->
 <div id="vcard" class="tab-content">
-<input id="name" placeholder="Full Name">
-<input id="phone" placeholder="Phone">
-<input id="emailV" placeholder="Email">
-<input id="company" placeholder="Company">
-<input id="website" placeholder="Website">
+<input id="vc_name" placeholder="Full Name">
+<input id="vc_phone" placeholder="Phone">
+<input id="vc_email" placeholder="Email">
+<input id="vc_company" placeholder="Company">
+<input id="vc_website" placeholder="Website">
 <button class="generate-btn" onclick="generateVCard()">Generate QR</button>
-</div>
-
-<!-- BUSINESS -->
-<div id="business" class="tab-content">
-<input id="bname" placeholder="Name">
-<input id="btitle" placeholder="Title">
-<input id="bphone" placeholder="Phone">
-<input id="bemail" placeholder="Email">
-<input id="bcompany" placeholder="Company">
-<button class="generate-btn" onclick="generateBusiness()">Generate QR</button>
 </div>
 
 <!-- SOCIAL -->
 <div id="social" class="tab-content">
-<input id="insta" placeholder="Instagram Username">
-<input id="whatsapp" placeholder="WhatsApp Number">
-<input id="linkedin" placeholder="LinkedIn URL">
+<select id="socialType">
+<option value="instagram">Instagram</option>
+<option value="whatsapp">WhatsApp</option>
+<option value="linkedin">LinkedIn</option>
+</select>
+
+<input id="socialInput" placeholder="Enter username / number / URL">
+
 <button class="generate-btn" onclick="generateSocial()">Generate QR</button>
 </div>
 
@@ -202,8 +162,8 @@ flex-direction:column;
 
 <!-- MAP -->
 <div id="maps" class="tab-content">
-<input id="location" placeholder="Enter Location">
-<button class="generate-btn" onclick="generateQR('https://maps.google.com/?q='+location.value)">Generate QR</button>
+<input id="location" placeholder="Enter location or paste Google Maps link">
+<button class="generate-btn" onclick="generateMap()">Generate QR</button>
 </div>
 
 <div class="output">
@@ -220,110 +180,119 @@ flex-direction:column;
 
 <script>
 
-let currentQR = null;
+/* SWITCH TAB + RESET QR */
 
-/* TABS */
-
-function showTab(tab){
+function switchTab(tab){
 document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"))
 document.getElementById(tab).classList.add("active")
+document.getElementById("qrcode").innerHTML=""
 }
 
-/* QR GENERATE */
+/* GENERATE QR */
 
 function generateQR(data){
-
 document.getElementById("qrcode").innerHTML=""
-
-currentQR = new QRCode(document.getElementById("qrcode"),{
+new QRCode(document.getElementById("qrcode"),{
 text:data,
 width:220,
 height:220
 })
-
 }
 
 /* VCARD */
 
 function generateVCard(){
+
+let name=document.getElementById("vc_name").value;
+let phone=document.getElementById("vc_phone").value;
+let email=document.getElementById("vc_email").value;
+let company=document.getElementById("vc_company").value;
+let website=document.getElementById("vc_website").value;
+
 let data=`BEGIN:VCARD
 VERSION:3.0
-FN:${name.value}
-TEL:${phone.value}
-EMAIL:${emailV.value}
-ORG:${company.value}
-URL:${website.value}
-END:VCARD`
-generateQR(data)
-}
+FN:${name}
+TEL:${phone}
+EMAIL:${email}
+ORG:${company}
+URL:${website}
+END:VCARD`;
 
-/* BUSINESS */
-
-function generateBusiness(){
-let data=`BEGIN:VCARD
-VERSION:3.0
-FN:${bname.value}
-TITLE:${btitle.value}
-TEL:${bphone.value}
-EMAIL:${bemail.value}
-ORG:${bcompany.value}
-END:VCARD`
-generateQR(data)
+generateQR(data);
 }
 
 /* SOCIAL */
 
 function generateSocial(){
-let data=`Instagram: https://instagram.com/${insta.value}
-WhatsApp: https://wa.me/${whatsapp.value}
-LinkedIn: ${linkedin.value}`
-generateQR(data)
+
+let type=document.getElementById("socialType").value;
+let input=document.getElementById("socialInput").value;
+
+let url="";
+
+if(type==="instagram"){
+url="https://instagram.com/"+input;
+}
+else if(type==="whatsapp"){
+url="https://wa.me/"+input;
+}
+else if(type==="linkedin"){
+url=input;
+}
+
+generateQR(url);
 }
 
 /* EMAIL */
 
 function generateEmail(){
-let data=`mailto:${emailTo.value}?subject=${subject.value}&body=${bodyMail.value}`
-generateQR(data)
+
+let data=`mailto:${emailTo.value}?subject=${subject.value}&body=${bodyMail.value}`;
+generateQR(data);
 }
 
-/* PNG DOWNLOAD (FIXED) */
+/* MAP */
+
+function generateMap(){
+
+let loc=document.getElementById("location").value;
+
+let url = loc.includes("http") 
+? loc 
+: "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);
+
+generateQR(url);
+}
+
+/* DOWNLOAD PNG */
 
 function downloadPNG(){
 
-let canvas = document.querySelector("#qrcode canvas");
+let canvas=document.querySelector("#qrcode canvas");
 
-if(!canvas){
-alert("Generate QR first");
-return;
-}
+if(!canvas){ alert("Generate QR first"); return; }
 
 let link=document.createElement("a");
 link.download="qr-code.png";
 link.href=canvas.toDataURL("image/png");
 link.click();
-
 }
 
-/* PDF DOWNLOAD (FIXED) */
+/* DOWNLOAD PDF */
 
 function downloadPDF(){
 
 const { jsPDF } = window.jspdf;
 
-let canvas = document.querySelector("#qrcode canvas");
+let canvas=document.querySelector("#qrcode canvas");
 
-if(!canvas){
-alert("Generate QR first");
-return;
-}
+if(!canvas){ alert("Generate QR first"); return; }
 
-let imgData = canvas.toDataURL("image/png");
+let img=canvas.toDataURL("image/png");
 
 let pdf=new jsPDF();
-pdf.addImage(imgData,'PNG',50,40,100,100);
+pdf.addImage(img,'PNG',50,40,100,100);
 pdf.save("qr-code.pdf");
-
 }
 
 </script>
