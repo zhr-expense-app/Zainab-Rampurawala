@@ -8,30 +8,19 @@
 <title>Scientific Calculator | ZHR Tools</title>
 
 <link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>  
 
 <style>
 
 body{
 font-family:'Segoe UI',sans-serif;
-background:white;
+
 margin:0;
 }
 
-/* HEADER */
 
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
-}
 
 /* TITLE */
 
@@ -39,7 +28,7 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
@@ -132,9 +121,8 @@ padding:10px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
 <h1 class="page-title">Scientific Calculator</h1>
 
@@ -264,6 +252,7 @@ backspace()
 })
 
 </script>
-
+<script src="layout.js"></script>
+  
 </body>
 </html>
