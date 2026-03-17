@@ -1,36 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>QR Code Generator | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
 body{
-font-family:'Segoe UI',sans-serif;
 background:white;
-margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
 }
 
 /* TITLE */
@@ -39,90 +27,104 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
 /* CONTAINER */
 
 .container{
-max-width:900px;
+max-width:1100px;
 margin:auto;
 padding:20px;
 }
 
-/* CARD */
+/* TABS */
 
-.card{
-background:#f8f9fb;
-padding:30px;
-border-radius:12px;
-box-shadow:0 6px 20px rgba(0,0,0,0.08);
-text-align:center;
+.tabs{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+justify-content:center;
+margin-bottom:20px;
 }
 
-/* DROP AREA */
-
-.drop-area{
-border:2px dashed #001d4c;
-padding:40px;
-border-radius:10px;
-background:white;
+.tabs button{
+background:#001d4c;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:5px;
 cursor:pointer;
 }
 
-.drop-area:hover{
-background:#f0f3ff;
-}
+/* TAB CONTENT */
 
-/* PREVIEW */
-
-.preview{
-margin-top:20px;
-}
-
-.preview img{
-max-width:100%;
+.tab-content{
+display:none;
+background:#f8f9fb;
+padding:25px;
 border-radius:8px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* SLIDER */
-
-.slider{
-margin-top:20px;
+.tab-content.active{
+display:block;
 }
 
-input[type=range]{
+/* INPUT */
+
+input, textarea{
 width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
 }
 
 /* BUTTON */
 
-button{
+.generate-btn{
 background:#001d4c;
 color:white;
 border:none;
-padding:14px 20px;
-font-size:16px;
+padding:12px;
+margin-top:15px;
 border-radius:6px;
 cursor:pointer;
+width:100%;
+}
+
+/* OUTPUT */
+
+.output{
+text-align:center;
+margin-top:25px;
+}
+
+.download-buttons{
 margin-top:15px;
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
 }
 
-/* STATS */
-
-.stats{
-margin-top:20px;
-font-weight:500;
-color:#001d4c;
+.download-buttons button{
+background:#001d4c;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:5px;
+cursor:pointer;
 }
+
+/* MOBILE */
 
 @media(max-width:768px){
-
-.page-title{
-font-size:26px;
+.tabs{
+flex-direction:column;
 }
-
 }
 
 </style>
@@ -131,40 +133,84 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Compressor</h1>
+<h1 class="page-title">QR Code Generator</h1>
 
 <div class="container">
 
-<div class="card">
-
-<div class="drop-area" id="dropArea">
-
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
-
-<input type="file" id="imageInput" accept="image/*" hidden>
-
+<div class="tabs">
+<button onclick="showTab('text')">Text</button>
+<button onclick="showTab('url')">URL</button>
+<button onclick="showTab('vcard')">vCard</button>
+<button onclick="showTab('business')">Business</button>
+<button onclick="showTab('social')">Social</button>
+<button onclick="showTab('email')">Email</button>
+<button onclick="showTab('maps')">Maps</button>
 </div>
 
-<div class="preview" id="preview"></div>
-
-<div class="slider">
-
-<label>Compression Quality</label>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
-
+<!-- TEXT -->
+<div id="text" class="tab-content active">
+<textarea id="textInput" placeholder="Enter text"></textarea>
+<button class="generate-btn" onclick="generateQR(textInput.value)">Generate QR</button>
 </div>
 
-<button onclick="compressImage()">Compress Image</button>
+<!-- URL -->
+<div id="url" class="tab-content">
+<input id="urlInput" placeholder="Enter URL">
+<button class="generate-btn" onclick="generateQR(urlInput.value)">Generate QR</button>
+</div>
 
-<div class="stats" id="stats"></div>
+<!-- VCARD -->
+<div id="vcard" class="tab-content">
+<input id="name" placeholder="Full Name">
+<input id="phone" placeholder="Phone">
+<input id="emailV" placeholder="Email">
+<input id="company" placeholder="Company">
+<input id="website" placeholder="Website">
+<button class="generate-btn" onclick="generateVCard()">Generate QR</button>
+</div>
 
-<button id="downloadBtn" style="display:none">Download Image</button>
+<!-- BUSINESS -->
+<div id="business" class="tab-content">
+<input id="bname" placeholder="Name">
+<input id="btitle" placeholder="Title">
+<input id="bphone" placeholder="Phone">
+<input id="bemail" placeholder="Email">
+<input id="bcompany" placeholder="Company">
+<button class="generate-btn" onclick="generateBusiness()">Generate QR</button>
+</div>
+
+<!-- SOCIAL -->
+<div id="social" class="tab-content">
+<input id="insta" placeholder="Instagram Username">
+<input id="whatsapp" placeholder="WhatsApp Number">
+<input id="linkedin" placeholder="LinkedIn URL">
+<button class="generate-btn" onclick="generateSocial()">Generate QR</button>
+</div>
+
+<!-- EMAIL -->
+<div id="email" class="tab-content">
+<input id="emailTo" placeholder="Email Address">
+<input id="subject" placeholder="Subject">
+<textarea id="bodyMail" placeholder="Email Body"></textarea>
+<button class="generate-btn" onclick="generateEmail()">Generate QR</button>
+</div>
+
+<!-- MAP -->
+<div id="maps" class="tab-content">
+<input id="location" placeholder="Enter Location">
+<button class="generate-btn" onclick="generateQR('https://maps.google.com/?q='+location.value)">Generate QR</button>
+</div>
+
+<div class="output">
+<div id="qrcode"></div>
+
+<div class="download-buttons">
+<button onclick="downloadPNG()">Download PNG</button>
+<button onclick="downloadPDF()">Download PDF</button>
+</div>
 
 </div>
 
@@ -172,101 +218,115 @@ font-size:26px;
 
 <script>
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
+let currentQR = null;
 
-let originalFile
-let compressedBlob
+/* TABS */
 
-dropArea.onclick=()=>imageInput.click()
-
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
+function showTab(tab){
+document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"))
+document.getElementById(tab).classList.add("active")
 }
 
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
+/* QR GENERATE */
+
+function generateQR(data){
+
+document.getElementById("qrcode").innerHTML=""
+
+currentQR = new QRCode(document.getElementById("qrcode"),{
+text:data,
+width:220,
+height:220
 })
 
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
+}
 
-function handleFile(file){
+/* VCARD */
 
-if(!file.type.startsWith("image"))return
+function generateVCard(){
+let data=`BEGIN:VCARD
+VERSION:3.0
+FN:${name.value}
+TEL:${phone.value}
+EMAIL:${emailV.value}
+ORG:${company.value}
+URL:${website.value}
+END:VCARD`
+generateQR(data)
+}
 
-originalFile=file
+/* BUSINESS */
 
-let img=document.createElement("img")
+function generateBusiness(){
+let data=`BEGIN:VCARD
+VERSION:3.0
+FN:${bname.value}
+TITLE:${btitle.value}
+TEL:${bphone.value}
+EMAIL:${bemail.value}
+ORG:${bcompany.value}
+END:VCARD`
+generateQR(data)
+}
 
-img.src=URL.createObjectURL(file)
+/* SOCIAL */
 
-preview.innerHTML=""
-preview.appendChild(img)
+function generateSocial(){
+let data=`Instagram: https://instagram.com/${insta.value}
+WhatsApp: https://wa.me/${whatsapp.value}
+LinkedIn: ${linkedin.value}`
+generateQR(data)
+}
 
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
+/* EMAIL */
+
+function generateEmail(){
+let data=`mailto:${emailTo.value}?subject=${subject.value}&body=${bodyMail.value}`
+generateQR(data)
+}
+
+/* PNG DOWNLOAD (FIXED) */
+
+function downloadPNG(){
+
+let canvas = document.querySelector("#qrcode canvas");
+
+if(!canvas){
+alert("Generate QR first");
+return;
+}
+
+let link=document.createElement("a");
+link.download="qr-code.png";
+link.href=canvas.toDataURL("image/png");
+link.click();
 
 }
 
-function compressImage(){
+/* PDF DOWNLOAD (FIXED) */
 
-if(!originalFile)return
+function downloadPDF(){
 
-let quality=document.getElementById("quality").value
+const { jsPDF } = window.jspdf;
 
-let img=new Image()
+let canvas = document.querySelector("#qrcode canvas");
 
-img.src=URL.createObjectURL(originalFile)
-
-img.onload=function(){
-
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-
-canvas.width=img.width
-canvas.height=img.height
-
-ctx.drawImage(img,0,0)
-
-canvas.toBlob(function(blob){
-
-compressedBlob=blob
-
-let compressedSize=(blob.size/1024).toFixed(2)
-
-let originalSize=(originalFile.size/1024).toFixed(2)
-
-stats.innerHTML=
-
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
-
-downloadBtn.style.display="inline-block"
-
-downloadBtn.onclick=function(){
-
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="compressed-image.jpg"
-
-link.click()
-
+if(!canvas){
+alert("Generate QR first");
+return;
 }
 
-},"image/jpeg",quality)
+let imgData = canvas.toDataURL("image/png");
 
-}
+let pdf=new jsPDF();
+pdf.addImage(imgData,'PNG',50,40,100,100);
+pdf.save("qr-code.pdf");
 
 }
 
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
