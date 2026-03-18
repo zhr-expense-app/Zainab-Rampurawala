@@ -95,13 +95,15 @@ transform:rotate(180deg);
 }
 
 .submenu{
-display:none;
+max-height:0;
+overflow:hidden;
+transition:max-height 0.35s ease;
 }
 
 /* SHOW WHEN ACTIVE */
 
 .menu-category.active + .submenu{
-display:block;
+max-height:500px; /* enough for items */
 }
 
 /* SEARCH */
