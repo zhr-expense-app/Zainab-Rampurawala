@@ -5,122 +5,145 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>Gratuity Calculator | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 
-body{
-font-family:'Segoe UI',sans-serif;
-background:white;
-margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
-}
-
-/* TITLE */
+/* PAGE TITLE (ZHR STYLE) */
 
 .page-title{
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
-/* CONTAINER */
+/* MAIN BOX */
 
-.container{
-max-width:900px;
-margin:auto;
-padding:20px;
+.gratuity-box{
+max-width:1100px;
+margin:30px auto;
+padding:25px;
+border-radius:12px;
+font-family:'Segoe UI',sans-serif;
+background:#f8f9fb;
+color:#001d4c;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+overflow-x:auto;
 }
 
-/* CARD */
+/* SECTION TITLE */
 
-.card{
-background:#f8f9fb;
-padding:30px;
-border-radius:12px;
-box-shadow:0 6px 20px rgba(0,0,0,0.08);
+.gratuity-box h2{
+text-align:center;
+color:#001d4c;
+margin-bottom:20px;
+}
+
+/* INPUTS */
+
+.gratuity-box input{
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+}
+
+/* TABLE */
+
+#employeeTable{
+width:100%;
+border-collapse:collapse;
+margin-bottom:15px;
 text-align:center;
 }
 
-/* DROP AREA */
-
-.drop-area{
-border:2px dashed #001d4c;
-padding:40px;
-border-radius:10px;
-background:white;
-cursor:pointer;
+#employeeTable th,
+#employeeTable td{
+border:1px solid #ddd;
+padding:10px;
 }
 
-.drop-area:hover{
-background:#f0f3ff;
+#employeeTable th{
+background:#001d4c;
+color:white;
 }
 
-/* PREVIEW */
-
-.preview{
-margin-top:20px;
-}
-
-.preview img{
-max-width:100%;
-border-radius:8px;
-}
-
-/* SLIDER */
-
-.slider{
-margin-top:20px;
-}
-
-input[type=range]{
+#employeeTable input{
 width:100%;
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
-/* BUTTON */
+/* BUTTONS */
 
-button{
+.gratuity-box button{
+padding:12px 15px;
+margin-top:10px;
+margin-right:8px;
 background:#001d4c;
 color:white;
 border:none;
-padding:14px 20px;
-font-size:16px;
-border-radius:6px;
+border-radius:8px;
+font-size:14px;
 cursor:pointer;
-margin-top:15px;
+transition:all 0.3s ease;
 }
 
-/* STATS */
+.gratuity-box button:hover{
+background:#003080;
+transform:translateY(-2px);
+box-shadow:0 8px 18px rgba(0,0,0,0.15);
+}
 
-.stats{
-margin-top:20px;
-font-weight:500;
+/* RESULT */
+
+#result{
+margin-top:25px;
+padding:15px;
+border-radius:10px;
+background:white;
 color:#001d4c;
+font-size:15px;
+box-shadow:0 4px 12px rgba(0,0,0,0.05);
+overflow-x:auto;
 }
+
+#result table{
+width:100%;
+border-collapse:collapse;
+}
+
+#result th,
+#result td{
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+}
+
+#result th{
+background:#001d4c;
+color:white;
+}
+
+/* MOBILE */
 
 @media(max-width:768px){
 
 .page-title{
 font-size:26px;
+}
+
+.gratuity-box{
+padding:15px;
 }
 
 }
@@ -131,142 +154,245 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
+<!-- ZHR HEADER -->
+<div id="header"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar-container"></div>
+
+<h1 class="page-title">UAE Gratuity Calculator</h1>
+
+<div class="gratuity-box">
+
+  <!-- Common As on Date -->
+  <div style="margin-bottom:15px;">
+    <label><b>Provision As on Date:</b></label>
+    <input type="date" id="provisionDate">
+  </div>
+
+  <!-- Excel Upload/Download Buttons -->
+  <div style="margin-bottom:15px;">
+    <button onclick="downloadTemplate()">📄 Download Template</button>
+    <input type="file" id="uploadFile" accept=".xlsx, .xls" onchange="uploadExcel(event)">
+  </div>
+
+  <!-- Employee Table -->
+  <table id="employeeTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Date of Joining</th>
+        <th>Basic Salary (AED)</th>
+        <th>Date of Leaving (if applicable)</th>
+      </tr>
+    </thead>
+    <tbody id="employeeBody"></tbody>
+  </table>
+
+  <button onclick="addEmployeeRow()">➕ Add Employee</button>
+  <button onclick="calculateAll()">✅ Calculate All</button>
+  <button id="printBtn" onclick="printResult()" style="display:none;background:#28a745;">🖨 Print / Save as PDF</button>
+  <button id="excelBtn" onclick="exportExcel()" style="display:none;background:#007bff;">📊 Export to Excel</button>
+
+  <div id="result"></div>
+
 </div>
 
-<h1 class="page-title">Image Compressor</h1>
-
-<div class="container">
-
-<div class="card">
-
-<div class="drop-area" id="dropArea">
-
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
-
-<input type="file" id="imageInput" accept="image/*" hidden>
-
-</div>
-
-<div class="preview" id="preview"></div>
-
-<div class="slider">
-
-<label>Compression Quality</label>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
-
-</div>
-
-<button onclick="compressImage()">Compress Image</button>
-
-<div class="stats" id="stats"></div>
-
-<button id="downloadBtn" style="display:none">Download Image</button>
-
-</div>
-
-</div>
-
+<!-- YOUR ORIGINAL SCRIPT (UNCHANGED) -->
+  
 <script>
+let employeeCount=0;
+let finalResults=[];
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
-
-let originalFile
-let compressedBlob
-
-dropArea.onclick=()=>imageInput.click()
-
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
+function addEmployeeRow(name="", doj="", salary="", dol=""){
+  employeeCount++;
+  let tbody=document.getElementById("employeeBody");
+  let row=document.createElement("tr");
+  row.innerHTML=`
+    <td><input type="text" id="name_${employeeCount}" value="${name}" placeholder="Name"></td>
+    <td><input type="date" id="doj_${employeeCount}" value="${doj}"></td>
+    <td><input type="number" id="salary_${employeeCount}" value="${salary}" placeholder="AED"></td>
+    <td><input type="date" id="dol_${employeeCount}" value="${dol}"></td>
+  `;
+  tbody.appendChild(row);
 }
 
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
-})
+function calculateAll(){
+  finalResults=[];
+  let results=[];
+  let globalDate=document.getElementById("provisionDate").value;
+  if(!globalDate){document.getElementById("result").innerHTML="<b style='color:red;'>⚠ Please select Provision As on Date.</b>"; return;}
+  let provisionDate=new Date(globalDate);
 
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
+  for(let i=1;i<=employeeCount;i++){
+    let name=document.getElementById("name_"+i)?.value;
+    let doj=new Date(document.getElementById("doj_"+i)?.value);
+    let salary=parseFloat(document.getElementById("salary_"+i)?.value);
+    let dolInput=document.getElementById("dol_"+i)?.value;
 
-function handleFile(file){
+    if(!name || !doj || !salary) continue;
+    let calcDate=dolInput?new Date(dolInput):provisionDate;
+    if(!calcDate || calcDate<doj) continue;
 
-if(!file.type.startsWith("image"))return
+    let diffTime=Math.abs(calcDate-doj)+(1000*60*60*24);
+    let totalYears=parseFloat((diffTime/(1000*60*60*24*365)).toFixed(4));
+    let dailySalary=parseFloat(((salary*12)/365).toFixed(4));
+    let gratuity=0;
 
-originalFile=file
+    if(totalYears>1 && totalYears<5) gratuity=dailySalary*21*totalYears;
+    else if(totalYears>=5) gratuity=(dailySalary*21*5)+(dailySalary*30*(totalYears-5));
+    else gratuity=dailySalary*21*totalYears;
 
-let img=document.createElement("img")
+    gratuity=gratuity.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
 
-img.src=URL.createObjectURL(file)
+    results.push({
+      emp:name,
+      service:totalYears.toFixed(4),
+      type:dolInput?"Final Settlement":"Provision",
+      gratuity:gratuity,
+      isShortService: totalYears<1,
+      isLeft: dolInput?true:false
+    });
+  }
 
-preview.innerHTML=""
-preview.appendChild(img)
+  if(results.length==0){
+    document.getElementById("result").innerHTML="<b style='color:red;'>⚠ Please fill at least one valid employee record.</b>";
+    document.getElementById("printBtn").style.display="none";
+    document.getElementById("excelBtn").style.display="none";
+    return;
+  }
 
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
+  finalResults=results;
 
+  let table=`<table>
+    <tr>
+      <th>Employee</th>
+      <th>Service Period (Years)</th>
+      <th>Type</th>
+      <th>Gratuity (AED)</th>
+    </tr>`;
+  results.forEach(r=>{
+    let rowStyle="";
+    if(r.isShortService) rowStyle+="color:red;";
+    if(r.isLeft) rowStyle+="background-color:#fff3cd;";
+    table+=`<tr style="${rowStyle}">
+      <td>${r.emp}</td>
+      <td>${r.service}</td>
+      <td>${r.type}</td>
+      <td>${r.gratuity}</td>
+    </tr>`;
+  });
+  table+=`</table>`;
+  document.getElementById("result").innerHTML=table;
+  document.getElementById("printBtn").style.display="block";
+  document.getElementById("excelBtn").style.display="block";
 }
 
-function compressImage(){
-
-if(!originalFile)return
-
-let quality=document.getElementById("quality").value
-
-let img=new Image()
-
-img.src=URL.createObjectURL(originalFile)
-
-img.onload=function(){
-
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-
-canvas.width=img.width
-canvas.height=img.height
-
-ctx.drawImage(img,0,0)
-
-canvas.toBlob(function(blob){
-
-compressedBlob=blob
-
-let compressedSize=(blob.size/1024).toFixed(2)
-
-let originalSize=(originalFile.size/1024).toFixed(2)
-
-stats.innerHTML=
-
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
-
-downloadBtn.style.display="inline-block"
-
-downloadBtn.onclick=function(){
-
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="compressed-image.jpg"
-
-link.click()
-
+function printResult(){
+  let resultContent=document.getElementById("result").innerHTML;
+  let printWindow=window.open("","_blank","width=900,height=650");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>ZHR Consultants - Gratuity Report</title>
+        <style>
+          body{font-family:Arial,sans-serif;padding:20px;color:#001d4c;}
+          h2{color:#001d4c;text-align:center;}
+          table{width:100%;border-collapse:collapse;margin-top:20px;}
+          th,td{border:1px solid #ccc;padding:8px;text-align:center;}
+          th{background:#001d4c;color:white;}
+        </style>
+      </head>
+      <body>
+        <div style="text-align:center;">
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg" width="120" alt="Company Logo"><br>
+          <h2>UAE Gratuity Calculation Report</h2>
+          <p><b>Prepared by:</b> ZHR Consultants | As on: ${document.getElementById("provisionDate").value}</p>
+        </div>
+        ${resultContent}
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.print();
 }
 
-},"image/jpeg",quality)
-
+function exportExcel(){
+  if(finalResults.length===0) return;
+  let ws_data=[
+    ["ZHR Consultants"],
+    ["UAE Gratuity Calculation Report"],
+    ["Prepared by: ZHR Consultants | As on: "+document.getElementById("provisionDate").value],
+    [],
+    ["Employee","Service Period (Years)","Type","Gratuity (AED)"],
+    ...finalResults.map(r=>[r.emp,r.service,r.type,r.gratuity])
+  ];
+  let wb=XLSX.utils.book_new();
+  let ws=XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb,ws,"Gratuity Report");
+  XLSX.writeFile(wb,"ZHR_Gratuity_Report.xlsx");
 }
 
+function downloadTemplate(){
+  let wb=XLSX.utils.book_new();
+  let ws_data=[["Name","Date of Joining","Basic Salary (AED)","Date of Leaving (optional)"]];
+  let ws=XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb,ws,"Template");
+  XLSX.writeFile(wb,"Gratuity_Template.xlsx");
 }
 
+function uploadExcel(event){
+  let file=event.target.files[0];
+  if(!file) return;
+  let reader=new FileReader();
+  reader.onload=function(e){
+    let data=new Uint8Array(e.target.result);
+    let workbook=XLSX.read(data,{type:'array'});
+    let firstSheetName=workbook.SheetNames[0];
+    let worksheet=workbook.Sheets[firstSheetName];
+    let jsonData=XLSX.utils.sheet_to_json(worksheet,{defval:""});
+    document.getElementById("employeeBody").innerHTML="";
+    employeeCount=0;
+
+    jsonData.forEach(row=>{
+      function formatDate(excelDate){
+        if(!excelDate) return "";
+        // Numeric Excel date
+        if(typeof excelDate==="number"){
+          let dateObj=XLSX.SSF.parse_date_code(excelDate);
+          let month=String(dateObj.m).padStart(2,"0");
+          let day=String(dateObj.d).padStart(2,"0");
+          return `${dateObj.y}-${month}-${day}`;
+        }
+        // String DD/MM/YYYY or DD-MM-YYYY
+        if(typeof excelDate==="string"){
+          let parts=excelDate.split(/[/\-\.]/);
+          if(parts.length===3){
+            let day=parts[0].padStart(2,"0");
+            let month=parts[1].padStart(2,"0");
+            let year=parts[2];
+            if(year.length===2) year="20"+year;
+            return `${year}-${month}-${day}`;
+          }
+        }
+        return excelDate;
+      }
+
+      addEmployeeRow(
+        row["Name"]||"",
+        formatDate(row["Date of Joining"]),
+        row["Basic Salary (AED)"]||"",
+        formatDate(row["Date of Leaving (optional)"])
+      );
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+window.onload=function(){addEmployeeRow();};
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
