@@ -33,15 +33,17 @@ document.getElementById("overlay").style.display="none"
 
 function toggleCategory(el){
 
-el.classList.toggle("active");
+let allCategories = document.querySelectorAll(".menu-category")
 
-let submenu = el.nextElementSibling;
-
-if(submenu.style.display === "block"){
-submenu.style.display = "none";
-}else{
-submenu.style.display = "block";
+allCategories.forEach(cat=>{
+if(cat !== el){
+cat.classList.remove("active")
 }
+})
+
+/* Toggle current */
+
+el.classList.toggle("active")
 
 }
 
