@@ -72,6 +72,9 @@ background:#ffffff22;
 /* CATEGORY */
 
 .menu-category{
+display:flex;
+justify-content:space-between;
+align-items:center;
 color:#cbd5ff;
 padding:15px 25px;
 font-size:13px;
@@ -79,8 +82,26 @@ text-transform:uppercase;
 cursor:pointer;
 }
 
+/* ARROW ICON */
+
+.menu-category .arrow{
+transition:transform 0.3s ease;
+}
+
+/* ROTATE WHEN OPEN */
+
+.menu-category.active .arrow{
+transform:rotate(180deg);
+}
+
 .submenu{
 display:none;
+}
+
+/* SHOW WHEN ACTIVE */
+
+.menu-category.active + .submenu{
+display:block;
 }
 
 /* SEARCH */
