@@ -70,13 +70,19 @@ link.textContent.toLowerCase().includes(filter)
 
 function highlightActivePage(){
 
-let path=window.location.pathname.split("/").pop()
+let path = window.location.pathname.split("/").pop()
 
 document.querySelectorAll(".sidebar a").forEach(link=>{
 
-if(link.getAttribute("href")===path){
+if(link.getAttribute("href") === path){
 
 link.classList.add("active")
+
+let submenu = link.closest(".submenu")
+if(submenu){
+submenu.style.display = "block"
+submenu.previousElementSibling.classList.add("active")
+}
 
 }
 
