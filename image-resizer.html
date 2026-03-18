@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Toolkit | ZHR Tools</title>
+<title>Image Resizer | ZHR Tools</title>
 
 <link rel="icon" href="/favicon.png">
 <link rel="stylesheet" href="layout.css">
@@ -16,12 +16,12 @@
 <style>
 
 body{
-font-family:'Segoe UI',sans-serif;
-
+background:white;
 margin:0;
 }
 
 /* TITLE */
+
 .page-title{
 text-align:center;
 font-size:30px;
@@ -31,13 +31,15 @@ font-weight:700;
 }
 
 /* CONTAINER */
+
 .container{
-max-width:1000px;
+max-width:900px;
 margin:auto;
 padding:20px;
 }
 
 /* CARD */
+
 .card{
 background:#f8f9fb;
 padding:30px;
@@ -45,7 +47,8 @@ border-radius:12px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* DROP */
+/* DROP AREA */
+
 .drop-area{
 border:2px dashed #001d4c;
 padding:40px;
@@ -55,47 +58,41 @@ cursor:pointer;
 background:white;
 }
 
-.drop-area:hover{background:#eef3ff;}
+.drop-area:hover{
+background:#eef3ff;
+}
 
 /* PREVIEW */
+
 .preview{
-display:flex;
-flex-wrap:wrap;
-gap:15px;
 margin-top:20px;
+text-align:center;
 }
 
 .preview img{
-width:120px;
-border-radius:8px;
+max-width:100%;
+border-radius:10px;
 }
-
 
 /* OPTIONS GRID */
 
 .options{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:20px 25px; /* vertical | horizontal spacing */
+gap:20px 25px;
 margin-top:20px;
 }
-
-/* OPTION BLOCK */
 
 .options div{
 display:flex;
 flex-direction:column;
 }
 
-/* LABEL */
-
 .options label{
 font-weight:600;
 color:#001d4c;
 margin-bottom:6px;
 }
-
-/* INPUT + SELECT */
 
 .options input,
 .options select{
@@ -104,44 +101,10 @@ padding:12px;
 border-radius:8px;
 border:1px solid #ccc;
 box-sizing:border-box;
-font-size:14px;
 }
-
-/* FIX RIGHT SIDE ALIGNMENT */
-
-.options div:nth-child(even){
-padding-left:5px;
-}
-
-.options div:nth-child(odd){
-padding-right:5px;
-}
-
-/* SECTION TITLE */
-
-h3{
-margin-top:25px;
-color:#001d4c;
-}
-
-/* MOBILE */
-
-@media(max-width:768px){
-.options{
-grid-template-columns:1fr;
-}
-.options div{
-padding:0 !important;
-}
-}
-
-
-
-  
-
-  
 
 /* BUTTON */
+
 button{
 background:#001d4c;
 color:white;
@@ -154,10 +117,16 @@ font-size:16px;
 cursor:pointer;
 }
 
-button:hover{background:#003080;}
+button:hover{
+background:#003080;
+}
+
+/* MOBILE */
 
 @media(max-width:768px){
-.options{grid-template-columns:1fr;}
+.options{
+grid-template-columns:1fr;
+}
 }
 
 </style>
@@ -169,17 +138,26 @@ button:hover{background:#003080;}
 <div id="header"></div>
 <div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Toolkit (Resize, Crop & Compress)</h1>
+<h1 class="page-title">Image Resizer</h1>
 
 <div class="container">
+
 <div class="card">
 
+<!-- UPLOAD -->
+
 <div class="drop-area" id="dropArea">
-<p>Upload / Drag Multiple Images</p>
-<input type="file" id="fileInput" multiple hidden>
+<p>Click or Drag Image</p>
+<input type="file" id="fileInput" hidden>
 </div>
 
-<div class="preview" id="preview"></div>
+<!-- PREVIEW -->
+
+<div class="preview">
+<img id="previewImage">
+</div>
+
+<!-- OPTIONS -->
 
 <div class="options">
 
@@ -199,11 +177,6 @@ button:hover{background:#003080;}
 </div>
 
 <div>
-<label>Target Size (KB)</label>
-<input type="number" id="targetSize">
-</div>
-
-<div>
 <label>Format</label>
 <select id="format">
 <option value="jpeg">JPG</option>
@@ -212,73 +185,55 @@ button:hover{background:#003080;}
 </select>
 </div>
 
-<div>
-<label>Preset</label>
-<select id="preset" onchange="applyPreset()">
-<option value="">Custom</option>
-<option value="instagram">Instagram (1080x1080)</option>
-<option value="linkedin">LinkedIn (1200x627)</option>
-<option value="youtube">YouTube Thumbnail</option>
-</select>
 </div>
+
+<button onclick="resizeImage()">Resize & Download</button>
 
 </div>
 
-<h3 style="margin-top:20px;color:#001d4c;">Crop (Optional)</h3>
-
-<div class="options">
-<input type="number" id="cropX" placeholder="Start X">
-<input type="number" id="cropY" placeholder="Start Y">
-<input type="number" id="cropW" placeholder="Crop Width">
-<input type="number" id="cropH" placeholder="Crop Height">
-</div>
-
-<button onclick="processImages()">Process & Download</button>
-
-</div>
 </div>
 
 <script>
 
-let images=[];
+let originalWidth, originalHeight, originalImage;
 
 /* UPLOAD */
 
-const dropArea=document.getElementById("dropArea");
-const fileInput=document.getElementById("fileInput");
+const dropArea = document.getElementById("dropArea");
+const fileInput = document.getElementById("fileInput");
 
-dropArea.onclick=()=>fileInput.click();
+dropArea.onclick = () => fileInput.click();
 
-fileInput.onchange=e=>handleFiles(e.target.files);
+fileInput.onchange = e => loadImage(e.target.files[0]);
 
-dropArea.ondrop=e=>{
+dropArea.ondrop = e => {
 e.preventDefault();
-handleFiles(e.dataTransfer.files);
+loadImage(e.dataTransfer.files[0]);
 };
 
-dropArea.ondragover=e=>e.preventDefault();
+dropArea.ondragover = e => e.preventDefault();
 
-function handleFiles(files){
+/* LOAD IMAGE */
 
-images=[];
-document.getElementById("preview").innerHTML="";
+function loadImage(file){
 
-Array.from(files).forEach(file=>{
+let reader = new FileReader();
 
-let reader=new FileReader();
+reader.onload = function(e){
 
-reader.onload=function(e){
+let img = new Image();
+img.src = e.target.result;
 
-let img=new Image();
-img.src=e.target.result;
+img.onload = function(){
 
-img.onload=function(){
+originalWidth = img.width;
+originalHeight = img.height;
+originalImage = img;
 
-images.push(img);
+document.getElementById("previewImage").src = img.src;
 
-let previewImg=document.createElement("img");
-previewImg.src=img.src;
-document.getElementById("preview").appendChild(previewImg);
+document.getElementById("width").value = originalWidth;
+document.getElementById("height").value = originalHeight;
 
 };
 
@@ -286,102 +241,67 @@ document.getElementById("preview").appendChild(previewImg);
 
 reader.readAsDataURL(file);
 
+}
+
+/* AUTO SYNC WIDTH -> HEIGHT */
+
+document.getElementById("width").addEventListener("input", function(){
+
+if(!originalWidth) return;
+
+let ratio = originalHeight / originalWidth;
+document.getElementById("height").value = Math.round(this.value * ratio);
+
 });
 
-}
+/* AUTO SYNC HEIGHT -> WIDTH */
 
-/* PRESETS */
+document.getElementById("height").addEventListener("input", function(){
 
-function applyPreset(){
+if(!originalHeight) return;
 
-let val=document.getElementById("preset").value;
+let ratio = originalWidth / originalHeight;
+document.getElementById("width").value = Math.round(this.value * ratio);
 
-if(val==="instagram"){
-width.value=1080;height.value=1080;
-}
-if(val==="linkedin"){
-width.value=1200;height.value=627;
-}
-if(val==="youtube"){
-width.value=1280;height.value=720;
-}
+});
 
-}
+/* RESIZE */
 
-/* PROCESS */
+function resizeImage(){
 
-function processImages(){
-
-if(images.length===0){
-alert("Upload images first");
+if(!originalImage){
+alert("Upload image first");
 return;
 }
 
-let width=parseInt(document.getElementById("width").value);
-let height=parseInt(document.getElementById("height").value);
-let percent=parseInt(document.getElementById("percent").value);
-let format=document.getElementById("format").value;
-let targetKB=parseInt(document.getElementById("targetSize").value);
+let width = parseInt(document.getElementById("width").value);
+let height = parseInt(document.getElementById("height").value);
+let percent = parseInt(document.getElementById("percent").value);
+let format = document.getElementById("format").value;
 
-/* crop */
+/* percent override */
 
-let cropX=parseInt(document.getElementById("cropX").value)||0;
-let cropY=parseInt(document.getElementById("cropY").value)||0;
-let cropW=parseInt(document.getElementById("cropW").value);
-let cropH=parseInt(document.getElementById("cropH").value);
-
-images.forEach((img,index)=>{
-
-let canvas=document.createElement("canvas");
-let ctx=canvas.getContext("2d");
-
-/* crop or full */
-
-let sx=cropX||0;
-let sy=cropY||0;
-let sw=cropW||img.width;
-let sh=cropH||img.height;
-
-/* resize */
-
-if(percent && percent!==100){
-width=sw*percent/100;
-height=sh*percent/100;
-}else{
-width=width||sw;
-height=height||sh;
+if(percent && percent !== 100){
+width = originalWidth * percent / 100;
+height = originalHeight * percent / 100;
 }
 
-canvas.width=width;
-canvas.height=height;
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
 
-ctx.drawImage(img,sx,sy,sw,sh,0,0,width,height);
+canvas.width = width;
+canvas.height = height;
 
-/* compression */
+ctx.drawImage(originalImage, 0, 0, width, height);
 
-let quality=0.9;
-let data;
-
-if(targetKB){
-
-do{
-data=canvas.toDataURL("image/"+format,quality);
-let size=(data.length*0.75)/1024;
-quality-=0.05;
-}while(size>targetKB && quality>0.1);
-
-}else{
-data=canvas.toDataURL("image/"+format,quality);
-}
+let data = canvas.toDataURL("image/" + format, 0.9);
 
 /* download */
 
-let link=document.createElement("a");
-link.href=data;
-link.download="image_"+(index+1)+"."+format;
+let link = document.createElement("a");
+link.href = data;
+link.download = "resized." + format;
 link.click();
-
-});
 
 }
 
