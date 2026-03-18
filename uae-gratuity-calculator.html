@@ -63,6 +63,7 @@ width:100%;
 border-collapse:collapse;
 margin-bottom:15px;
 text-align:center;
+table-layout:fixed;  
 }
 
 #employeeTable th,
@@ -76,11 +77,15 @@ background:#001d4c;
 color:white;
 }
 
+#employeeTable td{
+padding:8px;
+box-sizing:border-box;
+}
+  
 #employeeTable input{
 width:100%;
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
+box-sizing:border-box;
+max-width:100%;
 }
 
 /* BUTTONS */
