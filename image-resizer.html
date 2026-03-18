@@ -1,36 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>Image Resizer | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
-font-family:'Segoe UI',sans-serif;
 background:white;
 margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
 }
 
 /* TITLE */
@@ -39,7 +26,7 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
@@ -58,7 +45,6 @@ background:#f8f9fb;
 padding:30px;
 border-radius:12px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
-text-align:center;
 }
 
 /* DROP AREA */
@@ -66,34 +52,63 @@ text-align:center;
 .drop-area{
 border:2px dashed #001d4c;
 padding:40px;
-border-radius:10px;
-background:white;
+text-align:center;
+border-radius:12px;
 cursor:pointer;
+background:white;
 }
 
 .drop-area:hover{
-background:#f0f3ff;
+background:#eef3ff;
 }
 
 /* PREVIEW */
 
 .preview{
 margin-top:20px;
+text-align:center;
 }
 
 .preview img{
 max-width:100%;
-border-radius:8px;
+border-radius:10px;
 }
 
-/* SLIDER */
+/* OPTIONS */
 
-.slider{
+.options{
 margin-top:20px;
+display:flex;
+flex-wrap:wrap;
+gap:20px;
 }
 
-input[type=range]{
-width:100%;
+.option-group{
+flex:1;
+min-width:200px;
+display:flex;
+flex-direction:column;
+}
+
+.option-group label{
+font-weight:600;
+margin-bottom:5px;
+color:#001d4c;
+}
+
+input, select{
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+/* CHECKBOX */
+
+.checkbox{
+margin-top:10px;
+display:flex;
+align-items:center;
+gap:8px;
 }
 
 /* BUTTON */
@@ -102,22 +117,34 @@ button{
 background:#001d4c;
 color:white;
 border:none;
-padding:14px 20px;
+padding:14px;
+width:100%;
+margin-top:20px;
+border-radius:8px;
 font-size:16px;
-border-radius:6px;
 cursor:pointer;
-margin-top:15px;
+transition:0.3s;
 }
 
-/* STATS */
+button:hover{
+background:#003080;
+}
 
-.stats{
-margin-top:20px;
-font-weight:500;
+/* INFO */
+
+.info{
+margin-top:15px;
+font-weight:600;
 color:#001d4c;
 }
 
+/* MOBILE */
+
 @media(max-width:768px){
+
+.options{
+flex-direction:column;
+}
 
 .page-title{
 font-size:26px;
@@ -131,40 +158,66 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Compressor</h1>
+<h1 class="page-title">Image Resizer</h1>
 
 <div class="container">
 
 <div class="card">
 
+<!-- DROP AREA -->
+
 <div class="drop-area" id="dropArea">
+<p>Drag & Drop Image OR Click to Upload</p>
+<input type="file" id="fileInput" hidden>
+</div>
 
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
+<!-- PREVIEW -->
 
-<input type="file" id="imageInput" accept="image/*" hidden>
+<div class="preview">
+<img id="previewImage">
+</div>
+
+<!-- OPTIONS -->
+
+<div class="options">
+
+<div class="option-group">
+<label>Width (px)</label>
+<input type="number" id="width">
+</div>
+
+<div class="option-group">
+<label>Height (px)</label>
+<input type="number" id="height">
+</div>
+
+<div class="option-group">
+<label>Resize %</label>
+<input type="number" id="percent" value="100">
+</div>
+
+<div class="option-group">
+<label>Format</label>
+<select id="format">
+<option value="jpeg">JPG</option>
+<option value="png">PNG</option>
+<option value="webp">WebP</option>
+</select>
+</div>
 
 </div>
 
-<div class="preview" id="preview"></div>
-
-<div class="slider">
-
-<label>Compression Quality</label>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
-
+<div class="checkbox">
+<input type="checkbox" id="lockRatio" checked>
+<label>Maintain Aspect Ratio</label>
 </div>
 
-<button onclick="compressImage()">Compress Image</button>
+<div class="info" id="info"></div>
 
-<div class="stats" id="stats"></div>
-
-<button id="downloadBtn" style="display:none">Download Image</button>
+<button onclick="resizeImage()">Resize & Download</button>
 
 </div>
 
@@ -172,101 +225,126 @@ font-size:26px;
 
 <script>
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
+let originalWidth, originalHeight, originalImage;
 
-let originalFile
-let compressedBlob
+/* UPLOAD */
 
-dropArea.onclick=()=>imageInput.click()
+const dropArea = document.getElementById("dropArea");
+const fileInput = document.getElementById("fileInput");
 
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
-}
+dropArea.onclick = () => fileInput.click();
 
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
-})
+fileInput.onchange = e => loadImage(e.target.files[0]);
 
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
+dropArea.ondrop = e => {
+e.preventDefault();
+loadImage(e.dataTransfer.files[0]);
+};
 
-function handleFile(file){
+dropArea.ondragover = e => e.preventDefault();
 
-if(!file.type.startsWith("image"))return
+/* LOAD IMAGE */
 
-originalFile=file
+function loadImage(file){
 
-let img=document.createElement("img")
+let reader = new FileReader();
 
-img.src=URL.createObjectURL(file)
+reader.onload = function(e){
 
-preview.innerHTML=""
-preview.appendChild(img)
+let img = new Image();
+img.src = e.target.result;
 
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
+img.onload = function(){
 
-}
+originalWidth = img.width;
+originalHeight = img.height;
+originalImage = img;
 
-function compressImage(){
+document.getElementById("previewImage").src = img.src;
 
-if(!originalFile)return
+document.getElementById("width").value = originalWidth;
+document.getElementById("height").value = originalHeight;
 
-let quality=document.getElementById("quality").value
+document.getElementById("info").innerText =
+`Original: ${originalWidth} x ${originalHeight}px`;
 
-let img=new Image()
+};
 
-img.src=URL.createObjectURL(originalFile)
+};
 
-img.onload=function(){
-
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-
-canvas.width=img.width
-canvas.height=img.height
-
-ctx.drawImage(img,0,0)
-
-canvas.toBlob(function(blob){
-
-compressedBlob=blob
-
-let compressedSize=(blob.size/1024).toFixed(2)
-
-let originalSize=(originalFile.size/1024).toFixed(2)
-
-stats.innerHTML=
-
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
-
-downloadBtn.style.display="inline-block"
-
-downloadBtn.onclick=function(){
-
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="compressed-image.jpg"
-
-link.click()
+reader.readAsDataURL(file);
 
 }
 
-},"image/jpeg",quality)
+/* AUTO RATIO */
+
+document.getElementById("width").addEventListener("input", function(){
+
+if(document.getElementById("lockRatio").checked){
+
+let ratio = originalHeight / originalWidth;
+document.getElementById("height").value = Math.round(this.value * ratio);
 
 }
+
+});
+
+document.getElementById("height").addEventListener("input", function(){
+
+if(document.getElementById("lockRatio").checked){
+
+let ratio = originalWidth / originalHeight;
+document.getElementById("width").value = Math.round(this.value * ratio);
+
+}
+
+});
+
+/* RESIZE */
+
+function resizeImage(){
+
+if(!originalImage){
+alert("Upload image first");
+return;
+}
+
+let width = parseInt(document.getElementById("width").value);
+let height = parseInt(document.getElementById("height").value);
+let percent = parseInt(document.getElementById("percent").value);
+let format = document.getElementById("format").value;
+
+/* percentage override */
+
+if(percent && percent !== 100){
+width = originalWidth * percent / 100;
+height = originalHeight * percent / 100;
+}
+
+let canvas = document.createElement("canvas");
+let ctx = canvas.getContext("2d");
+
+canvas.width = width;
+canvas.height = height;
+
+ctx.drawImage(originalImage, 0, 0, width, height);
+
+let mime = "image/" + format;
+
+let data = canvas.toDataURL(mime, 0.9);
+
+/* download */
+
+let link = document.createElement("a");
+link.href = data;
+link.download = "resized." + format;
+link.click();
 
 }
 
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
