@@ -163,7 +163,7 @@ cursor:pointer;
 .social-icons{
 display:flex;
 justify-content:center;
-margin-top:13px;
+margin-top:15px;
 }
 
 .social-icons a{
@@ -175,7 +175,7 @@ color:white;
 .sidebar-footer{
 text-align:center;
 margin-top:15px;
-font-size:15px;
+font-size:13px;
 color:#cbd5ff;
 }
 
