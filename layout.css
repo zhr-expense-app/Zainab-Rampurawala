@@ -143,12 +143,10 @@ justify-content:center;
 }
 
 .contact-form input,
-.contact-form textarea{
-width:100%;
-padding:8px;
-border-radius:5px;
+width:90%;
+padding:10px;
+border-radius:6px;
 border:none;
-font-size:14px;
 }
 
 .contact-form button{
