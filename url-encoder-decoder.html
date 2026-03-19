@@ -5,32 +5,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>URL Encoder / Decoder | ZHR Tools</title>
 
 <link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
 font-family:'Segoe UI',sans-serif;
-background:white;
+
 margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
 }
 
 /* TITLE */
@@ -39,7 +26,7 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
@@ -56,73 +43,70 @@ padding:20px;
 .card{
 background:#f8f9fb;
 padding:30px;
-border-radius:12px;
-box-shadow:0 6px 20px rgba(0,0,0,0.08);
-text-align:center;
-}
-
-/* DROP AREA */
-
-.drop-area{
-border:2px dashed #001d4c;
-padding:40px;
 border-radius:10px;
-background:white;
-cursor:pointer;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+display:flex;
+flex-direction:column;
+gap:15px;
 }
 
-.drop-area:hover{
-background:#f0f3ff;
-}
+/* TEXTAREA */
 
-/* PREVIEW */
-
-.preview{
-margin-top:20px;
-}
-
-.preview img{
-max-width:100%;
-border-radius:8px;
-}
-
-/* SLIDER */
-
-.slider{
-margin-top:20px;
-}
-
-input[type=range]{
+textarea{
 width:100%;
+min-height:150px;
+padding:14px 16px;
+border-radius:8px;
+border:1px solid #ccc;
+font-size:15px;
+resize:vertical;
+box-sizing:border-box;
 }
 
-/* BUTTON */
+/* BUTTON GROUP */
+
+.button-group{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
 
 button{
 background:#001d4c;
 color:white;
 border:none;
-padding:14px 20px;
-font-size:16px;
+padding:12px;
 border-radius:6px;
 cursor:pointer;
-margin-top:15px;
+flex:1;
 }
 
-/* STATS */
-
-.stats{
-margin-top:20px;
-font-weight:500;
-color:#001d4c;
+button:hover{
+opacity:0.9;
 }
+
+/* OUTPUT */
+
+.output{
+background:white;
+padding:15px;
+border-radius:8px;
+border-left:5px solid #001d4c;
+word-break:break-all;
+}
+
+/* COPY BTN */
+
+.copy-btn{
+margin-top:10px;
+}
+
+/* MOBILE */
 
 @media(max-width:768px){
-
-.page-title{
-font-size:26px;
+.button-group{
+flex-direction:column;
 }
-
 }
 
 </style>
@@ -131,40 +115,28 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Compressor</h1>
+<h1 class="page-title">URL Encoder / Decoder</h1>
 
 <div class="container">
 
 <div class="card">
 
-<div class="drop-area" id="dropArea">
+<label><b>Enter URL / Text</b></label>
+<textarea id="inputText" placeholder="Enter URL or text here..."></textarea>
 
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
-
-<input type="file" id="imageInput" accept="image/*" hidden>
-
+<div class="button-group">
+<button onclick="encodeURL()">Encode URL</button>
+<button onclick="decodeURL()">Decode URL</button>
+<button onclick="clearText()">Clear</button>
 </div>
 
-<div class="preview" id="preview"></div>
+<label><b>Result</b></label>
+<div class="output" id="outputText">Output will appear here...</div>
 
-<div class="slider">
-
-<label>Compression Quality</label>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
-
-</div>
-
-<button onclick="compressImage()">Compress Image</button>
-
-<div class="stats" id="stats"></div>
-
-<button id="downloadBtn" style="display:none">Download Image</button>
+<button class="copy-btn" onclick="copyOutput()">Copy Result</button>
 
 </div>
 
@@ -172,101 +144,59 @@ font-size:26px;
 
 <script>
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
+/* ENCODE */
 
-let originalFile
-let compressedBlob
+function encodeURL(){
+let input=document.getElementById("inputText").value;
 
-dropArea.onclick=()=>imageInput.click()
-
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
+if(!input){
+alert("Please enter text");
+return;
 }
 
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
-})
+let result=encodeURIComponent(input);
 
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
-
-function handleFile(file){
-
-if(!file.type.startsWith("image"))return
-
-originalFile=file
-
-let img=document.createElement("img")
-
-img.src=URL.createObjectURL(file)
-
-preview.innerHTML=""
-preview.appendChild(img)
-
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
-
+document.getElementById("outputText").innerText=result;
 }
 
-function compressImage(){
+/* DECODE */
 
-if(!originalFile)return
+function decodeURL(){
+let input=document.getElementById("inputText").value;
 
-let quality=document.getElementById("quality").value
-
-let img=new Image()
-
-img.src=URL.createObjectURL(originalFile)
-
-img.onload=function(){
-
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-
-canvas.width=img.width
-canvas.height=img.height
-
-ctx.drawImage(img,0,0)
-
-canvas.toBlob(function(blob){
-
-compressedBlob=blob
-
-let compressedSize=(blob.size/1024).toFixed(2)
-
-let originalSize=(originalFile.size/1024).toFixed(2)
-
-stats.innerHTML=
-
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
-
-downloadBtn.style.display="inline-block"
-
-downloadBtn.onclick=function(){
-
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="compressed-image.jpg"
-
-link.click()
-
+if(!input){
+alert("Please enter encoded text");
+return;
 }
 
-},"image/jpeg",quality)
-
+try{
+let result=decodeURIComponent(input);
+document.getElementById("outputText").innerText=result;
+}catch{
+document.getElementById("outputText").innerText="Invalid encoded URL";
+}
 }
 
+/* CLEAR */
+
+function clearText(){
+document.getElementById("inputText").value="";
+document.getElementById("outputText").innerText="Output will appear here...";
+}
+
+/* COPY */
+
+function copyOutput(){
+let text=document.getElementById("outputText").innerText;
+
+navigator.clipboard.writeText(text);
+
+alert("Copied to clipboard");
 }
 
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
