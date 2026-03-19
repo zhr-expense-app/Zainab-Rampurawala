@@ -96,15 +96,38 @@ background:white;
 background:#eef3ff;
 }
 
-/* TEXTAREA */
-
 textarea{
 width:100%;
 height:180px;
-padding:12px;
-border-radius:8px;
+
+/* PERFECT ALIGNMENT */
+padding:14px 18px;
+
+/* CRITICAL FIX */
+box-sizing:border-box;
+display:block;
+
+/* REMOVE DEFAULT OFFSET */
+margin:0;
+outline:none;
+
+/* FONT */
+font-family:'Segoe UI',sans-serif;
+font-size:14px;
+line-height:1.6;
+
+/* UI */
+border-radius:10px;
 border:1px solid #ccc;
 resize:vertical;
+
+/* FIX RIGHT SIDE SHIFT */
+overflow-y:scroll; /* always show scrollbar */
+}
+
+/* REMOVE SCROLLBAR WIDTH SHIFT (MODERN BROWSERS) */
+textarea{
+scrollbar-gutter: stable;
 }
 
 /* BUTTON */
@@ -174,7 +197,7 @@ font-size:26px;
 <p>Click or Drag Image</p>
 <input type="file" id="fileInput" hidden>
 </div>
-<br><br>
+<br>
 <textarea id="base64Output" placeholder="Base64 output will appear here..."></textarea>
 
 <button class="action" onclick="copyBase64()">Copy Base64</button>
