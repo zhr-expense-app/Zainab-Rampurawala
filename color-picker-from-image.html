@@ -5,32 +5,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>Color Picker from Image | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
 font-family:'Segoe UI',sans-serif;
-background:white;
+
 margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
 }
 
 /* TITLE */
@@ -39,14 +26,14 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
 /* CONTAINER */
 
 .container{
-max-width:900px;
+max-width:1100px;
 margin:auto;
 padding:20px;
 }
@@ -55,44 +42,57 @@ padding:20px;
 
 .card{
 background:#f8f9fb;
-padding:30px;
-border-radius:12px;
+padding:25px;
+border-radius:10px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
-text-align:center;
+display:flex;
+flex-direction:column;
+gap:15px;
 }
 
 /* DROP AREA */
 
 .drop-area{
 border:2px dashed #001d4c;
-padding:40px;
+padding:30px;
+text-align:center;
 border-radius:10px;
-background:white;
 cursor:pointer;
 }
 
-.drop-area:hover{
-background:#f0f3ff;
+/* IMAGE */
+
+.canvas-container{
+text-align:center;
+position:relative;
 }
 
-/* PREVIEW */
-
-.preview{
-margin-top:20px;
-}
-
-.preview img{
+canvas{
 max-width:100%;
+border-radius:10px;
+cursor:crosshair;
+}
+
+/* COLOR PREVIEW */
+
+.color-box{
+height:60px;
 border-radius:8px;
+border:1px solid #ccc;
 }
 
-/* SLIDER */
+/* INFO */
 
-.slider{
-margin-top:20px;
+.color-info{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
 }
 
-input[type=range]{
+.color-info input{
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
 width:100%;
 }
 
@@ -102,27 +102,34 @@ button{
 background:#001d4c;
 color:white;
 border:none;
-padding:14px 20px;
-font-size:16px;
+padding:10px;
 border-radius:6px;
 cursor:pointer;
-margin-top:15px;
 }
 
-/* STATS */
+/* PALETTE */
 
-.stats{
-margin-top:20px;
-font-weight:500;
-color:#001d4c;
+.palette{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-top:10px;
 }
+
+.color-swatch{
+width:60px;
+height:60px;
+border-radius:8px;
+cursor:pointer;
+border:1px solid #ccc;
+}
+
+/* MOBILE */
 
 @media(max-width:768px){
-
-.page-title{
-font-size:26px;
+.color-info{
+grid-template-columns:1fr;
 }
-
 }
 
 </style>
@@ -131,40 +138,46 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Compressor</h1>
+<h1 class="page-title">Color Picker from Image</h1>
 
 <div class="container">
 
 <div class="card">
 
-<div class="drop-area" id="dropArea">
+<!-- UPLOAD -->
 
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
-
-<input type="file" id="imageInput" accept="image/*" hidden>
-
+<div class="drop-area" onclick="fileInput.click()">
+Click or Drag Image Here
+<input type="file" id="fileInput" accept="image/*" hidden>
 </div>
 
-<div class="preview" id="preview"></div>
+<!-- CANVAS -->
 
-<div class="slider">
-
-<label>Compression Quality</label>
-
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
-
+<div class="canvas-container">
+<canvas id="canvas"></canvas>
 </div>
 
-<button onclick="compressImage()">Compress Image</button>
+<!-- COLOR PREVIEW -->
 
-<div class="stats" id="stats"></div>
+<div class="color-box" id="colorBox"></div>
 
-<button id="downloadBtn" style="display:none">Download Image</button>
+<div class="color-info">
+<input id="hex" placeholder="HEX">
+<input id="rgb" placeholder="RGB">
+<input id="hsl" placeholder="HSL">
+</div>
+
+<button onclick="copyColor()">Copy HEX</button>
+
+<!-- PALETTE -->
+
+<h3>Color Palette</h3>
+<div class="palette" id="palette"></div>
+
+<button onclick="downloadPalette()">Download Palette</button>
 
 </div>
 
@@ -172,101 +185,135 @@ font-size:26px;
 
 <script>
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
 
-let originalFile
-let compressedBlob
+let img=new Image();
 
-dropArea.onclick=()=>imageInput.click()
+fileInput.onchange=e=>{
+let file=e.target.files[0];
+let reader=new FileReader();
 
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
-}
-
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
-})
-
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
-
-function handleFile(file){
-
-if(!file.type.startsWith("image"))return
-
-originalFile=file
-
-let img=document.createElement("img")
-
-img.src=URL.createObjectURL(file)
-
-preview.innerHTML=""
-preview.appendChild(img)
-
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
-
-}
-
-function compressImage(){
-
-if(!originalFile)return
-
-let quality=document.getElementById("quality").value
-
-let img=new Image()
-
-img.src=URL.createObjectURL(originalFile)
-
+reader.onload=function(ev){
 img.onload=function(){
+canvas.width=img.width;
+canvas.height=img.height;
+ctx.drawImage(img,0,0);
+generatePalette();
+};
+img.src=ev.target.result;
+};
 
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
+reader.readAsDataURL(file);
+};
 
-canvas.width=img.width
-canvas.height=img.height
+/* CLICK PICK */
 
-ctx.drawImage(img,0,0)
+canvas.addEventListener("click",function(e){
 
-canvas.toBlob(function(blob){
+let rect=canvas.getBoundingClientRect();
 
-compressedBlob=blob
+let x=e.clientX-rect.left;
+let y=e.clientY-rect.top;
 
-let compressedSize=(blob.size/1024).toFixed(2)
+let pixel=ctx.getImageData(x,y,1,1).data;
 
-let originalSize=(originalFile.size/1024).toFixed(2)
+let r=pixel[0], g=pixel[1], b=pixel[2];
 
-stats.innerHTML=
+let hex="#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
 
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
+let hsl=rgbToHsl(r,g,b);
 
-downloadBtn.style.display="inline-block"
+document.getElementById("colorBox").style.background=hex;
+document.getElementById("hex").value=hex;
+document.getElementById("rgb").value=`rgb(${r}, ${g}, ${b})`;
+document.getElementById("hsl").value=hsl;
 
-downloadBtn.onclick=function(){
+});
 
-let link=document.createElement("a")
+/* RGB → HSL */
 
-link.href=URL.createObjectURL(blob)
+function rgbToHsl(r,g,b){
 
-link.download="compressed-image.jpg"
+r/=255; g/=255; b/=255;
 
-link.click()
+let max=Math.max(r,g,b), min=Math.min(r,g,b);
+let h,s,l=(max+min)/2;
 
+if(max==min){
+h=s=0;
+}else{
+let d=max-min;
+s=l>0.5?d/(2-max-min):d/(max+min);
+
+switch(max){
+case r: h=(g-b)/d+(g<b?6:0); break;
+case g: h=(b-r)/d+2; break;
+case b: h=(r-g)/d+4; break;
 }
 
-},"image/jpeg",quality)
+h/=6;
+}
+
+return `hsl(${Math.round(h*360)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
+}
+
+/* COPY */
+
+function copyColor(){
+navigator.clipboard.writeText(hex.value);
+alert("Copied HEX!");
+}
+
+/* PALETTE */
+
+function generatePalette(){
+
+let colors={};
+
+for(let i=0;i<canvas.width;i+=10){
+for(let j=0;j<canvas.height;j+=10){
+
+let data=ctx.getImageData(i,j,1,1).data;
+let key=`rgb(${data[0]},${data[1]},${data[2]})`;
+
+colors[key]=(colors[key]||0)+1;
 
 }
+}
+
+let sorted=Object.entries(colors).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+let paletteDiv=document.getElementById("palette");
+paletteDiv.innerHTML="";
+
+sorted.forEach(c=>{
+let div=document.createElement("div");
+div.className="color-swatch";
+div.style.background=c[0];
+div.onclick=()=>navigator.clipboard.writeText(c[0]);
+paletteDiv.appendChild(div);
+});
+}
+
+/* DOWNLOAD */
+
+function downloadPalette(){
+
+let colors=[...document.querySelectorAll(".color-swatch")].map(c=>c.style.background);
+
+let blob=new Blob([colors.join("\n")],{type:"text/plain"});
+let link=document.createElement("a");
+
+link.href=URL.createObjectURL(blob);
+link.download="palette.txt";
+link.click();
 
 }
 
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
