@@ -163,6 +163,7 @@ cursor:pointer;
 .social-icons{
 display:flex;
 justify-content:center;
+  gap:8px;
 margin-top:15px;
 }
 
