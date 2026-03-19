@@ -136,7 +136,7 @@ cursor:pointer;
 
 .contact-form{
 display:flex;
-flex-direction:column;
+
 gap:10px;
 padding:15px 20px 25px 20px;
 justify-content:center;
@@ -165,7 +165,7 @@ cursor:pointer;
 .social-icons{
 display:flex;
 justify-content:center;
-gap:10px;
+gap:5px;
 margin-top:15px;
 }
 
