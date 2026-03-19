@@ -1,36 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Image Compressor | ZHR Tools</title>
+<title>Image ↔ Base64 Converter | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
-font-family:'Segoe UI',sans-serif;
-background:white;
+
 margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
+font-family:'Segoe UI',sans-serif;
 }
 
 /* TITLE */
@@ -39,14 +27,14 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
 /* CONTAINER */
 
 .container{
-max-width:900px;
+max-width:1000px;
 margin:auto;
 padding:20px;
 }
@@ -58,7 +46,39 @@ background:#f8f9fb;
 padding:30px;
 border-radius:12px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
-text-align:center;
+}
+
+/* TABS */
+
+.tabs{
+display:flex;
+gap:10px;
+justify-content:center;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.tabs button{
+background:#001d4c;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.tabs button.active{
+background:#003080;
+}
+
+/* TAB CONTENT */
+
+.tab{
+display:none;
+}
+
+.tab.active{
+display:block;
 }
 
 /* DROP AREA */
@@ -66,63 +86,62 @@ text-align:center;
 .drop-area{
 border:2px dashed #001d4c;
 padding:40px;
-border-radius:10px;
-background:white;
+text-align:center;
+border-radius:12px;
 cursor:pointer;
+background:white;
 }
 
 .drop-area:hover{
-background:#f0f3ff;
+background:#eef3ff;
+}
+
+/* TEXTAREA */
+
+textarea{
+width:100%;
+height:180px;
+padding:12px;
+border-radius:8px;
+border:1px solid #ccc;
+resize:vertical;
+}
+
+/* BUTTON */
+
+button.action{
+background:#001d4c;
+color:white;
+border:none;
+padding:12px;
+margin-top:15px;
+border-radius:6px;
+cursor:pointer;
+width:100%;
+}
+
+button.action:hover{
+background:#003080;
 }
 
 /* PREVIEW */
 
 .preview{
 margin-top:20px;
+text-align:center;
 }
 
 .preview img{
 max-width:100%;
-border-radius:8px;
+border-radius:10px;
 }
 
-/* SLIDER */
-
-.slider{
-margin-top:20px;
-}
-
-input[type=range]{
-width:100%;
-}
-
-/* BUTTON */
-
-button{
-background:#001d4c;
-color:white;
-border:none;
-padding:14px 20px;
-font-size:16px;
-border-radius:6px;
-cursor:pointer;
-margin-top:15px;
-}
-
-/* STATS */
-
-.stats{
-margin-top:20px;
-font-weight:500;
-color:#001d4c;
-}
+/* MOBILE */
 
 @media(max-width:768px){
-
 .page-title{
 font-size:26px;
 }
-
 }
 
 </style>
@@ -131,40 +150,52 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Image Compressor</h1>
+<h1 class="page-title">Image ↔ Base64 Converter</h1>
 
 <div class="container">
 
 <div class="card">
 
+<!-- TABS -->
+
+<div class="tabs">
+<button class="active" onclick="switchTab('imgToBase64', this)">Image → Base64</button>
+<button onclick="switchTab('base64ToImg', this)">Base64 → Image</button>
+</div>
+
+<!-- IMAGE TO BASE64 -->
+
+<div id="imgToBase64" class="tab active">
+
 <div class="drop-area" id="dropArea">
+<p>Click or Drag Image</p>
+<input type="file" id="fileInput" hidden>
+</div>
 
-<p>Drag & Drop Image Here</p>
-<p>or Click to Upload</p>
+<textarea id="base64Output" placeholder="Base64 output will appear here..."></textarea>
 
-<input type="file" id="imageInput" accept="image/*" hidden>
+<button class="action" onclick="copyBase64()">Copy Base64</button>
 
 </div>
 
-<div class="preview" id="preview"></div>
+<!-- BASE64 TO IMAGE -->
 
-<div class="slider">
+<div id="base64ToImg" class="tab">
 
-<label>Compression Quality</label>
+<textarea id="base64Input" placeholder="Paste Base64 string here..."></textarea>
 
-<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.7">
+<button class="action" onclick="convertToImage()">Convert to Image</button>
 
+<div class="preview">
+<img id="outputImage">
 </div>
 
-<button onclick="compressImage()">Compress Image</button>
+<button class="action" onclick="downloadImage()">Download Image</button>
 
-<div class="stats" id="stats"></div>
-
-<button id="downloadBtn" style="display:none">Download Image</button>
+</div>
 
 </div>
 
@@ -172,101 +203,95 @@ font-size:26px;
 
 <script>
 
-let imageInput=document.getElementById("imageInput")
-let dropArea=document.getElementById("dropArea")
-let preview=document.getElementById("preview")
-let stats=document.getElementById("stats")
-let downloadBtn=document.getElementById("downloadBtn")
+/* TAB SWITCH */
 
-let originalFile
-let compressedBlob
+function switchTab(id,btn){
 
-dropArea.onclick=()=>imageInput.click()
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
 
-imageInput.onchange=e=>{
-handleFile(e.target.files[0])
-}
-
-dropArea.addEventListener("dragover",e=>{
-e.preventDefault()
-})
-
-dropArea.addEventListener("drop",e=>{
-e.preventDefault()
-handleFile(e.dataTransfer.files[0])
-})
-
-function handleFile(file){
-
-if(!file.type.startsWith("image"))return
-
-originalFile=file
-
-let img=document.createElement("img")
-
-img.src=URL.createObjectURL(file)
-
-preview.innerHTML=""
-preview.appendChild(img)
-
-stats.innerHTML="Original Size: "+(file.size/1024).toFixed(2)+" KB"
+document.getElementById(id).classList.add("active");
+btn.classList.add("active");
 
 }
 
-function compressImage(){
+/* IMAGE → BASE64 */
 
-if(!originalFile)return
+const dropArea = document.getElementById("dropArea");
+const fileInput = document.getElementById("fileInput");
 
-let quality=document.getElementById("quality").value
+dropArea.onclick = ()=>fileInput.click();
 
-let img=new Image()
+fileInput.onchange = e => convertImage(e.target.files[0]);
 
-img.src=URL.createObjectURL(originalFile)
+dropArea.ondrop = e=>{
+e.preventDefault();
+convertImage(e.dataTransfer.files[0]);
+};
 
-img.onload=function(){
+dropArea.ondragover = e=>e.preventDefault();
 
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
+function convertImage(file){
 
-canvas.width=img.width
-canvas.height=img.height
+let reader = new FileReader();
 
-ctx.drawImage(img,0,0)
+reader.onload = function(e){
+document.getElementById("base64Output").value = e.target.result;
+};
 
-canvas.toBlob(function(blob){
-
-compressedBlob=blob
-
-let compressedSize=(blob.size/1024).toFixed(2)
-
-let originalSize=(originalFile.size/1024).toFixed(2)
-
-stats.innerHTML=
-
-"Original Size: "+originalSize+" KB <br> "+
-"Compressed Size: "+compressedSize+" KB"
-
-downloadBtn.style.display="inline-block"
-
-downloadBtn.onclick=function(){
-
-let link=document.createElement("a")
-
-link.href=URL.createObjectURL(blob)
-
-link.download="compressed-image.jpg"
-
-link.click()
+reader.readAsDataURL(file);
 
 }
 
-},"image/jpeg",quality)
+/* COPY */
+
+function copyBase64(){
+
+let text = document.getElementById("base64Output");
+
+text.select();
+document.execCommand("copy");
+
+alert("Copied to clipboard");
 
 }
+
+/* BASE64 → IMAGE */
+
+function convertToImage(){
+
+let base64 = document.getElementById("base64Input").value.trim();
+
+if(!base64.startsWith("data:image")){
+alert("Invalid Base64 format");
+return;
+}
+
+document.getElementById("outputImage").src = base64;
+
+}
+
+/* DOWNLOAD */
+
+function downloadImage(){
+
+let img = document.getElementById("outputImage");
+
+if(!img.src){
+alert("No image to download");
+return;
+}
+
+let link = document.createElement("a");
+link.href = img.src;
+link.download = "image.png";
+link.click();
 
 }
 
 </script>
+
+<script src="layout.js"></script>
 
 </body>
 </html>
