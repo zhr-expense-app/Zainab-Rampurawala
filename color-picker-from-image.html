@@ -85,15 +85,20 @@ border:1px solid #ccc;
 
 .color-info{
 display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
+grid-template-columns:repeat(3, 1fr);
+gap:12px; /* spacing between boxes */
+margin-top:10px;
 }
 
+/* FIX INPUT BOXES */
+
 .color-info input{
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
 width:100%;
+padding:10px 14px;
+border-radius:8px;
+border:1px solid #ccc;
+box-sizing:border-box; /* CRITICAL FIX */
+font-size:14px;
 }
 
 /* BUTTON */
