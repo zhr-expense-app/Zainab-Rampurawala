@@ -85,11 +85,11 @@ display:block;
 
 .drop-area{
 border:2px dashed #001d4c;
-padding:40px;
+padding:30px; /* reduced from 40 */
 text-align:center;
-border-radius:12px;
+border-radius:10px;
 cursor:pointer;
-background:white;
+margin-bottom:18px; /* KEY FIX */
 }
 
 .drop-area:hover{
@@ -108,7 +108,8 @@ box-sizing:border-box;
 display:block;
 
 /* REMOVE DEFAULT OFFSET */
-margin:0;
+margin-top:0;
+margin-bottom:15px; /* controlled spacing */
 outline:none;
 
 /* FONT */
@@ -130,23 +131,36 @@ textarea{
 scrollbar-gutter: stable;
 }
 
-/* BUTTON */
 
-button.action{
-background:#001d4c;
-color:white;
-border:none;
-padding:12px;
-margin-top:15px;
-border-radius:6px;
-cursor:pointer;
-width:100%;
+
+/* BUTTON GROUP */
+
+.button-group{
+display:flex;
+justify-content:center;
+gap:12px; /* reduced gap */
+margin-bottom:20px; /* controlled spacing below */
 }
 
+.button-group button{
+padding:10px 18px;
+font-size:14px;
+border-radius:6px;
+}
+  
 button.action:hover{
 background:#003080;
 }
 
+.card > *{
+margin-bottom:15px;
+}
+
+.card > *:last-child{
+margin-bottom:0;
+}
+
+  
 /* PREVIEW */
 
 .preview{
@@ -210,13 +224,18 @@ font-size:26px;
 
 <textarea id="base64Input" placeholder="Paste Base64 string here..."></textarea>
 
-<button class="action" onclick="convertToImage()">Convert to Image</button>
-
 <div class="preview">
 <img id="outputImage">
 </div>
 
-<button class="action" onclick="downloadImage()">Download Image</button>
+  
+<div class="button-group">
+  <button>Image → Base64</button>
+  <button>Base64 → Image</button>
+</div>
+
+
+
 
 </div>
 
