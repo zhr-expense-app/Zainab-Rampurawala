@@ -49,6 +49,16 @@ showDashboard();
 
 <style>
 
+/* HEADER HEIGHT FIX */
+:root{
+  --header-height: 70px; /* adjust if your header height is different */
+}
+
+/* PUSH CONTENT BELOW HEADER */
+body{
+  padding-top: var(--header-height);
+}
+  
 body {
 font-family: Arial, sans-serif;
 text-align: center;
@@ -96,9 +106,10 @@ box-sizing: border-box;
 
 /* LOGIN BOX */
 
-#login {
+#login{
 width: 400px;
-margin: 80px auto;
+margin: 0 auto;
+margin-top: calc(var(--header-height) + 40px);
 background: white;
 padding: 40px;
 border-radius: 12px;
@@ -232,7 +243,8 @@ cursor: pointer;
 .dashboard-container {
 max-width: 1200px;
 margin: 0 auto;
-padding: 60px;
+padding: 20px;
+margin-top: 50px;
 }
 
 #reportOutput {
@@ -251,18 +263,18 @@ text-align:center;
 MOBILE OPTIMIZED VERTICAL LAYOUT
 =================================== */
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width:768px){
 
 body{
-padding:10px;
+padding-top: var(--header-height);
 }
 
-/* LOGIN */
-
 #login{
+margin-top: calc(var(--header-height) + 20px);
 width:95%;
-margin:40px auto;
 padding:25px;
+}
+
 }
 
 /* LOGO */
@@ -434,7 +446,7 @@ text-align:right;
 
 <body>
 
-<div id="header"></div>
+
 <div id="sidebar-container"></div>  
 
 <div id="login">
