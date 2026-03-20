@@ -14,6 +14,8 @@
 
 <style>
 
+/* BODY */
+
 body{
 font-family:'Segoe UI',sans-serif;
 
@@ -33,73 +35,100 @@ font-weight:700;
 /* CONTAINER */
 
 .container{
-max-width:900px;
+max-width:800px;
 margin:auto;
 padding:20px;
 }
 
 /* CARD */
 
-.card{
+.contact-card{
 background:#f8f9fb;
 padding:30px;
-border-radius:10px;
-box-shadow:0 6px 20px rgba(0,0,0,0.08);
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.08);
+margin-bottom:25px;
+}
+
+/* FORM GROUP */
+
+.form-group{
 display:flex;
 flex-direction:column;
-gap:15px;
+margin-bottom:18px;
+}
+
+/* LABEL */
+
+.form-group label{
+font-weight:600;
+color:#001d4c;
+margin-bottom:6px;
 }
 
 /* INPUT */
 
-input, textarea{
-width:100%;
+.form-group input,
+.form-group textarea{
 padding:12px 14px;
 border-radius:8px;
-border:1px solid #ccc;
+border:1px solid #dcdcdc;
 font-size:15px;
 box-sizing:border-box;
+transition:0.2s;
+}
+
+/* FOCUS */
+
+.form-group input:focus,
+.form-group textarea:focus{
+border-color:#001d4c;
+box-shadow:0 0 0 2px rgba(0,29,76,0.08);
+outline:none;
 }
 
 /* BUTTON */
 
-button{
+.submit-btn{
 background:#001d4c;
 color:white;
 border:none;
 padding:14px;
-border-radius:6px;
-cursor:pointer;
+border-radius:8px;
 font-size:16px;
+cursor:pointer;
+width:150px;
+transition:0.2s;
 }
 
-button:hover{
-opacity:0.9;
+.submit-btn:hover{
+background:#003080;
 }
 
-/* CONTACT DETAILS */
+/* DETAILS CARD */
 
-.details{
-margin-top:30px;
-background:#f8f9fb;
+.contact-details{
+background:#ffffff;
 padding:25px;
-border-radius:10px;
+border-radius:12px;
+box-shadow:0 6px 20px rgba(0,0,0,0.06);
 }
 
-.details h3{
+.contact-details h3{
 color:#001d4c;
 margin-bottom:10px;
 }
 
-.details p{
-margin:5px 0;
+.contact-details p{
+margin:8px 0;
+line-height:1.6;
 }
 
 /* MOBILE */
 
 @media(max-width:768px){
-.page-title{
-font-size:26px;
+.submit-btn{
+width:100%;
 }
 }
 
@@ -109,30 +138,44 @@ font-size:26px;
 
 <body>
 
+<!-- HEADER & SIDEBAR -->
+
 <div id="header"></div>
 <div id="sidebar-container"></div>
+
+<!-- TITLE -->
 
 <h1 class="page-title">Contact Us</h1>
 
 <div class="container">
 
-<div class="card">
+<!-- FORM -->
 
-<form action="https://formspree.io/f/xrbbjada" method="POST">
+<div class="contact-card">
 
+<form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+
+<div class="form-group">
 <label>Name</label>
-<input type="text" name="text" placeholder="Enter your name" required>
-  
+<input type="text" name="name" placeholder="Enter your name" required>
+</div>
+
+<div class="form-group">
 <label>Email</label>
 <input type="email" name="email" placeholder="Enter your email" required>
+</div>
 
+<div class="form-group">
 <label>Phone Number</label>
-<input type="tel" name="phone" placeholder="Enter your phone number" required>
+<input type="tel" name="phone" placeholder="Enter your phone number">
+</div>
 
+<div class="form-group">
 <label>Message</label>
-<textarea name="message" rows="5" placeholder="Write your message..." required></textarea required>
+<textarea name="message" rows="5" placeholder="Write your message..." required></textarea>
+</div>
 
-<button type="submit">Submit</button>
+<button type="submit" class="submit-btn">Submit</button>
 
 </form>
 
@@ -140,11 +183,14 @@ font-size:26px;
 
 <!-- CONTACT DETAILS -->
 
-<div class="details">
+<div class="contact-details">
 
 <h3>India</h3>
 
-<p><b>Address:</b> C/1302, Reliable Prestige 1, Achole Road, Nalasopara (E), Mumbai-401209, India</p>
+<p><b>Address:</b><br>
+C/1302, Reliable Prestige 1,<br>
+Achole Road, Nalasopara (E),<br>
+Mumbai - 401209, India</p>
 
 <p><b>Phone/WhatsApp:</b> +91 7869531188</p>
 
@@ -152,7 +198,7 @@ font-size:26px;
 
 <p><b>Working Hours:</b> Mon-Sat: 9:00 AM - 9:00 PM</p>
 
-<br>
+<hr>
 
 <h3>International Clients (UAE)</h3>
 
