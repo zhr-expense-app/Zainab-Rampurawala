@@ -7,10 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/favicon.png" type="image/png">
 
-  <link rel="stylesheet" href="layout.css">
-
-<script src="https://unpkg.com/lucide@latest"></script> 
-
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -52,10 +48,13 @@
       font-family: Arial, sans-serif;
       text-align: center;
       background: #f4f6f9;
-      margin: 20px;
+      margin: 0;
     }
 
- 
+    .logo {
+      width: 320px;
+      margin: 20px 0;
+    }
 
     h2,
     h3 {
@@ -95,7 +94,7 @@
 
     #login {
       width: 400px;
-      margin: 20px auto;
+      margin: 110px auto;
       background: white;
       padding: 40px;
       border-radius: 12px;
@@ -304,13 +303,7 @@
 
 <body>
 
-<div class="layout">
 
-  <div id="sidebar-container"></div>
-
-  <div class="main-content">
-
-    <div id="header"></div>
  
 
 <div id="login">
