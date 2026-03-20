@@ -5,30 +5,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Age Calculator | ZHR Tools</title>
+<title>Contact Us | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
 body{
 font-family:'Segoe UI',sans-serif;
-background:white;
+
 margin:0;
-}
-
-/* HEADER */
-
-.logo-header{
-position:sticky;
-top:0;
-z-index:1000;
-background:white;
-text-align:center;
-padding:15px 5px 10px;
-}
-
-.logo-header img{
-max-width:400px;
-height:50px;
 }
 
 /* TITLE */
@@ -37,7 +26,7 @@ height:50px;
 text-align:center;
 font-size:30px;
 color:#001d4c;
-margin:30px 0;
+margin-top:50px;
 font-weight:700;
 }
 
@@ -56,17 +45,20 @@ background:#f8f9fb;
 padding:30px;
 border-radius:10px;
 box-shadow:0 6px 20px rgba(0,0,0,0.08);
+display:flex;
+flex-direction:column;
+gap:15px;
 }
 
 /* INPUT */
 
-input{
+input, textarea{
 width:100%;
-padding:12px;
-font-size:16px;
-margin-top:10px;
-border-radius:6px;
+padding:12px 14px;
+border-radius:8px;
 border:1px solid #ccc;
+font-size:15px;
+box-sizing:border-box;
 }
 
 /* BUTTON */
@@ -76,55 +68,39 @@ background:#001d4c;
 color:white;
 border:none;
 padding:14px;
-width:100%;
-margin-top:15px;
-font-size:18px;
 border-radius:6px;
 cursor:pointer;
-}
-
-/* RESULT GRID */
-
-.result-grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:20px;
-margin-top:25px;
-}
-
-/* RESULT BOX */
-
-.result-box{
-background:white;
-padding:15px;
-border-radius:6px;
-border-left:5px solid #001d4c;
-}
-
-.result-box h3{
-margin:0;
-color:#001d4c;
 font-size:16px;
 }
 
-.result-box p{
-margin:5px 0 0;
-font-size:18px;
-font-weight:600;
+button:hover{
+opacity:0.9;
+}
+
+/* CONTACT DETAILS */
+
+.details{
+margin-top:30px;
+background:#f8f9fb;
+padding:25px;
+border-radius:10px;
+}
+
+.details h3{
+color:#001d4c;
+margin-bottom:10px;
+}
+
+.details p{
+margin:5px 0;
 }
 
 /* MOBILE */
 
 @media(max-width:768px){
-
-.result-grid{
-grid-template-columns:1fr;
-}
-
 .page-title{
 font-size:26px;
 }
-
 }
 
 </style>
@@ -133,141 +109,62 @@ font-size:26px;
 
 <body>
 
-<div class="logo-header">
-<img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg-FrquxVNT6X8mePEZk64LLCgRVikX9PnuPOSqK4CKoL9-r2wGHbx1zt7_q-6dlITZ4wfQSnuXLkJDvq8DxSnruDo6wE-kEBY86sLYgJTe8WMxIQN3y4ah6Ffc2As2_z4rGs3cxyBAr3ik-S-GYA6MIm4F4p74-43WT3s573TJoXgdDRPBT1UEP1Q1EFY/s1920/1736676952-picsayjdndnndnd.jpg">
-</div>
+<div id="header"></div>
+<div id="sidebar-container"></div>
 
-<h1 class="page-title">Age Calculator</h1>
+<h1 class="page-title">Contact Us</h1>
 
 <div class="container">
 
 <div class="card">
 
-<label>Date of Birth</label>
-<input type="date" id="dob">
+<form action="https://formspree.io/f/xrbbjada" method="POST">
 
-<button onclick="calculateAge()">Calculate Age</button>
+<label>Name</label>
+<input type="text" name="text" placeholder="Enter your name" required>
+  
+<label>Email</label>
+<input type="email" name="email" placeholder="Enter your email" required>
 
-<div class="result-grid" id="results" style="display:none">
+<label>Phone Number</label>
+<input type="tel" name="phone" placeholder="Enter your phone number" required>
 
-<div class="result-box">
-<h3>Exact Age</h3>
-<p id="age"></p>
+<label>Message</label>
+<textarea name="message" rows="5" placeholder="Write your message..." required></textarea required>
+
+<button type="submit">Submit</button>
+
+</form>
+
 </div>
 
-<div class="result-box">
-<h3>Total Months</h3>
-<p id="months"></p>
-</div>
+<!-- CONTACT DETAILS -->
 
-<div class="result-box">
-<h3>Total Weeks</h3>
-<p id="weeks"></p>
-</div>
+<div class="details">
 
-<div class="result-box">
-<h3>Total Days</h3>
-<p id="days"></p>
-</div>
+<h3>India</h3>
 
-<div class="result-box">
-<h3>Total Hours</h3>
-<p id="hours"></p>
-</div>
+<p><b>Address:</b> C/1302, Reliable Prestige 1, Achole Road, Nalasopara (E), Mumbai-401209, India</p>
 
-<div class="result-box">
-<h3>Total Minutes</h3>
-<p id="minutes"></p>
-</div>
+<p><b>Phone/WhatsApp:</b> +91 7869531188</p>
 
-<div class="result-box">
-<h3>Day Born</h3>
-<p id="dayBorn"></p>
-</div>
+<p><b>Email:</b> accounts@zhrconsultants.com</p>
 
-<div class="result-box">
-<h3>Next Birthday In</h3>
-<p id="nextBirthday"></p>
-</div>
+<p><b>Working Hours:</b> Mon-Sat: 9:00 AM - 9:00 PM</p>
+
+<br>
+
+<h3>International Clients (UAE)</h3>
+
+<p>Services provided from India to clients across the UAE remotely</p>
+
+<p><b>Phone/WhatsApp:</b> +971 505389452</p>
 
 </div>
 
 </div>
 
-</div>
-
-<script>
-
-function calculateAge(){
-
-let dobInput=document.getElementById("dob").value;
-
-if(!dobInput){
-alert("Please select date of birth");
-return;
-}
-
-let dob=new Date(dobInput);
-let today=new Date();
-
-let years=today.getFullYear()-dob.getFullYear();
-let months=today.getMonth()-dob.getMonth();
-let days=today.getDate()-dob.getDate();
-
-if(days<0){
-months--;
-days+=30;
-}
-
-if(months<0){
-years--;
-months+=12;
-}
-
-/* totals */
-
-let diff=today-dob;
-
-let totalDays=Math.floor(diff/(1000*60*60*24));
-let totalWeeks=Math.floor(totalDays/7);
-let totalMonths=years*12+months;
-let totalHours=Math.floor(diff/(1000*60*60));
-let totalMinutes=Math.floor(diff/(1000*60));
-
-/* next birthday */
-
-let nextBirthday=new Date(today.getFullYear(),dob.getMonth(),dob.getDate());
-
-if(nextBirthday<today){
-nextBirthday.setFullYear(today.getFullYear()+1);
-}
-
-let birthdayDiff=nextBirthday-today;
-
-let birthdayDays=Math.floor(birthdayDiff/(1000*60*60*24));
-
-/* day born */
-
-let daysOfWeek=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-
-let dayBorn=daysOfWeek[dob.getDay()];
-
-/* display */
-
-document.getElementById("age").innerHTML=years+" Years "+months+" Months "+days+" Days";
-document.getElementById("months").innerHTML=totalMonths;
-document.getElementById("weeks").innerHTML=totalWeeks;
-document.getElementById("days").innerHTML=totalDays;
-document.getElementById("hours").innerHTML=totalHours;
-document.getElementById("minutes").innerHTML=totalMinutes;
-document.getElementById("dayBorn").innerHTML=dayBorn;
-document.getElementById("nextBirthday").innerHTML=birthdayDays+" Days";
-
-document.getElementById("results").style.display="grid";
-
-}
-
-</script>
+<script src="layout.js"></script>
 
 </body>
 </html>
