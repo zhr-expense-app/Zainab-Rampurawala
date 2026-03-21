@@ -36,14 +36,13 @@
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
 	  
+   auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
     auth.onAuthStateChanged(user => {
-  if (user) {
-    showDashboard();
-  } else {
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("login").style.display = "block";
-  }
-});
+      if (user) {
+        showDashboard();
+      }
+    });
 	  
   </script>
 
@@ -625,7 +624,7 @@ function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
-document.getElementById("userEmail").innerText = auth.currentUser.email;
+
   loadOpeningBalance();
   loadTransactions();
 
