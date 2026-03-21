@@ -443,19 +443,25 @@ text-align:right;
 
 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
 
-<h1>Expense Tracker</h1>
-<div style="display:flex; align-items:center; gap:10px;">
-    <span id="userEmail" style="font-weight:600; color:#001d4c;"></span></div>
-<div>
-<button onclick="showCurrentMonth()">Current Month</button>
-<button onclick="showLastMonth()">Last Month</button>
-<button onclick="showFullYear()">Full Year</button>
-<button onclick="showCustomSummary()">Custom Date Filter</button>
-<button onclick="exportSummaryExcel()">Export Dashboard</button>
+  <h1>Expense Tracker</h1>
 
-	<button onclick="confirmLogout()" style="background:green;">Logout</button>
+  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
 
-</div>
+    <!-- USER EMAIL -->
+    <span id="userEmail" style="font-weight:600; color:#001d4c;"></span>
+
+    <!-- BUTTONS -->
+    <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end;">
+      <button onclick="showCurrentMonth()">Current Month</button>
+      <button onclick="showLastMonth()">Last Month</button>
+      <button onclick="showFullYear()">Full Year</button>
+      <button onclick="showCustomSummary()">Custom Date Filter</button>
+      <button onclick="exportSummaryExcel()">Export Dashboard</button>
+      <button onclick="confirmLogout()" style="background:green;">Logout</button>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- FIRST ROW : 3 TABLES -->
