@@ -617,6 +617,9 @@ auth.signInWithEmailAndPassword(email,password)
 alert("Invalid Login");
 });
 
+// AFTER successful login:
+  startInactivityTracking();  // ✅ ADD THIS
+	
 }
 
 function showDashboard() {
@@ -3129,13 +3132,25 @@ function resetInactivityTimer() {
     alert("Session expired due to inactivity");
     logout();
 
-  }, 10 * 60 * 1000); // 10 minutes
-
+  }, 2 * 60 * 1000); // 2 minutes
+	
 }	
 
-["click","mousemove","keydown","scroll","touchstart"].forEach(event => {
-  document.addEventListener(event, resetInactivityTimer);
-});
+//////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////
+
+function startInactivityTracking() {
+
+  ["click","mousemove","keydown","scroll","touchstart"].forEach(event => {
+    document.addEventListener(event, resetInactivityTimer);
+  });
+
+  resetInactivityTimer(); // start timer immediately
+
+}
+
+	
 	
 </script>
 
