@@ -445,6 +445,7 @@ text-align:right;
 <button onclick="showFullYear()">Full Year</button>
 <button onclick="showCustomSummary()">Custom Date Filter</button>
 <button onclick="exportSummaryExcel()">Export Dashboard</button>
+	<button onclick="logout() color=green">Logout</button>
 </div>
 
 
@@ -3069,6 +3070,28 @@ saveAs(new Blob([buffer]),fileName);
 }
 
 
+//////////////////////////////////////////////////
+// LOGOUT
+//////////////////////////////////////////////////
+
+function logout() {
+  auth.signOut().then(() => {
+
+    // Hide dashboard
+    document.getElementById("dashboard").style.display = "none";
+
+    // Show login
+    document.getElementById("login").style.display = "block";
+
+    // Clear session storage
+    sessionStorage.clear();
+
+  }).catch((error) => {
+    alert("Logout failed");
+  });
+}
+
+	
 
 </script>
 
