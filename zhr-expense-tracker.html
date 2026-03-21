@@ -439,8 +439,8 @@ text-align:right;
 <div id="login">
 
 <h3>Login</h3>
-<input type="email" id="username" placeholder="Login ID">
-<input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter'){login()}">
+<input type="email" id="username" placeholder="Login ID" autocomplete="off">
+<input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter'){login()}" autocomplete="new-password">
 <button onclick="login()">Login</button>
 </div>
 
@@ -3101,7 +3101,12 @@ function logout() {
     document.getElementById("login").style.display = "block";
 
     sessionStorage.clear();
+	  
+// ✅ CLEAR INPUT FIELDS
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
 
+	  
   }).catch(() => {
     alert("Logout failed");
   });
