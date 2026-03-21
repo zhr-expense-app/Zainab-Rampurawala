@@ -3093,6 +3093,8 @@ function logout() {
 
     clearTimeout(inactivityTimer);
 
+	stopInactivityTracking(); // ✅ THIS IS CLEANUP  
+
     closePopup(); // ✅ ADD THIS LINE
 
     document.getElementById("dashboard").style.display = "none";
