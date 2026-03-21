@@ -35,11 +35,16 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
+	  
     auth.onAuthStateChanged(user => {
-      if (user) {
-        showDashboard();
-      }
-    });
+  if (user) {
+    showDashboard();
+  } else {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("login").style.display = "block";
+  }
+});
+	  
   </script>
 
   <style>
