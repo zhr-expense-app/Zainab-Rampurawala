@@ -35,13 +35,17 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-	  
-
     auth.onAuthStateChanged(user => {
-      if (user) {
-        showDashboard();
-      }
-    });
+
+  if (user) {
+    showDashboard();
+    startInactivityTracking(); // ✅ restart timer after refresh
+  } else {
+    document.getElementById("login").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+  }
+
+});
 	  
   </script>
 
@@ -611,16 +615,16 @@ let password = document.getElementById("password").value;
 
 auth.signInWithEmailAndPassword(email,password)
 .then(()=>{
-// dashboard will open automatically via auth listener
+
+  startInactivityTracking(); // ✅ ONLY after successful login
+
 })
 .catch(()=>{
 
-alert("Invalid Login");
+  alert("Invalid Login");
+
 });
 
-// AFTER successful login:
-  startInactivityTracking();  // ✅ ADD THIS
-	
 }
 
 function showDashboard() {
@@ -3090,25 +3094,26 @@ saveAs(new Blob([buffer]),fileName);
 //////////////////////////////////////////////////
 
 function logout() {
-  auth.signOut().then(() => {
 
-    clearTimeout(inactivityTimer);
+  clearTimeout(inactivityTimer);
+  stopInactivityTracking();
 
-	stopInactivityTracking(); // ✅ THIS IS CLEANUP  
+  closePopup();
 
-    closePopup(); // ✅ ADD THIS LINE
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("login").style.display = "block";
 
-    document.getElementById("dashboard").style.display = "none";
-    document.getElementById("login").style.display = "block";
+  sessionStorage.clear();
 
-    sessionStorage.clear();
-	  
+  // ✅ clear login fields
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
 
-
-	  
-  }).catch(() => {
-    alert("Logout failed");
+  // ✅ try firebase logout but don't block UI
+  auth.signOut().catch((error) => {
+    console.log("Logout error:", error);
   });
+
 }
 
 	function confirmLogout() {
@@ -3156,6 +3161,11 @@ function startInactivityTracking() {
 
 }
 
+function stopInactivityTracking() {
+  ["click","mousemove","keydown","scroll","touchstart"].forEach(event => {
+    document.removeEventListener(event, resetInactivityTimer);
+  });
+}	
 	
 	
 </script>
