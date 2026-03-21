@@ -89,24 +89,14 @@
     * {
       box-sizing: border-box;
     }
-
-/* Mobile button spacing */
-
-@media screen and (max-width:768px){
-
-button{
-width:auto;
-padding:8px 14px;
-margin:6px 6px;
-font-size:14px;
-}
-    
+  
     
     /* LOGIN BOX */
 
     #login {
       width: 400px;
-      margin: 110px auto;
+      
+	margin: 110px auto;
       background: white;
       padding: 40px;
       border-radius: 12px;
@@ -280,38 +270,155 @@ font-size:14px;
         width: 100%;
       }
 
-      .charts-container {
-        flex-direction: column;
-        gap: 30px;
-      }
+      .charts-container{
+flex-direction:column;
+align-items:stretch;
+gap:30px;
+}
 
-      .chart-box canvas {
-        height: 260px !important;
-      }
+.chart-box{
+width:100%;
+height:auto;
+}
 
-      button {
-        width: 100%;
-      }
 
-      .modal-content {
-        width: 95%;
-      }
+.chart-box canvas{
+width:100% !important;
+height:260px !important;
+}
 
-      .report-table {
-        overflow-x: auto;
-        display: block;
-      }
+/* BUTTONS FULL WIDTH */
 
-      input,
-      select {
-        font-size: 16px;
-      }
+button{
+width:100%;
+margin:6px 0;
+}
 
-    }
+     /* POPUP FIX */
 
-  </style>
+.modal-content{
+width:95%;
+margin:20% auto;
+}
+
+/* REPORT TABLE SCROLL */
+
+.report-table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+/* INPUTS BIGGER FOR MOBILE */
+
+input, select{
+font-size:16px;
+}
+
+/* DASHBOARD PADDING */
+
+.dashboard-container{
+padding:10px;
+}
+
+/* PERSONAL MONTHLY TABLE */
+
+#personalMonthlySummary table{
+font-size:14px;
+}
+
+}
+
+/* Mobile button spacing */
+
+@media screen and (max-width:768px){
+
+button{
+width:auto;
+padding:8px 14px;
+margin:6px 6px;
+font-size:14px;
+}
+
+.dashboard-container{
+padding:15px;
+}
+
+.summary-box{
+padding:12px;
+}
+
+}
+
+.summary-box td{
+text-align:right;
+}
+
+/* UNIVERSAL REPORT TABLE ALIGNMENT */
+
+/* Default center alignment */
+
+.report-table td{
+text-align:center;
+}
+
+/* Amount column always right aligned */
+
+.report-table td:nth-last-child(3){
+text-align:right;
+}
+
+/* Edit button column */
+
+.report-table td:nth-last-child(2){
+text-align:center;
+}
+
+/* Delete button column */
+
+.report-table td:nth-last-child(1){
+text-align:center;
+}
+
+
+/* SUMMARY TABLE ALIGNMENT */
+
+/* Headers stay centered */
+.summary-box th{
+text-align:center;
+}
+
+/* First column text left aligned */
+.summary-box td:first-child{
+text-align:left;
+}
+
+/* Numbers right aligned */
+.summary-box td:last-child{
+text-align:right;
+}
+
+/* Monthly personal expense table */
+
+#personalMonthlySummary th{
+text-align:center;
+}
+
+#personalMonthlySummary td:first-child{
+text-align:left;
+}
+
+#personalMonthlySummary td:last-child{
+text-align:right;
+}
+
+
+
+</style>
 
 </head>
+
+
 
 <body>
 
@@ -2968,5 +3075,4 @@ saveAs(new Blob([buffer]),fileName);
 </body>
 
 </html>
-
 
