@@ -125,6 +125,14 @@
       border-radius: 6px;
     }
 
+#userEmail {
+  background:#eef3ff;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:13px;
+}
+
+	  
     /* SUMMARY TABLES */
 
     .summary-container {
@@ -3093,6 +3101,8 @@ function logout() {
   auth.signOut().then(() => {
 
     clearTimeout(inactivityTimer);
+
+    closePopup(); // ✅ ADD THIS LINE
 
     document.getElementById("dashboard").style.display = "none";
     document.getElementById("login").style.display = "block";
