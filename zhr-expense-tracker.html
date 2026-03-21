@@ -639,7 +639,7 @@ let loginVisible = document.getElementById("login").style.display !== "none";
 if(loginVisible){
 login();
 }
-
+resetInactivityTimer();
 }
 
 });
@@ -3086,16 +3086,14 @@ saveAs(new Blob([buffer]),fileName);
 function logout() {
   auth.signOut().then(() => {
 
-    // Hide dashboard
-    document.getElementById("dashboard").style.display = "none";
+    clearTimeout(inactivityTimer);
 
-    // Show login
+    document.getElementById("dashboard").style.display = "none";
     document.getElementById("login").style.display = "block";
 
-    // Clear session storage
     sessionStorage.clear();
 
-  }).catch((error) => {
+  }).catch(() => {
     alert("Logout failed");
   });
 }
@@ -3110,8 +3108,31 @@ function logout() {
 
 	}
 
-	
 
+//////////////////////////////////////////////////
+// AUTO LOGOUT AFTER INACTIVITY
+//////////////////////////////////////////////////
+
+	
+let inactivityTimer;
+
+function resetInactivityTimer() {
+
+  clearTimeout(inactivityTimer);
+
+  inactivityTimer = setTimeout(() => {
+    
+    alert("Session expired due to inactivity");
+    logout();
+
+  }, 10 * 60 * 1000); // 10 minutes
+
+}	
+
+["click","mousemove","keydown","scroll","touchstart"].forEach(event => {
+  document.addEventListener(event, resetInactivityTimer);
+});
+	
 </script>
 
 </body>
