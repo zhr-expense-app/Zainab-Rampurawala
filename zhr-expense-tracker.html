@@ -621,7 +621,7 @@ function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
-
+document.getElementById("userEmail").innerText = auth.currentUser.email;
   loadOpeningBalance();
   loadTransactions();
 
@@ -3099,6 +3099,16 @@ function logout() {
     alert("Logout failed");
   });
 }
+
+	function confirmLogout() {
+
+  openPopup(`
+    <h3>Confirm Logout</h3>
+    <p>Are you sure you want to logout?</p>
+    <button onclick="logout()">Yes, Logout</button>
+  `);
+
+	}
 
 	
 
