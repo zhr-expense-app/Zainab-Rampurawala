@@ -574,8 +574,40 @@ let currentFromDate = null;
 let currentToDate = null;
 let expenseChart = null;
 let personalExpenseChart = null;
+let accountsList = [];
+let activeAccounts = []; 		 	
 
 
+//////////////////////////////////////////////////
+// LOAD ACCOUNTS FROM FIREBASE 	
+//////////////////////////////////////////////////
+
+function loadAccounts() {
+
+  db.collection("accounts").onSnapshot(snapshot => {
+
+    accountsList = [];
+    activeAccounts = [];
+
+    snapshot.forEach(doc => {
+
+      let data = doc.data();
+
+      accountsList.push(data.name);
+
+      if(data.active !== false){
+        activeAccounts.push(data.name);
+      }
+
+    });
+
+  });
+
+}
+	
+
+
+	
 //////////////////////////////////////////////////
 // AUTO FORMAT AMOUNTS (INDIAN + DECIMAL + RIGHT ALIGN)
 //////////////////////////////////////////////////
@@ -630,6 +662,20 @@ function getMonthName(monthIndex){
   return months[monthIndex];
 }
 
+	
+//////////////////////////////////////////////////
+// DYNAMIC DROPDOWNS (SAFE REPLACEMENT)
+//////////////////////////////////////////////////
+
+function getAccountOptions(selected=""){
+
+  return activeAccounts.map(acc =>
+    `<option ${acc===selected?"selected":""}>${acc}</option>`
+  ).join("");
+
+}
+
+	
 
 //////////////////////////////////////////////////
 // ADMIN
@@ -672,6 +718,7 @@ function showDashboard() {
 
   loadOpeningBalance();
   loadTransactions();
+	loadAccounts();
 
 
 //////////////////////////////////////////////////
@@ -1054,12 +1101,11 @@ openPopup(`
 
 function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
-  let balances = {
-    Cash: Number(openingBalances.Cash || 0),
-    BOB5606: Number(openingBalances.BOB5606 || 0),
-    BOB9195: Number(openingBalances.BOB9195 || 0),
-    IDBI5391: Number(openingBalances.IDBI5391 || 0)
-  };
+  let balances = {};
+
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   let expenses = {
     Personal:0,
@@ -1097,19 +1143,33 @@ function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
   });
 
-let totalBalance = balances.Cash + balances.BOB5606 + balances.BOB9195 + balances.IDBI5391;
+let totalBalance = 0;
+
+accountsList.forEach(acc=>{
+  totalBalance += balances[acc];
+});
 
 let totalExpense = expenses.Personal + expenses.Home + expenses["Office Reimbursement"];
 
+let rows = "";
+
+accountsList.forEach(acc => {
+
+  rows += `
+    <tr>
+      <td>${acc}</td>
+      <td>${balances[acc] || 0}</td>
+    </tr>
+  `;
+
+});
+	
   document.getElementById("closingSummary").innerHTML = `
 
 <div class="summary-title">${balanceTitle}</div>
     <table>
       <tr><th>Account</th><th>Balance</th></tr>
-      <tr><td>Cash</td><td> ${balances.Cash}</td></tr>
-      <tr><td>BOB5606</td><td> ${balances.BOB5606}</td></tr>
-      <tr><td>BOB9195</td><td> ${balances.BOB9195}</td></tr>
-      <tr><td>IDBI5391</td><td> ${balances.IDBI5391}</td></tr>
+      ${rows}
 <tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
     </table>
   `;
@@ -1289,12 +1349,11 @@ saveAs(new Blob([buffer]), fileName);
 
 function calculateDashboard() {
 
-  let balances = {
-    Cash: Number(openingBalances.Cash || 0),
-    BOB5606: Number(openingBalances.BOB5606 || 0),
-    BOB9195: Number(openingBalances.BOB9195 || 0),
-    IDBI5391: Number(openingBalances.IDBI5391 || 0)
-  };
+  let balances = {};
+
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   let expenses = {
     Personal: 0,
@@ -1327,13 +1386,24 @@ function calculateDashboard() {
   // DISPLAY CLOSING BALANCE
   //////////////////////////////////////////////
 
+
+let rows = "";
+
+accountsList.forEach(acc => {
+
+  rows += `
+    <tr>
+      <td>${acc}</td>
+      <td>${balances[acc] || 0}</td>
+    </tr>
+  `;
+
+});
+	
   document.getElementById("closingSummary").innerHTML = `
     <table>
       <tr><th>Account</th><th>Balance</th></tr>
-      <tr><td>Cash</td><td> ${balances.Cash}</td></tr>
-      <tr><td>BOB5606</td><td> ${balances.BOB5606}</td></tr>
-      <tr><td>BOB9195</td><td> ${balances.BOB9195}</td></tr>
-      <tr><td>IDBI5391</td><td> ${balances.IDBI5391}</td></tr>
+      ${rows}
     </table>
   `;
 
@@ -1358,12 +1428,11 @@ function calculateDashboard() {
 
 function getCurrentBalance(account) {
 
-  let balances = {
-    Cash: Number(openingBalances.Cash || 0),
-    BOB5606: Number(openingBalances.BOB5606 || 0),
-    BOB9195: Number(openingBalances.BOB9195 || 0),
-    IDBI5391: Number(openingBalances.IDBI5391 || 0)
-  };
+  let balances = {};
+
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   transactionsCache.forEach(t => {
 
@@ -1583,10 +1652,7 @@ function showForm(type) {
       <h3>Record Receipt</h3>
       <label>Mode</label>
       <select id="account">
-        <option>Cash</option>
-        <option>BOB5606</option>
-        <option>BOB9195</option>
-        <option>IDBI5391</option>
+        ${getAccountOptions()}
       </select>
 
       <label>Date</label>
@@ -1607,10 +1673,7 @@ function showForm(type) {
       <h3>Record Payment</h3>
       <label>Mode</label>
       <select id="account">
-        <option>Cash</option>
-        <option>BOB5606</option>
-        <option>BOB9195</option>
-        <option>IDBI5391</option>
+        ${getAccountOptions()}
       </select>
 
       <label>Category</label>
@@ -1639,18 +1702,12 @@ function showForm(type) {
 
       <label>From Account</label>
       <select id="from">
-        <option>Cash</option>
-        <option>BOB5606</option>
-        <option>BOB9195</option>
-        <option>IDBI5391</option>
+        ${getAccountOptions()}
       </select>
 
       <label>To Account</label>
       <select id="to">
-        <option>Cash</option>
-        <option>BOB5606</option>
-        <option>BOB9195</option>
-        <option>IDBI5391</option>
+        ${getAccountOptions()}
       </select>
 
       <label>Date</label>
@@ -2579,12 +2636,11 @@ function refreshCurrentReport(){
 
 function getBalanceExcludingTransaction(account, transactionId) {
 
-  let balances = {
-    Cash: Number(openingBalances.Cash || 0),
-    BOB5606: Number(openingBalances.BOB5606 || 0),
-    BOB9195: Number(openingBalances.BOB9195 || 0),
-    IDBI5391: Number(openingBalances.IDBI5391 || 0)
-  };
+  let balances = {};
+
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   transactionsCache.forEach(t => {
 
