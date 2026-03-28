@@ -594,17 +594,25 @@ function loadAccounts() {
 
       let data = doc.data();
 
-      accountsList.push(data.name);
+      console.log("Account Doc:", data); // ✅ DEBUG
 
-      if(data.active !== false){
+      if(data.name){  // ✅ safety check
+        accountsList.push(data.name);
+      }
+
+      if (data.active !== false && data.name) {
         activeAccounts.push(data.name);
       }
 
     });
 
-// ✅ VERY IMPORTANT (THIS FIXES YOUR ISSUE)
-    calculateDashboard();
-	  
+    console.log("Final Accounts List:", accountsList); // ✅ DEBUG
+
+    // ✅ IMPORTANT: refresh EVERYTHING after load
+    setTimeout(() => {
+      calculateDashboard();
+    }, 100);
+
   });
 
 }
@@ -843,9 +851,6 @@ function showDashboard() {
   loadTransactions();
 loadAccounts();
 
-setTimeout(()=>{
-  calculateDashboard();
-},300);
 
 
 //////////////////////////////////////////////////
