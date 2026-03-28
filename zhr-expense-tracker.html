@@ -499,6 +499,7 @@ text-align:right;
       <button onclick="showFullYear()">Full Year</button>
       <button onclick="showCustomSummary()">Custom Date Filter</button>
       <button onclick="exportSummaryExcel()">Export Dashboard</button>
+		<button onclick="manageAccounts()">Manage Accounts</button>
       <button onclick="confirmLogout()" style="background:green;">Logout</button>
     </div>
 
@@ -606,11 +607,130 @@ function loadAccounts() {
 }
 	
 
+//////////////////////////////////////////////////
+// MANAGE ACCOUNTS
+//////////////////////////////////////////////////
+
+function manageAccounts(){
+
+openPopup(`
+  <h3>Admin Login</h3>
+
+  <label>Admin ID</label>
+  <input type="text" id="adminId">
+
+  <label>Password</label>
+  <input type="password" id="adminPass">
+
+  <button onclick="verifyAccountAdmin()">Login</button>
+`);
+
+}
+	
+
+//////////////////////////////////////////////////
+// ADMIN VALIDATION
+//////////////////////////////////////////////////
+	
+function verifyAccountAdmin(){
+
+if(
+  document.getElementById("adminId").value !== ADMIN_ID ||
+  document.getElementById("adminPass").value !== ADMIN_PASS
+){
+  alert("Invalid Admin");
+  return;
+}
+
+showAccountManager();
+
+}
+
+
+//////////////////////////////////////////////////
+// ACCOUNT MANAGER UI
+//////////////////////////////////////////////////	
+
+function showAccountManager(){
+
+let html = `<h3>Manage Accounts</h3>`;
+
+accountsList.forEach(acc=>{
+
+let isActive = activeAccounts.includes(acc);
+
+html += `
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+  <span>${acc}</span>
+
+  <button onclick="toggleAccount('${acc}', ${isActive})">
+    ${isActive ? "Deactivate" : "Activate"}
+  </button>
+</div>
+`;
+
+});
+
+html += `
+<hr>
+
+<label>Add New Account</label>
+<input type="text" id="newAccount" placeholder="Enter account name">
+
+<button onclick="addAccount()">Add Account</button>
+`;
+
+openPopup(html);
+
+}
+	
+
+//////////////////////////////////////////////////
+// ADD ACCOUNT FUNCTION
+//////////////////////////////////////////////////
+
+async function addAccount(){
+
+let name = document.getElementById("newAccount").value.trim();
+
+if(!name){
+  alert("Enter account name");
+  return;
+}
+
+await db.collection("accounts").add({
+  name: name,
+  active: true
+});
+
+closePopup();
+
+}	
+
+
+//////////////////////////////////////////////////////////
+// ACTIVATE / DEACTIVATE
+//////////////////////////////////////////////////////////
 
 	
-//////////////////////////////////////////////////
+async function toggleAccount(name, isActive){
+
+let snapshot = await db.collection("accounts")
+.where("name","==",name).get();
+
+snapshot.forEach(doc=>{
+  db.collection("accounts").doc(doc.id).update({
+    active: !isActive
+  });
+});
+
+}
+	
+	
+	
+//////////////////////////////////////////////////////////
 // AUTO FORMAT AMOUNTS (INDIAN + DECIMAL + RIGHT ALIGN)
-//////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 function formatAllAmounts(){
 
@@ -863,26 +983,24 @@ function showOpening() {
   // First Time Entry
   if (!openingBalances.openingDate) {
 
-    openPopup(`
-      <h3>Enter Opening Balance</h3>
+    let html = `<h3>Opening Balance</h3>
 
-      <label>Date</label>
-      <input type="date" id="openingDate">
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
 
-      <label>Cash</label>
-      <input type="number" id="cash">
+accountsList.forEach(acc => {
 
-      <label>BOB5606</label>
-      <input type="number" id="bob5606">
+  html += `
+    <label>${acc}</label>
+    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+  `;
 
-      <label>BOB9195</label>
-      <input type="number" id="bob9195">
+});
 
-      <label>IDBI5391</label>
-      <input type="number" id="idbi5391">
+html += `<button onclick="saveOpening()">Save</button>`;
 
-      <button onclick="saveOpening()">Save</button>
-    `);
+openPopup(html);
 
   } else {
 
@@ -905,17 +1023,20 @@ function showOpening() {
 // SAVE OPENING BALANCE
 //////////////////////////////////////////////////
 
-async function saveOpening() {
+async function saveOpening(){
 
-  await db.collection("settings").doc("openingBalance").set({
-    openingDate: document.getElementById("openingDate").value,
-    Cash: Number(document.getElementById("cash").value) || 0,
-    BOB5606: Number(document.getElementById("bob5606").value) || 0,
-    BOB9195: Number(document.getElementById("bob9195").value) || 0,
-    IDBI5391: Number(document.getElementById("idbi5391").value) || 0
-  });
+let data = {
+  openingDate: document.getElementById("openingDate").value
+};
 
-  closePopup();
+accountsList.forEach(acc=>{
+  data[acc] = Number(document.getElementById(acc).value) || 0;
+});
+
+await db.collection("settings").doc("openingBalance").set(data);
+
+closePopup();
+
 }
 
 //////////////////////////////////////////////////
@@ -3147,28 +3268,12 @@ sheet.addRow(["","","","","Closing Balance","",runningBalance]);
 }
 
 //////////////////////////////////////////////////
-// SHEET 2 : CASH
+// CREATE SHEETS FOR ALL ACCOUNTS
 //////////////////////////////////////////////////
 
-createAccountSheet("Cash");
-
-//////////////////////////////////////////////////
-// SHEET 3 : BOB5606
-//////////////////////////////////////////////////
-
-createAccountSheet("BOB5606");
-
-//////////////////////////////////////////////////
-// SHEET 4 : BOB9195
-//////////////////////////////////////////////////
-
-createAccountSheet("BOB9195");
-
-//////////////////////////////////////////////////
-// SHEET 5 : IDBI5391
-//////////////////////////////////////////////////
-
-createAccountSheet("IDBI5391");
+accountsList.forEach(acc=>{
+  createAccountSheet(acc);
+});
 
 //////////////////////////////////////////////////
 // EXPORT FILE
