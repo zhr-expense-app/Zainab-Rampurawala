@@ -838,7 +838,11 @@ function showDashboard() {
 
   loadOpeningBalance();
   loadTransactions();
-	loadAccounts();
+loadAccounts();
+
+setTimeout(()=>{
+  calculateDashboard();
+},300);
 
 
 //////////////////////////////////////////////////
@@ -1004,17 +1008,18 @@ openPopup(html);
 
   } else {
 
-    openPopup(`
-      <h3>Opening Balance</h3>
+    let html = `<h3>Opening Balance</h3>
 
-      <p><b>Date:</b> ${openingBalances.openingDate}</p>
-      <p>Cash:  ${openingBalances.Cash}</p>
-      <p>BOB5606:  ${openingBalances.BOB5606}</p>
-      <p>BOB9195:  ${openingBalances.BOB9195}</p>
-      <p>IDBI5391:  ${openingBalances.IDBI5391}</p>
+<p><b>Date:</b> ${openingBalances.openingDate}</p>
+`;
 
-      <button onclick="editOpening()">Modify</button>
-    `);
+accountsList.forEach(acc => {
+  html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
+});
+
+html += `<button onclick="editOpening()">Modify</button>`;
+
+openPopup(html);
 
   }
 }
@@ -1065,26 +1070,24 @@ function verifyAdmin() {
     document.getElementById("adminPass").value === ADMIN_PASS
   ) {
 
-    openPopup(`
-      <h3>Modify Opening Balance</h3>
+    let html = `<h3>Modify Opening Balance</h3>
 
-      <label>Date</label>
-      <input type="date" id="openingDate" value="${openingBalances.openingDate}">
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
 
-      <label>Cash</label>
-      <input type="number" id="cash" value="${openingBalances.Cash}">
+accountsList.forEach(acc => {
 
-      <label>BOB5606</label>
-      <input type="number" id="bob5606" value="${openingBalances.BOB5606}">
+  html += `
+    <label>${acc}</label>
+    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+  `;
 
-      <label>BOB9195</label>
-      <input type="number" id="bob9195" value="${openingBalances.BOB9195}">
+});
 
-      <label>IDBI5391</label>
-      <input type="number" id="idbi5391" value="${openingBalances.IDBI5391}">
+html += `<button onclick="saveOpening()">Update</button>`;
 
-      <button onclick="saveOpening()">Update</button>
-    `);
+openPopup(html);
 
   } else {
     alert("Invalid Admin Credentials");
@@ -2204,11 +2207,8 @@ function editPayment(id) {
 
     <label>Mode</label>
     <select id="account">
-      <option ${t.account==="Cash"?"selected":""}>Cash</option>
-      <option ${t.account==="BOB5606"?"selected":""}>BOB5606</option>
-      <option ${t.account==="BOB9195"?"selected":""}>BOB9195</option>
-      <option ${t.account==="IDBI5391"?"selected":""}>IDBI5391</option>
-    </select>
+  ${getAccountOptions(t.account)}
+</select>
 
     <label>Category</label>
     <select id="category">
@@ -2397,19 +2397,13 @@ function editContra(id) {
 
     <label>From Account</label>
     <select id="from">
-      <option ${t.from==="Cash"?"selected":""}>Cash</option>
-      <option ${t.from==="BOB5606"?"selected":""}>BOB5606</option>
-      <option ${t.from==="BOB9195"?"selected":""}>BOB9195</option>
-      <option ${t.from==="IDBI5391"?"selected":""}>IDBI5391</option>
-    </select>
+  ${getAccountOptions(t.from)}
+</select>
 
     <label>To Account</label>
     <select id="to">
-      <option ${t.to==="Cash"?"selected":""}>Cash</option>
-      <option ${t.to==="BOB5606"?"selected":""}>BOB5606</option>
-      <option ${t.to==="BOB9195"?"selected":""}>BOB9195</option>
-      <option ${t.to==="IDBI5391"?"selected":""}>IDBI5391</option>
-    </select>
+  ${getAccountOptions(t.to)}
+</select>
 
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
@@ -2556,11 +2550,8 @@ function editTransaction(id) {
 
     <label>Mode</label>
     <select id="account">
-      <option ${t.account==="Cash"?"selected":""}>Cash</option>
-      <option ${t.account==="BOB5606"?"selected":""}>BOB5606</option>
-      <option ${t.account==="BOB9195"?"selected":""}>BOB9195</option>
-      <option ${t.account==="IDBI5391"?"selected":""}>IDBI5391</option>
-    </select>
+  ${getAccountOptions(t.account)}
+</select>
 
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
