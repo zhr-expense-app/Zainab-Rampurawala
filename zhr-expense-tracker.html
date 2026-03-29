@@ -590,13 +590,18 @@ function loadAccounts() {
     accountsList = [];
     activeAccounts = [];
 
+    if (snapshot.empty) {
+      console.log("❌ No accounts found in Firebase");
+      return;
+    }
+
     snapshot.forEach(doc => {
 
       let data = doc.data();
 
-      console.log("Account Doc:", data); // ✅ DEBUG
+      console.log("Account Doc:", data);
 
-      if(data.name){  // ✅ safety check
+      if (data.name) {
         accountsList.push(data.name);
       }
 
@@ -606,17 +611,16 @@ function loadAccounts() {
 
     });
 
-    console.log("Final Accounts List:", accountsList); // ✅ DEBUG
+    console.log("✅ Accounts Loaded:", accountsList);
 
-    // ✅ IMPORTANT: refresh EVERYTHING after load
+    // ✅ ONLY PLACE where dashboard should run
     setTimeout(() => {
       calculateDashboard();
     }, 100);
 
   });
 
-}
-	
+}	
 
 //////////////////////////////////////////////////
 // MANAGE ACCOUNTS
@@ -962,7 +966,7 @@ function loadTransactions() {
       snapshot.forEach(doc => {
         transactionsCache.push({ id: doc.id, ...doc.data() });
       });
-       calculateDashboard();
+       
     });
 }
 
@@ -981,7 +985,7 @@ function loadOpeningBalance() {
         openingBalances = {};
       }
 
-      calculateDashboard();   // ADD THIS LINE
+      
 
     });
 }
