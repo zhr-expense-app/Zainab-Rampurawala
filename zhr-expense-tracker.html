@@ -962,11 +962,47 @@ function closePopup() {
 function loadTransactions() {
   db.collection("transactions")
     .onSnapshot(snapshot => {
+
       transactionsCache = [];
+
       snapshot.forEach(doc => {
         transactionsCache.push({ id: doc.id, ...doc.data() });
       });
-       
+
+      // ✅ ALWAYS refresh dashboard
+      calculateDashboard();
+
+      // ✅ Refresh current summary (Current Month / Last Month etc.)
+      let activeSummary = sessionStorage.getItem("activeSummary");
+
+      if (activeSummary === "currentMonth") showCurrentMonth();
+      else if (activeSummary === "lastMonth") showLastMonth();
+      else if (activeSummary === "fullYear") showFullYear();
+      else if (activeSummary === "customSummary") {
+        let fromDate = sessionStorage.getItem("summaryFromDate");
+        let toDate = sessionStorage.getItem("summaryToDate");
+
+        let balanceTitle = `Balance as on ${toDate}`;
+        let expenseTitle = `From ${fromDate} till ${toDate}`;
+
+        calculateSummary(fromDate, toDate, expenseTitle, balanceTitle);
+      }
+
+      // ✅ Refresh current report (THIS IS YOUR MAIN REQUIREMENT)
+      let currentReport = sessionStorage.getItem("currentReport");
+
+      if (currentReport === "receipts") {
+        refreshReceiptsReport();
+      }
+
+      if (currentReport === "payments") {
+        refreshPaymentReport();
+      }
+
+      if (currentReport === "contra") {
+        refreshContraReport();
+      }
+
     });
 }
 
