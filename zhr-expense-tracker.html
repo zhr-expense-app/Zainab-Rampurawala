@@ -636,19 +636,50 @@ text-align:right;
 
 <h2>Transactions</h2>
 
-<button onclick="showForm('receipt')">Receipts</button>
-<button onclick="showForm('payment')">Payments</button>
-<button onclick="showForm('contra')">Contra</button>
-<button onclick="showOpening()">Opening Balance</button>
+<div class="action-buttons">
+
+<button onclick="showForm('receipt')">
+  <i data-lucide="arrow-down-circle"></i> Receipts
+</button>
+
+<button onclick="showForm('payment')">
+  <i data-lucide="arrow-up-circle"></i> Payments
+</button>
+
+<button onclick="showForm('contra')">
+  <i data-lucide="repeat"></i> Contra
+</button>
+
+<button onclick="showOpening()">
+  <i data-lucide="wallet"></i> Opening Balance
+</button>
+
+</div>
 
 
 <h2>Reports</h2>
 
-<button onclick="showReceiptsReport()">Receipts Report</button>
-<button onclick="showPaymentsReport()">Payments Report</button>
-<button onclick="showContraReport()">Contra Report</button>
-<button onclick="showMiniStatement()">Mini Statement</button>
-<button onclick="exportCurrentReport()">Export Report</button>
+<div class="action-buttons">
+
+<button onclick="showReceiptsReport()">
+  <i data-lucide="file-text"></i> Receipts Report
+</button>
+
+<button onclick="showPaymentsReport()">
+  <i data-lucide="bar-chart-3"></i> Payments Report
+</button>
+
+<button onclick="showContraReport()">
+  <i data-lucide="shuffle"></i> Contra Report
+</button>
+
+<button onclick="showMiniStatement()">
+  <i data-lucide="book-open"></i> Mini Statement
+</button>
+
+<button onclick="exportCurrentReport()">
+  <i data-lucide="download"></i> Export Report
+</button>
 
 </div>
 </div>
