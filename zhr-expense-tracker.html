@@ -1076,6 +1076,8 @@ resetInactivityTimer();
 function openPopup(content) {
   document.getElementById("popupContent").innerHTML = content;
   document.getElementById("popupModal").style.display = "block";
+
+	lucide.createIcons(); // ✅ IMPORTANT
 }
 
 function closePopup() {
@@ -1496,7 +1498,9 @@ renderPersonalMonthlySummary();
 renderPersonalExpenseChart();
 
 formatAllAmounts();
-
+	
+lucide.createIcons();
+	
 }
 
 
@@ -1719,6 +1723,8 @@ accountsList.forEach(acc => {
       <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
     </table>
   `;
+lucide.createIcons(); // ✅ HERE
+	
 }
 
 //////////////////////////////////////////////////
@@ -3551,6 +3557,14 @@ document.addEventListener("click", function(e){
 
 });
 
+//////////////////////////////////////////////////
+// ON LOAD
+//////////////////////////////////////////////////
+
+window.onload = function(){
+  lucide.createIcons();
+};
+	
 	
 </script>
 <script src="layout.js"></script>
