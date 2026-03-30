@@ -901,14 +901,23 @@ closePopup();
 	
 async function toggleAccount(name, isActive){
 
-let snapshot = await db.collection("accounts")
-.where("name","==",name).get();
+  let snapshot = await db.collection("accounts")
+  .where("name","==",name).get();
 
-snapshot.forEach(doc=>{
-  db.collection("accounts").doc(doc.id).update({
-    active: !isActive
+  let updates = [];
+
+  snapshot.forEach(doc=>{
+    updates.push(
+      db.collection("accounts").doc(doc.id).update({
+        active: !isActive
+      })
+    );
   });
-});
+
+  await Promise.all(updates);
+
+  // ✅ Refresh popup instantly
+  showAccountManager();
 
 }
 	
@@ -1455,7 +1464,8 @@ accountsList.forEach(acc=>{
   let expenses = {
     Personal:0,
     Home:0,
-    "Office Reimbursement":0
+    "Office Reimbursement":0,
+  	"Qardan Given":0
   };
 
 
@@ -1494,18 +1504,28 @@ accountsList.forEach(acc=>{
   totalBalance += balances[acc];
 });
 
-let totalExpense = expenses.Personal + expenses.Home + expenses["Office Reimbursement"];
+let totalExpense = 
+  expenses.Personal + 
+  expenses.Home + 
+  expenses["Office Reimbursement"] +
+  expenses["Qardan Given"];
 
 let rows = "";
 
 accountsList.forEach(acc => {
 
-  rows += `
-    <tr>
-      <td>${acc}</td>
-      <td>${balances[acc] || 0}</td>
-    </tr>
-  `;
+  let isActive = activeAccounts.includes(acc);
+
+let dot = isActive
+  ? '<span style="color:green;font-size:18px;">●</span>'
+  : '<span style="color:red;font-size:18px;">●</span>';
+
+rows += `
+<tr>
+  <td>${dot} ${acc}</td>
+  <td>${balances[acc] || 0}</td>
+</tr>
+`;
 
 });
 	
@@ -1526,6 +1546,7 @@ accountsList.forEach(acc => {
       <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
       <tr><td>Home</td><td> ${expenses.Home}</td></tr>
       <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+	  <tr><td>Qardan Given</td><td> ${expenses["Qardan Given"]}</td></tr>
 <tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
     </table>
   `;
@@ -1533,7 +1554,8 @@ accountsList.forEach(acc => {
 renderExpenseChart(
   expenses.Personal,
   expenses.Home,
-  expenses["Office Reimbursement"]
+  expenses["Office Reimbursement"],
+  expenses["Qardan Given"]
 );
 
 renderPersonalMonthlySummary();
@@ -1817,9 +1839,9 @@ function renderExpenseChart(personal, home, office){
   expenseChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Personal","Home","Office Reimbursement"],
+      labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
       datasets: [{
-        data: [personal, home, office],
+        data: [personal, home, office, Qardan],
         backgroundColor: [
           "#4CAF50",
           "#2196F3",
@@ -2030,6 +2052,7 @@ function showForm(type) {
         <option>Personal</option>
         <option>Home</option>
         <option>Office Reimbursement</option>
+		<option>Qardan Given</option>
       </select>
 
       <label>Date</label>
@@ -2317,6 +2340,7 @@ function showPaymentsReport() {
       <option>Personal</option>
       <option>Home</option>
       <option>Office Reimbursement</option>
+	  <option>Qardan Given</option>
     </select>
 
     <label>From Date</label>
@@ -3303,7 +3327,8 @@ const workbook = new ExcelJS.Workbook();
 let expenses = {
 Personal:0,
 Home:0,
-"Office Reimbursement":0
+"Office Reimbursement":0,
+"Qardan Given":0
 };
 
 transactionsCache.forEach(t=>{
