@@ -140,7 +140,16 @@ button:active{
       box-sizing: border-box;
     }
   
-    
+
+/* FIX LOGIN BUTTON ALIGNMENT */
+#login button{
+  display:block;
+  margin:15px auto 0;
+  text-align:center;
+  justify-content:center; /* 👈 important */
+}
+
+	  
     /* LOGIN BOX */
 
     #login {
@@ -540,6 +549,33 @@ text-align:right;
 }
 
 
+
+/* MOBILE HORIZONTAL SCROLL BUTTONS */
+@media screen and (max-width:768px){
+
+.action-buttons{
+  display:flex;
+  flex-wrap:nowrap;              /* ❗ no wrapping */
+  overflow-x:auto;               /* ❗ horizontal scroll */
+  -webkit-overflow-scrolling:touch;
+  gap:10px;
+  padding-bottom:5px;
+}
+
+/* Hide scrollbar (clean look) */
+.action-buttons::-webkit-scrollbar{
+  display:none;
+}
+
+/* Prevent button shrinking */
+.action-buttons button{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+}
+
+	  
 
 </style>
 
