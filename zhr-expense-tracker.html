@@ -1491,7 +1491,11 @@ accountsList.forEach(acc=>{
     if(t.date >= fromDate && t.date <= toDate){
 
       if (t.type === "payment" || t.type === "outflow"){
-        expenses[t.category] += Number(t.amount);
+        if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
+
+expenses[t.category] += Number(t.amount);
       }
 
     }
@@ -1740,7 +1744,11 @@ accountsList.forEach(acc=>{
     // PAYMENTS
     if (t.type === "payment" || t.type === "outflow") {
       balances[t.account] -= Number(t.amount);
-      expenses[t.category] += Number(t.amount);
+      if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
+
+expenses[t.category] += Number(t.amount);
     }
 
     // CONTRA
@@ -3336,7 +3344,11 @@ transactionsCache.forEach(t=>{
 
 if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
 
-expenses[t.category]+=Number(t.amount);
+if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
+
+expenses[t.category] += Number(t.amount);
 
 }
 
