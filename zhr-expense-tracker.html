@@ -91,21 +91,51 @@ font-weight:700;
       font-size: 14px;
     }
 
-    button {
-      background: #001d4c;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      margin: 6px;
-      cursor: pointer;
-      font-weight: 500;
-      border-radius: 4px;
-    }
+    /* BUTTON GROUP */
+.action-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
 
-    button:hover {
-      opacity: 0.9;
-    }
+/* MODERN BUTTON */
+button{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#001d4c;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  transition: all 0.2s ease;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
 
+/* ICON SIZE */
+button i{
+  width:16px;
+  height:16px;
+}
+
+/* HOVER EFFECT */
+button:hover{
+  transform: translateY(-2px);
+  box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  opacity:1;
+}
+
+/* CLICK EFFECT */
+button:active{
+  transform: scale(0.96);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+
+	  
     * {
       box-sizing: border-box;
     }
@@ -381,6 +411,51 @@ margin:6px 6px;
 font-size:14px;
 }
 
+/* BUTTON GROUP */
+.action-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+/* MODERN BUTTON */
+button{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#001d4c;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  transition: all 0.2s ease;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* ICON SIZE */
+button i{
+  width:16px;
+  height:16px;
+}
+
+/* HOVER EFFECT */
+button:hover{
+  transform: translateY(-2px);
+  box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  opacity:1;
+}
+
+/* CLICK EFFECT */
+button:active{
+  transform: scale(0.96);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+
+	
 #login {
 	margin: 50px auto;
 }
@@ -493,15 +568,37 @@ text-align:right;
 
 	
 	<!-- BUTTONS -->
-    <div>
-      <button onclick="showCurrentMonth()">Current Month</button>
-      <button onclick="showLastMonth()">Last Month</button>
-      <button onclick="showFullYear()">Full Year</button>
-      <button onclick="showCustomSummary()">Custom Date Filter</button>
-      <button onclick="exportSummaryExcel()">Export Dashboard</button>
-		<button onclick="manageAccounts()">Manage Accounts</button>
-      <button onclick="confirmLogout()" style="background:green;">Logout</button>
-    </div>
+    <div class="action-buttons">
+
+<button onclick="showCurrentMonth()">
+  <i data-lucide="calendar"></i> Current Month
+</button>
+
+<button onclick="showLastMonth()">
+  <i data-lucide="calendar-days"></i> Last Month
+</button>
+
+<button onclick="showFullYear()">
+  <i data-lucide="bar-chart"></i> Full Year
+</button>
+
+<button onclick="showCustomSummary()">
+  <i data-lucide="filter"></i> Custom Filter
+</button>
+
+<button onclick="exportSummaryExcel()">
+  <i data-lucide="download"></i> Export Dashboard
+</button>
+
+<button onclick="manageAccounts()">
+  <i data-lucide="settings"></i> Accounts
+</button>
+
+<button onclick="confirmLogout()" style="background:green;">
+  <i data-lucide="log-out"></i> Logout
+</button>
+
+</div>
 
 
 <!-- FIRST ROW : 3 TABLES -->
@@ -3386,7 +3483,7 @@ function resetInactivityTimer() {
 }	
 
 //////////////////////////////////////////////////
-// 
+// START INACTIVITY TRACKING
 //////////////////////////////////////////////////
 
 function startInactivityTracking() {
@@ -3405,9 +3502,30 @@ function stopInactivityTracking() {
   });
 }	
 	
+
+//////////////////////////////////////////////////
+// BUTTON SOUND EFFECT
+//////////////////////////////////////////////////
+	
+document.addEventListener("click", function(e){
+
+  if(e.target.closest("button")){
+
+    let sound = document.getElementById("clickSound");
+
+    sound.currentTime = 0;
+    sound.play();
+
+  }
+
+});
+
 	
 </script>
 <script src="layout.js"></script>
+
+<audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b4c89.mp3?filename=click-124467.mp3"></audio>
+	
 </body>
 
 </html>
