@@ -3593,13 +3593,45 @@ document.addEventListener("click", function(e){
 
     let sound = document.getElementById("clickSound");
 
-    sound.currentTime = 0;
-    sound.play();
+    if(sound){
+
+      sound.pause();
+      sound.currentTime = 0;
+
+      let playPromise = sound.play();
+
+      if(playPromise !== undefined){
+        playPromise.catch(() => {
+          // 🔇 Ignore autoplay error (mobile restriction)
+        });
+      }
+
+    }
 
   }
 
 });
 
+//////////////////////////////////////////////////
+// SOUND
+//////////////////////////////////////////////////
+
+document.addEventListener("touchstart", function initSound(){
+
+  let sound = document.getElementById("clickSound");
+
+  if(sound){
+    sound.play().then(()=>{
+      sound.pause();
+      sound.currentTime = 0;
+    }).catch(()=>{});
+  }
+
+  document.removeEventListener("touchstart", initSound);
+
+});
+
+	
 //////////////////////////////////////////////////
 // ON LOAD
 //////////////////////////////////////////////////
@@ -3612,7 +3644,9 @@ window.onload = function(){
 </script>
 <script src="layout.js"></script>
 
-<audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b4c89.mp3?filename=click-124467.mp3"></audio>
+<audio id="clickSound" preload="auto" playsinline>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b4c89.mp3?filename=click-124467.mp3" type="audio/mpeg">
+</audio>
 	
 </body>
 
