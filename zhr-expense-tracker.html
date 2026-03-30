@@ -1828,7 +1828,7 @@ accountsList.forEach(acc=>{
 // Pie Chart Function
 //////////////////////////////////////////////////
 
-function renderExpenseChart(personal, home, office){
+function renderExpenseChart(personal, home, office, qardan){
 
   const ctx = document.getElementById("expensePieChart");
 
@@ -1841,12 +1841,12 @@ function renderExpenseChart(personal, home, office){
     data: {
       labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
       datasets: [{
-        data: [personal, home, office, qardan],
+        data: [personal, home, office, qardan], // ✅ FIXED
         backgroundColor: [
           "#4CAF50",
           "#2196F3",
           "#FF9800",
-		"#9C27B0"   // ✅ add color for Qardan
+          "#9C27B0"
         ]
       }]
     },
@@ -1861,7 +1861,6 @@ function renderExpenseChart(personal, home, office){
   });
 
 }
-
 
 //////////////////////////////////////////////////
 // Personal Expense Chart Function
@@ -3327,10 +3326,10 @@ const workbook = new ExcelJS.Workbook();
 //////////////////////////////////////////////////
 
 let expenses = {
-Personal:0,
-Home:0,
-"Office Reimbursement":0,
-"Qardan Given":0
+  Personal: 0,
+  Home: 0,
+  "Office Reimbursement": 0,
+  "Qardan Given": 0
 };
 
 transactionsCache.forEach(t=>{
