@@ -1841,11 +1841,12 @@ function renderExpenseChart(personal, home, office){
     data: {
       labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
       datasets: [{
-        data: [personal, home, office, Qardan],
+        data: [personal, home, office, qardan],
         backgroundColor: [
           "#4CAF50",
           "#2196F3",
-          "#FF9800"
+          "#FF9800",
+		"#9C27B0"   // ✅ add color for Qardan
         ]
       }]
     },
@@ -2464,6 +2465,7 @@ function editPayment(id) {
       <option ${t.category==="Personal"?"selected":""}>Personal</option>
       <option ${t.category==="Home"?"selected":""}>Home</option>
       <option ${t.category==="Office Reimbursement"?"selected":""}>Office Reimbursement</option>
+	  <option ${t.category==="Qardan Given"?"selected":""}>Qardan Given</option>
     </select>
 
     <label>Date</label>
@@ -3354,6 +3356,7 @@ summarySheet.addRow(["Category","Amount"]);
 summarySheet.addRow(["Personal",expenses.Personal]);
 summarySheet.addRow(["Home",expenses.Home]);
 summarySheet.addRow(["Office Reimbursement",expenses["Office Reimbursement"]]);
+summarySheet.addRow(["Qardan Given",expenses["Qardan Given"]]); // ✅ ADD THIS
 
 //////////////////////////////////////////////////
 // PIE CHART IMAGE
