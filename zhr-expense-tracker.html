@@ -150,6 +150,28 @@ button:active{
 }
 
 
+
+.toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#001d4c;
+  color:white;
+  padding:12px 20px;
+  border-radius:8px;
+  font-size:14px;
+  opacity:0;
+  transition:all 0.3s ease;
+  z-index:3000;
+}
+
+.toast.show{
+  opacity:1;
+  bottom:50px;
+}
+
+	  
 .loader-overlay{
   position:fixed;
   top:0;
@@ -909,17 +931,21 @@ async function addAccount(){
 let name = document.getElementById("newAccount").value.trim();
 
 if(!name){
-  alert("Enter account name");
+  showToast("Enter account name","error");
   return;
 }
+
+showLoader();
 
 await db.collection("accounts").add({
   name: name,
   active: true
 });
 
-closePopup();
+hideLoader();
+showToast("Account Added ✅");
 
+closePopup();
 }	
 
 
@@ -930,24 +956,27 @@ closePopup();
 	
 async function toggleAccount(name, isActive){
 
-  let snapshot = await db.collection("accounts")
-  .where("name","==",name).get();
+showLoader();
 
-  let updates = [];
+let snapshot = await db.collection("accounts")
+.where("name","==",name).get();
 
-  snapshot.forEach(doc=>{
-    updates.push(
-      db.collection("accounts").doc(doc.id).update({
-        active: !isActive
-      })
-    );
-  });
+let updates = [];
 
-  await Promise.all(updates);
+snapshot.forEach(doc=>{
+  updates.push(
+    db.collection("accounts").doc(doc.id).update({
+      active: !isActive
+    })
+  );
+});
 
-  // ✅ Refresh popup instantly
-  showAccountManager();
+await Promise.all(updates);
 
+hideLoader();
+showToast("Account Updated ✅");
+
+showAccountManager();
 }
 	
 	
@@ -1038,20 +1067,21 @@ let transactionsCache = [];
 
 function login(){
 
-let email = document.getElementById("username").value;
-let password = document.getElementById("password").value;
+  showLoader();
 
-auth.signInWithEmailAndPassword(email,password)
-.then(()=>{
+  let email = document.getElementById("username").value;
+  let password = document.getElementById("password").value;
 
-  startInactivityTracking(); // ✅ ONLY after successful login
-
-})
-.catch(()=>{
-
-  alert("Invalid Login");
-
-});
+  auth.signInWithEmailAndPassword(email,password)
+  .then(()=>{
+    hideLoader();
+    showToast("Login Successful ✅");
+    startInactivityTracking();
+  })
+  .catch(()=>{
+    hideLoader();
+    showToast("Invalid Login ❌","error");
+  });
 
 }
 
@@ -1171,6 +1201,9 @@ function closePopup() {
 
 
 function loadTransactions() {
+
+	showLoader(); // ✅ ADD THIS
+	
   db.collection("transactions")
     .onSnapshot(snapshot => {
 
@@ -1291,6 +1324,8 @@ openPopup(html);
 
 async function saveOpening(){
 
+showLoader();
+
 let data = {
   openingDate: document.getElementById("openingDate").value
 };
@@ -1301,8 +1336,10 @@ accountsList.forEach(acc=>{
 
 await db.collection("settings").doc("openingBalance").set(data);
 
-closePopup();
+hideLoader();
+showToast("Opening Balance Saved ✅");
 
+closePopup();
 }
 
 //////////////////////////////////////////////////
@@ -2551,6 +2588,8 @@ async function updatePayment(id) {
     return;
   }
 
+	  showLoader();
+
   await db.collection("transactions").doc(id).update({
     account: account,
     category: document.getElementById("category").value,
@@ -2559,7 +2598,10 @@ async function updatePayment(id) {
     amount: amount
   });
 
-  closePopup();
+  hideLoader();
+showToast("Payment Updated ✏️");
+
+closePopup();
 
   // reload report with same filter
   setTimeout(refreshPaymentReport,300);
@@ -2744,7 +2786,7 @@ async function updateContra(id) {
     alert("Insufficient balance in " + from);
     return;
   }
-
+showLoader();
   await db.collection("transactions").doc(id).update({
     from: from,
     to: to,
@@ -2753,7 +2795,10 @@ async function updateContra(id) {
     amount: amount
   });
 
-  closePopup();
+  hideLoader();
+showToast("Contra Updated ✏️");
+
+closePopup();
 
   // refresh contra report automatically
   if(sessionStorage.getItem("currentReport") === "contra"){
@@ -2878,7 +2923,7 @@ async function updateTransaction(id) {
     alert("Amount must be greater than 0");
     return;
   }
-
+showLoader();
   await db.collection("transactions").doc(id).update({
     account: document.getElementById("account").value,
     date: document.getElementById("date").value,
@@ -2886,7 +2931,10 @@ async function updateTransaction(id) {
     amount: amount
   });
 
-  closePopup();
+  hideLoader();
+showToast("Receipt Updated ✏️");
+
+closePopup();
 
   // refresh receipts report automatically
   if(sessionStorage.getItem("currentReport") === "receipts"){
@@ -2969,27 +3017,32 @@ formatAllAmounts();
 // DELETE TRANSACTION
 //////////////////////////////////////////////////
 
-async function deleteTransaction(id) {
+function deleteTransaction(id){
 
-  if (!confirm("Are you sure you want to delete this transaction?"))
-    return;
+openPopup(`
+  <h3>Confirm Delete</h3>
+  <p>Are you sure you want to delete?</p>
+  <button onclick="confirmDelete('${id}')">Yes, Delete</button>
+`);
 
-  await db.collection("transactions").doc(id).delete();
+}
 
-  let currentReport = sessionStorage.getItem("currentReport");
+async function confirmDelete(id){
 
-  if(currentReport === "receipts"){
-    setTimeout(refreshReceiptsReport,300);
-  }
+showLoader();
 
-  if(currentReport === "payments"){
-    setTimeout(refreshPaymentReport,300);
-  }
+await db.collection("transactions").doc(id).delete();
 
-  if(currentReport === "contra"){
-    setTimeout(refreshContraReport,300);
-  }
+hideLoader();
+showToast("Deleted Successfully 🗑️");
 
+closePopup();
+
+let currentReport = sessionStorage.getItem("currentReport");
+
+if(currentReport === "receipts") setTimeout(refreshReceiptsReport,300);
+if(currentReport === "payments") setTimeout(refreshPaymentReport,300);
+if(currentReport === "contra") setTimeout(refreshContraReport,300);
 }
 
 //////////////////////////////////////////////////
@@ -3733,6 +3786,31 @@ function hideLoader(){
   document.getElementById("loader").style.display = "none";
 }
 	
+//////////////////////////////////////////////////
+// SHOW TOAST
+//////////////////////////////////////////////////
+
+function showToast(message, type="success"){
+
+  const toast = document.getElementById("toast");
+
+  if(!toast) return; // safety
+
+  toast.innerText = message;
+
+  if(type === "error"){
+    toast.style.background = "#e53935";
+  } else {
+    toast.style.background = "#001d4c";
+  }
+
+  toast.classList.add("show");
+
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  },3000);
+}
+
 	
 </script>
 <script src="layout.js"></script>
@@ -3741,6 +3819,8 @@ function hideLoader(){
   <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b4c89.mp3?filename=click-124467.mp3" type="audio/mpeg">
 </audio>
 
+<div id="toast" class="toast"></div>
+	
 <div id="loader" class="loader-overlay" style="display:none;">
   <div class="loader"></div>
 </div>
