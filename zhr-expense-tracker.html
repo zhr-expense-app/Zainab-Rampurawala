@@ -2196,7 +2196,7 @@ async function saveReceipt() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if (!account || !date || !narration || amount === 0) {
+  if (!account || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
 document.getElementById("amount").focus();
 return;
@@ -2233,7 +2233,7 @@ async function savePayment() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if (!account || !category || !date || !narration || amount === 0) {
+  if (!account || !category || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
     document.getElementById("amount").focus();
 	  return;
@@ -2289,7 +2289,7 @@ async function saveContra() {
   }
 
   if (from === to) {
-    showToast("From and To account cannot be same ❌","error");
+    showToast("From and To account cannot be the same ❌","error");
     return;
   }
 
@@ -2592,7 +2592,7 @@ let date = document.getElementById("date").value;
 let narration = document.getElementById("narration").value.trim();
 let amount = Number(document.getElementById("amount").value);
 
-if (!account || !category || !date || !narration || amount === 0) {
+if (!account || !category || !date || !narration || isNaN(amount)) {
   showToast("All fields are mandatory","error");
   document.getElementById("amount").focus();
   return;
@@ -2801,7 +2801,7 @@ if (!from || !to || !date || !narration || !amount) {
 }
 
 if (from === to) {
-  showToast("From and To account cannot be same ❌","error");
+  showToast("From and To account cannot be the same ❌","error");
   return;
 }
 
@@ -2952,7 +2952,7 @@ let date = document.getElementById("date").value;
 let narration = document.getElementById("narration").value.trim();
 let amount = Number(document.getElementById("amount").value);
 
-if (!account || !date || !narration || amount === 0) {
+if (!account || !date || !narration || isNaN(amount)) {
   showToast("All fields are mandatory","error");
   document.getElementById("amount").focus();
   return;
