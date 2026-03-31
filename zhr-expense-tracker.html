@@ -1202,10 +1202,14 @@ function closePopup() {
 
 function loadTransactions() {
 
-	showLoader(); // ✅ ADD THIS
-	
+  let firstLoad = true; // ✅ ADD HERE
+
   db.collection("transactions")
     .onSnapshot(snapshot => {
+
+      if(firstLoad){
+        showLoader(); // ✅ only first time
+      }
 
       transactionsCache = [];
 
@@ -1213,12 +1217,15 @@ function loadTransactions() {
         transactionsCache.push({ id: doc.id, ...doc.data() });
       });
 
-hideLoader(); // ✅ after load
-		
+      if(firstLoad){
+        hideLoader(); // ✅ only first time
+        firstLoad = false;
+      }
+
       // ✅ ALWAYS refresh dashboard
       calculateDashboard();
 
-      // ✅ Refresh current summary (Current Month / Last Month etc.)
+      // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
 
       if (activeSummary === "currentMonth") showCurrentMonth();
@@ -1234,7 +1241,7 @@ hideLoader(); // ✅ after load
         calculateSummary(fromDate, toDate, expenseTitle, balanceTitle);
       }
 
-      // ✅ Refresh current report (THIS IS YOUR MAIN REQUIREMENT)
+      // ✅ Refresh current report
       let currentReport = sessionStorage.getItem("currentReport");
 
       if (currentReport === "receipts") {
@@ -3134,6 +3141,8 @@ accountsList.forEach(acc=>{
 
 function exportCurrentReport(){
 
+showLoader(); // ADD	
+
 let reportType = sessionStorage.getItem("currentReport");
 
 if(!reportType){
@@ -3383,6 +3392,9 @@ let fileName = `${title}_${fromDate}_to_${toDate}.xlsx`;
 
 XLSX.writeFile(workbook,fileName);
 
+hideLoader(); // ADD
+showToast("Report Exported 📊");	
+
 }
 
 
@@ -3411,6 +3423,8 @@ openPopup(`
 //////////////////////////////////////////////////
 
 async function exportMiniStatement(){
+
+showLoader(); // ADD	
 
 let fromDate = document.getElementById("miniFrom").value;
 let toDate = document.getElementById("miniTo").value;
@@ -3635,6 +3649,9 @@ const buffer = await workbook.xlsx.writeBuffer();
 
 saveAs(new Blob([buffer]),fileName);
 
+hideLoader(); // ADD
+showToast("Report Exported 📊");	
+
 }
 
 
@@ -3670,7 +3687,7 @@ function logout() {
   openPopup(`
     <h3>Confirm Logout</h3>
     <p>Are you sure you want to logout?</p>
-    <button onclick="logout()">Yes, Logout</button>
+    <button onclick="confirmLogoutNow()">Yes, Logout</button>
   `);
 
 	}
@@ -3813,6 +3830,19 @@ function showToast(message, type="success"){
   setTimeout(()=>{
     toast.classList.remove("show");
   },3000);
+}
+
+//////////////////////////////////////////////////
+// CONFIRM LOGOUT
+//////////////////////////////////////////////////	
+
+function confirmLogoutNow(){
+  showLoader();
+  setTimeout(()=>{
+    logout();
+    hideLoader();
+    showToast("Logged out successfully 👋");
+  },500);
 }
 
 	
