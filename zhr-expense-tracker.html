@@ -2196,7 +2196,7 @@ async function saveReceipt() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if (!account || !date || !narration || !amount) {
+  if (!account || !date || !narration || amount === 0) {
     showToast("All fields are mandatory","error");
 document.getElementById("amount").focus();
 return;
@@ -2233,7 +2233,7 @@ async function savePayment() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if (!account || !category || !date || !narration || !amount) {
+  if (!account || !category || !date || !narration || amount === 0) {
     showToast("All fields are mandatory","error");
     document.getElementById("amount").focus();
 	  return;
@@ -2587,12 +2587,21 @@ function editPayment(id) {
 async function updatePayment(id) {
 
   let account = document.getElementById("account").value;
-  let amount = Number(document.getElementById("amount").value);
+let category = document.getElementById("category").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
+if (!account || !category || !date || !narration || amount === 0) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
+
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
 
   let balance = getBalanceExcludingTransaction(account, id);
 
@@ -2780,18 +2789,26 @@ function editContra(id) {
 async function updateContra(id) {
 
   let from = document.getElementById("from").value;
-  let to = document.getElementById("to").value;
-  let amount = Number(document.getElementById("amount").value);
+let to = document.getElementById("to").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
+if (!from || !to || !date || !narration || !amount) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
 
-  if (from === to) {
-    showToast("From and To account cannot be same ❌","error");
-    return;
-  }
+if (from === to) {
+  showToast("From and To account cannot be same ❌","error");
+  return;
+}
+
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
 
   let balance = getBalanceExcludingTransaction(from, id);
 
@@ -2930,12 +2947,21 @@ function editTransaction(id) {
 
 async function updateTransaction(id) {
 
-  let amount = Number(document.getElementById("amount").value);
+  let account = document.getElementById("account").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
+if (!account || !date || !narration || amount === 0) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
+
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
 showLoader();
   await db.collection("transactions").doc(id).update({
     account: document.getElementById("account").value,
@@ -3717,9 +3743,9 @@ function resetInactivityTimer() {
     showToast("Session expired due to inactivity ⏳","error");
 
 setTimeout(()=>{
-  
-},1000);
     logout();
+  },1000);
+    
 
   }, 2 * 60 * 1000); // 2 minutes
 	
