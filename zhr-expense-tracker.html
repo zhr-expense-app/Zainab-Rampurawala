@@ -875,7 +875,7 @@ if(
   document.getElementById("adminId").value !== ADMIN_ID ||
   document.getElementById("adminPass").value !== ADMIN_PASS
 ){
-  alert("Invalid Admin");
+  showToast("Invalid Admin ❌","error");
   return;
 }
 
@@ -1388,7 +1388,7 @@ html += `<button onclick="saveOpening()">Update</button>`;
 openPopup(html);
 
   } else {
-    alert("Invalid Admin Credentials");
+    showToast("Invalid Admin Credentials ❌","error");
   }
 }
 
@@ -1478,7 +1478,7 @@ function runCustomSummary(){
   let toDate = document.getElementById("summaryTo").value;
 
   if(!fromDate || !toDate){
-    alert("Both dates are mandatory");
+    showToast("Please select both From Date and To Date","error");
     return;
   }
 
@@ -2192,7 +2192,7 @@ async function saveReceipt() {
   }
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 
@@ -2228,14 +2228,14 @@ async function savePayment() {
   }
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 
   let balance = getCurrentBalance(account);
 
   if (balance < amount) {
-    alert("Insufficient balance in " + account);
+    showToast("Insufficient balance in " + account,"error");
     return;
   }
 
@@ -2276,19 +2276,19 @@ async function saveContra() {
   }
 
   if (from === to) {
-    alert("From and To account cannot be same");
+    showToast("From and To account cannot be same ❌","error");
     return;
   }
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 
   let balance = getCurrentBalance(from);
 
   if (balance < amount) {
-    alert("Insufficient balance in " + from);
+    showToast("Insufficient balance in " + from + " ❌","error");
     return;
   }
 
@@ -2338,7 +2338,7 @@ let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
 if (!fromDate || !toDate) {
-  alert("Please select both From Date and To Date");
+  showToast("Please select both From Date and To Date","error");
   return;
 }
 
@@ -2452,7 +2452,7 @@ function runPaymentReport() {
   let toDate = document.getElementById("toDate").value;
 
 if (!category || !fromDate || !toDate) {
-  alert("Please select Category and Date Range");
+  showToast("Please select Category and Date Range ❌","error");
   return;
 }
 
@@ -2577,14 +2577,14 @@ async function updatePayment(id) {
   let amount = Number(document.getElementById("amount").value);
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 
   let balance = getBalanceExcludingTransaction(account, id);
 
   if (balance < amount) {
-    alert("Insufficient balance in " + account);
+    showToast("Insufficient balance in " + account,"error");
     return;
   }
 
@@ -2710,7 +2710,7 @@ function runContraReport(){
   let toDate = document.getElementById("toDate").value;
 
 if (!fromDate || !toDate) {
-    alert("Please select both From Date and To Date");
+    showToast("Please select both From Date and To Date","error");
     return;
   }
 
@@ -2771,19 +2771,19 @@ async function updateContra(id) {
   let amount = Number(document.getElementById("amount").value);
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 
   if (from === to) {
-    alert("From and To account cannot be the same");
+    showToast("From and To account cannot be the same ❌","error");
     return;
   }
 
   let balance = getBalanceExcludingTransaction(from, id);
 
   if (balance < amount) {
-    alert("Insufficient balance in " + from);
+    showToast("Insufficient balance in " + from + " ❌","error");
     return;
   }
 showLoader();
@@ -2920,7 +2920,7 @@ async function updateTransaction(id) {
   let amount = Number(document.getElementById("amount").value);
 
   if (amount <= 0) {
-    alert("Amount must be greater than 0");
+    showToast("Amount must be greater than 0","error");
     return;
   }
 showLoader();
@@ -3137,7 +3137,7 @@ function exportCurrentReport(){
 let reportType = sessionStorage.getItem("currentReport");
 
 if(!reportType){
-alert("Please run a report first");
+showToast("Please run a report first ❌","error");
 return;
 }
 
@@ -3416,7 +3416,7 @@ let fromDate = document.getElementById("miniFrom").value;
 let toDate = document.getElementById("miniTo").value;
 
 if(!fromDate || !toDate){
-alert("Both dates required");
+showToast("Please select both From Date and To Date","error");
 return;
 }
 
@@ -3689,7 +3689,11 @@ function resetInactivityTimer() {
 
   inactivityTimer = setTimeout(() => {
     
-    alert("Session expired due to inactivity");
+    showToast("Session expired due to inactivity ⏳","error");
+
+setTimeout(()=>{
+  logout();
+},1000);
     logout();
 
   }, 2 * 60 * 1000); // 2 minutes
