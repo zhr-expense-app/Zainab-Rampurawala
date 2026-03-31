@@ -1656,6 +1656,8 @@ lucide.createIcons();
 
 async function exportSummaryExcel(){
 
+showLoader(); // ADD at top	
+
 //////////////////////////////////////////////////
 // GET TITLES
 //////////////////////////////////////////////////
@@ -1786,7 +1788,8 @@ cell.alignment = { horizontal: "right" };
 const buffer = await workbook.xlsx.writeBuffer();
 saveAs(new Blob([buffer]), fileName);
 
-
+hideLoader();
+showToast("Dashboard Exported 📊");
 
 }
 
@@ -2195,7 +2198,8 @@ async function saveReceipt() {
 
   if (!account || !date || !narration || !amount) {
     showToast("All fields are mandatory","error");
-    return;
+document.getElementById("amount").focus();
+return;
   }
 
   if (amount <= 0) {
@@ -2231,7 +2235,8 @@ async function savePayment() {
 
   if (!account || !category || !date || !narration || !amount) {
     showToast("All fields are mandatory","error");
-    return;
+    document.getElementById("amount").focus();
+	  return;
   }
 
   if (amount <= 0) {
@@ -2279,7 +2284,8 @@ async function saveContra() {
 
   if (!from || !to || !date || !narration || !amount) {
     showToast("All fields are mandatory","error");
-    return;
+    document.getElementById("amount").focus();
+	  return;
   }
 
   if (from === to) {
@@ -2783,7 +2789,7 @@ async function updateContra(id) {
   }
 
   if (from === to) {
-    showToast("From and To account cannot be the same ❌","error");
+    showToast("From and To account cannot be same ❌","error");
     return;
   }
 
@@ -3146,8 +3152,9 @@ showLoader(); // ADD
 let reportType = sessionStorage.getItem("currentReport");
 
 if(!reportType){
-showToast("Please run a report first ❌","error");
-return;
+  hideLoader(); // ✅ ADD THIS
+  showToast("Please run a report first ❌","error");
+  return;
 }
 
 let rows = [];
@@ -3430,8 +3437,9 @@ let fromDate = document.getElementById("miniFrom").value;
 let toDate = document.getElementById("miniTo").value;
 
 if(!fromDate || !toDate){
-showToast("Please select both From Date and To Date","error");
-return;
+  hideLoader(); // ✅ ADD
+  showToast("Please select both From Date and To Date","error");
+  return;
 }
 
 closePopup();
@@ -3709,7 +3717,7 @@ function resetInactivityTimer() {
     showToast("Session expired due to inactivity ⏳","error");
 
 setTimeout(()=>{
-  logout();
+  
 },1000);
     logout();
 
