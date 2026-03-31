@@ -2187,7 +2187,7 @@ async function saveReceipt() {
   let amount = Number(document.getElementById("amount").value);
 
   if (!account || !date || !narration || !amount) {
-    alert("All fields are mandatory");
+    showToast("All fields are mandatory","error");
     return;
   }
 
@@ -2223,7 +2223,7 @@ async function savePayment() {
   let amount = Number(document.getElementById("amount").value);
 
   if (!account || !category || !date || !narration || !amount) {
-    alert("All fields are mandatory");
+    showToast("All fields are mandatory","error");
     return;
   }
 
@@ -2271,7 +2271,7 @@ async function saveContra() {
   let amount = Number(document.getElementById("amount").value);
 
   if (!from || !to || !date || !narration || !amount) {
-    alert("All fields are mandatory");
+    showToast("All fields are mandatory","error");
     return;
   }
 
