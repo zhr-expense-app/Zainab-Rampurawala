@@ -1412,22 +1412,21 @@ openPopup(html);
 
 function showCurrentMonth(){
 
-sessionStorage.setItem("activeSummary","currentMonth");
+  sessionStorage.setItem("activeSummary","currentMonth");
 
   let today = new Date();
 
   let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  let todayDate = formatDateLocal(today);
 
-let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-let firstDayStr = formatDateLocal(firstDay);
+  let from = formatDateLocal(firstDay);
+  let to = formatDateLocal(today);
 
   let monthName = getMonthName(today.getMonth());
 
-  let balanceTitle = `Balance as on ${todayDate}`;
+  let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `For the month of ${monthName} ${today.getFullYear()}`;
 
-  calculateSummary(firstDayStr, todayDate, expenseTitle, balanceTitle);
+  calculateSummary(from, to, expenseTitle, balanceTitle);
 
 }
 
@@ -1438,20 +1437,19 @@ let firstDayStr = formatDateLocal(firstDay);
 
 function showLastMonth(){
 
-sessionStorage.setItem("activeSummary","lastMonth");
+  sessionStorage.setItem("activeSummary","lastMonth");
 
   let today = new Date();
 
-  
   let firstDay = new Date(today.getFullYear(), today.getMonth()-1, 1);
-let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+  let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
 
-let from = formatDateLocal(firstDay);
-let to = formatDateLocal(lastDay);
+  let from = formatDateLocal(firstDay);
+  let to = formatDateLocal(lastDay);
 
   let monthName = getMonthName(firstDay.getMonth());
 
-  let balanceTitle = `Balance as on ${lastDay.toISOString().split("T")[0]}`;
+  let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `For the month of ${monthName} ${firstDay.getFullYear()}`;
 
   calculateSummary(from, to, expenseTitle, balanceTitle);
@@ -1495,14 +1493,23 @@ function runCustomSummary(){
   let fromDate = document.getElementById("summaryFrom").value;
   let toDate = document.getElementById("summaryTo").value;
 
+  // ❗ Empty check
   if(!fromDate || !toDate){
     showToast("Please select both From Date and To Date","error");
+    document.getElementById("summaryFrom").focus();
     return;
   }
 
-sessionStorage.setItem("activeSummary","customSummary");
-sessionStorage.setItem("summaryFromDate",fromDate);
-sessionStorage.setItem("summaryToDate",toDate);
+  // ❗ Date logic check
+  if(fromDate > toDate){
+    showToast("From Date cannot be after To Date ❌","error");
+    document.getElementById("summaryFrom").focus();
+    return;
+  }
+
+  sessionStorage.setItem("activeSummary","customSummary");
+  sessionStorage.setItem("summaryFromDate",fromDate);
+  sessionStorage.setItem("summaryToDate",toDate);
 
   closePopup();
 
@@ -1520,14 +1527,17 @@ sessionStorage.setItem("summaryToDate",toDate);
 
 function showCustomSummary(){
 
+let from = sessionStorage.getItem("summaryFromDate") || "";
+let to = sessionStorage.getItem("summaryToDate") || "";
+
 openPopup(`
 <h3>Custom Date Filter</h3>
 
 <label>From Date</label>
-<input type="date" id="summaryFrom">
+<input type="date" id="summaryFrom" value="${from}">
 
 <label>To Date</label>
-<input type="date" id="summaryTo">
+<input type="date" id="summaryTo" value="${to}">
 
 <button onclick="runCustomSummary()">Run</button>
 `);
