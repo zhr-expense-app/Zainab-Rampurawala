@@ -1065,24 +1065,30 @@ let transactionsCache = [];
 //////////////////////////////////////////////////
 
 
-function login(){
+async function login(){
 
   showLoader();
 
   let email = document.getElementById("username").value;
   let password = document.getElementById("password").value;
 
-  auth.signInWithEmailAndPassword(email,password)
-  .then(()=>{
+  try{
+    await auth.signInWithEmailAndPassword(email,password);
+
     hideLoader();
     showToast("Login Successful ✅");
-    startInactivityTracking();
-  })
-  .catch(()=>{
-    hideLoader();
-    showToast("Invalid Login ❌","error");
-  });
 
+    startInactivityTracking();
+
+  }catch(e){
+
+    hideLoader();
+
+    setTimeout(()=>{
+      showToast("Invalid Login ❌","error");
+    },100); // 👈 important delay
+
+  }
 }
 
 function showDashboard() {
@@ -1411,14 +1417,17 @@ sessionStorage.setItem("activeSummary","currentMonth");
   let today = new Date();
 
   let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  let todayDate = today.toISOString().split("T")[0];
+  let todayDate = formatDateLocal(today);
+
+let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+let firstDayStr = formatDateLocal(firstDay);
 
   let monthName = getMonthName(today.getMonth());
 
   let balanceTitle = `Balance as on ${todayDate}`;
   let expenseTitle = `For the month of ${monthName} ${today.getFullYear()}`;
 
-  calculateSummary(firstDay.toISOString().split("T")[0],todayDate,expenseTitle,balanceTitle);
+  calculateSummary(firstDayStr, todayDate, expenseTitle, balanceTitle);
 
 }
 
@@ -1434,19 +1443,18 @@ sessionStorage.setItem("activeSummary","lastMonth");
   let today = new Date();
 
   let firstDay = new Date(today.getFullYear(), today.getMonth()-1, 1);
-  let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+  let firstDay = new Date(today.getFullYear(), today.getMonth()-1, 1);
+let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+
+let from = formatDateLocal(firstDay);
+let to = formatDateLocal(lastDay);
 
   let monthName = getMonthName(firstDay.getMonth());
 
   let balanceTitle = `Balance as on ${lastDay.toISOString().split("T")[0]}`;
   let expenseTitle = `For the month of ${monthName} ${firstDay.getFullYear()}`;
 
-  calculateSummary(
-    firstDay.toISOString().split("T")[0],
-    lastDay.toISOString().split("T")[0],
-    expenseTitle,
-    balanceTitle
-  );
+  calculateSummary(from, to, expenseTitle, balanceTitle);
 
 }
 
@@ -1456,18 +1464,21 @@ sessionStorage.setItem("activeSummary","lastMonth");
 
 function showFullYear(){
 
-sessionStorage.setItem("activeSummary","fullYear");
+  sessionStorage.setItem("activeSummary","fullYear");
 
   let today = new Date();
 
   let start = new Date(today.getFullYear(),0,1);
 
-  let balanceTitle = `Balance as on ${today.toISOString().split("T")[0]}`;
+  let from = formatDateLocal(start);
+  let to = formatDateLocal(today);
+
+  let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `FY ${today.getFullYear()}`;
 
   calculateSummary(
-    start.toISOString().split("T")[0],
-    today.toISOString().split("T")[0],
+    from,
+    to,
     expenseTitle,
     balanceTitle
   );
@@ -3871,14 +3882,26 @@ function showToast(message, type="success"){
 //////////////////////////////////////////////////	
 
 function confirmLogoutNow(){
-  showLoader();
+
+  showToast("Logged out successfully 👋");
+
   setTimeout(()=>{
     logout();
-    hideLoader();
-    showToast("Logged out successfully 👋");
-  },500);
+  },800); // 👈 allow toast to show first
+
 }
 
+//////////////////////////////////////////////////
+// DATE LOCAL
+//////////////////////////////////////////////////
+
+function formatDateLocal(date){
+  let d = new Date(date);
+  let month = String(d.getMonth()+1).padStart(2,"0");
+  let day = String(d.getDate()).padStart(2,"0");
+  return `${d.getFullYear()}-${month}-${day}`;
+}
+	
 	
 </script>
 <script src="layout.js"></script>
