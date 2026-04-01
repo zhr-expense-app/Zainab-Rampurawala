@@ -1121,6 +1121,25 @@ resetInactivityTimer();
 });
 
 
+//////////////////////////////////////////////////
+// DATE RANGE
+//////////////////////////////////////////////////
+
+function validateDateRange(fromDate, toDate){
+
+  if(!fromDate || !toDate){
+    showToast("Please select both From Date and To Date","error");
+    return false;
+  }
+
+  if(fromDate > toDate){
+    showToast("From Date cannot be after To Date ❌","error");
+    return false;
+  }
+
+  return true;
+}
+	
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
@@ -2217,6 +2236,13 @@ async function saveReceipt() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
+
+	
   if (!account || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
 document.getElementById("amount").focus();
@@ -2254,6 +2280,13 @@ async function savePayment() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
+
+	
   if (!account || !category || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
     document.getElementById("amount").focus();
@@ -2303,6 +2336,13 @@ async function saveContra() {
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
+
+	
   if (!from || !to || !date || !narration || !amount) {
     showToast("All fields are mandatory","error");
     document.getElementById("amount").focus();
@@ -2371,10 +2411,7 @@ function runReceiptsReport() {
 let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if (!fromDate || !toDate) {
-  showToast("Please select both From Date and To Date","error");
-  return;
-}
+if(!validateDateRange(fromDate,toDate)) return;
 
   currentReport = "receipts";
   sessionStorage.setItem("currentReport","receipts");
@@ -2485,10 +2522,12 @@ function runPaymentReport() {
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if (!category || !fromDate || !toDate) {
-  showToast("Please select Category and Date Range ❌","error");
+if(!category){
+  showToast("Please select Category ❌","error");
   return;
 }
+
+if(!validateDateRange(fromDate,toDate)) return;
 
   // remember current report
   sessionStorage.setItem("currentReport","payments");
@@ -2752,10 +2791,7 @@ function runContraReport(){
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if (!fromDate || !toDate) {
-    showToast("Please select both From Date and To Date","error");
-    return;
-  }
+if(!validateDateRange(fromDate,toDate)) return;
 
   sessionStorage.setItem("currentReport","contra");
   sessionStorage.setItem("currentFromDate",fromDate);
@@ -3483,9 +3519,8 @@ showLoader(); // ADD
 let fromDate = document.getElementById("miniFrom").value;
 let toDate = document.getElementById("miniTo").value;
 
-if(!fromDate || !toDate){
-  hideLoader(); // ✅ ADD
-  showToast("Please select both From Date and To Date","error");
+if(!validateDateRange(fromDate,toDate)){
+  hideLoader();
   return;
 }
 
