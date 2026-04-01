@@ -1097,6 +1097,10 @@ async function login(){
   let password = document.getElementById("password").value;
 
   try{
+
+	  // ✅ CLEAR OLD SESSION (IMPORTANT)
+    sessionStorage.clear();
+	  
     await auth.signInWithEmailAndPassword(email,password);
 
     hideLoader();
