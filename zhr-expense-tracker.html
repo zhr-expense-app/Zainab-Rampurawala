@@ -799,7 +799,31 @@ let expenseChart = null;
 let personalExpenseChart = null;
 let accountsList = [];
 let activeAccounts = []; 		 	
+let currentUserRole = "viewer";
 
+	
+//////////////////////////////////////////////////
+// LOAD USER
+//////////////////////////////////////////////////
+	
+async function loadUserRole(){
+
+  let user = auth.currentUser;
+
+  if(!user) return;
+
+  let doc = await db.collection("users").doc(user.email).get();
+
+  if(doc.exists){
+    currentUserRole = doc.data().role;
+  }else{
+    currentUserRole = "viewer"; // safety fallback
+  }
+
+  console.log("User Role:", currentUserRole); // for testing
+
+}
+	
 
 //////////////////////////////////////////////////
 // LOAD ACCOUNTS FROM FIREBASE 	
@@ -1091,10 +1115,11 @@ async function login(){
   }
 }
 
-function showDashboard() {
+async function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
+	await loadUserRole(); // ✅ VERY IMPORTANT
 
   loadOpeningBalance();
   loadTransactions();
