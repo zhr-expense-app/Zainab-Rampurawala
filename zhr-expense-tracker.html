@@ -1084,9 +1084,9 @@ async function login(){
 
     hideLoader();
 
-    
+    setTimeout(()=>{
       showToast("Invalid Login ❌","error");
-    
+    },100); // 👈 important delay
 
   }
 }
