@@ -801,6 +801,31 @@ let accountsList = [];
 let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
 
+//////////////////////////////////////////////////
+// CHECK PERMISSION
+//////////////////////////////////////////////////
+
+function checkPermission(action){
+
+  if(action === "delete" && currentUserRole !== "admin"){
+    showToast("You are not authorized to delete ❌","error");
+    return false;
+  }
+
+  if(action === "write" && !["admin","user"].includes(currentUserRole)){
+    showToast("You are not authorized to add/modify ❌","error");
+    return false;
+  }
+
+  if(action === "admin" && currentUserRole !== "admin"){
+    showToast("Admin access only ❌","error");
+    return false;
+  }
+
+  return true;
+}
+
+
 	
 //////////////////////////////////////////////////
 // LOAD USER
@@ -874,38 +899,11 @@ function loadAccounts() {
 
 function manageAccounts(){
 
-openPopup(`
-  <h3>Admin Login</h3>
+  if(!checkPermission("admin")) return;
 
-  <label>Admin ID</label>
-  <input type="text" id="adminId">
-
-  <label>Password</label>
-  <input type="password" id="adminPass">
-
-  <button onclick="verifyAccountAdmin()">Login</button>
-`);
-
+  showAccountManager();
 }
 	
-
-//////////////////////////////////////////////////
-// ADMIN VALIDATION
-//////////////////////////////////////////////////
-	
-function verifyAccountAdmin(){
-
-if(
-  document.getElementById("adminId").value !== ADMIN_ID ||
-  document.getElementById("adminPass").value !== ADMIN_PASS
-){
-  showToast("Invalid Admin ❌","error");
-  return;
-}
-
-showAccountManager();
-
-}
 
 
 //////////////////////////////////////////////////
@@ -952,6 +950,8 @@ openPopup(html);
 
 async function addAccount(){
 
+	if(!checkPermission("admin")) return;
+
 let name = document.getElementById("newAccount").value.trim();
 
 if(!name){
@@ -979,6 +979,8 @@ closePopup();
 
 	
 async function toggleAccount(name, isActive){
+
+	if(!checkPermission("admin")) return;
 
 showLoader();
 
@@ -1078,8 +1080,6 @@ function getAccountOptions(selected=""){
 // ADMIN
 //////////////////////////////////////////////////
 
-const ADMIN_ID = "admin";
-const ADMIN_PASS = "Admin@123";
 
 let openingBalances = {};
 let transactionsCache = [];
@@ -1115,6 +1115,10 @@ async function login(){
   }
 }
 
+//////////////////////////////////////////////////
+// SHOW DASHBOARD
+//////////////////////////////////////////////////
+	
 async function showDashboard() {
 
   document.getElementById("login").style.display = "none";
@@ -1318,6 +1322,8 @@ function loadOpeningBalance() {
 
 function showOpening() {
 
+	if(!checkPermission("admin")) return;
+
   // First Time Entry
   if (!openingBalances.openingDate) {
 
@@ -1364,6 +1370,8 @@ openPopup(html);
 
 async function saveOpening(){
 
+if(!checkPermission("admin")) return;						
+
 showLoader();
 
 let data = {
@@ -1401,36 +1409,6 @@ function editOpening() {
   `);
 }
 
-function verifyAdmin() {
-
-  if (
-    document.getElementById("adminId").value === ADMIN_ID &&
-    document.getElementById("adminPass").value === ADMIN_PASS
-  ) {
-
-    let html = `<h3>Modify Opening Balance</h3>
-
-<label>Date</label>
-<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
-`;
-
-accountsList.forEach(acc => {
-
-  html += `
-    <label>${acc}</label>
-    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-  `;
-
-});
-
-html += `<button onclick="saveOpening()">Update</button>`;
-
-openPopup(html);
-
-  } else {
-    showToast("Invalid Admin Credentials ❌","error");
-  }
-}
 
 
 //////////////////////////////////////////////////
@@ -2239,6 +2217,8 @@ function showForm(type) {
 
 async function saveReceipt() {
 
+	if(!checkPermission("write")) return;
+
   let account = document.getElementById("account").value;
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
@@ -2281,6 +2261,8 @@ hideLoader();
 //////////////////////////////////////////////////
 
 async function savePayment() {
+
+	if(!checkPermission("write")) return;
 
   let account = document.getElementById("account").value;
   let category = document.getElementById("category").value;
@@ -2337,6 +2319,8 @@ hideLoader();
 //////////////////////////////////////////////////
 
 async function saveContra() {
+
+	if(!checkPermission("write")) return;
 
   let from = document.getElementById("from").value;
   let to = document.getElementById("to").value;
@@ -2654,6 +2638,8 @@ function editPayment(id) {
 
 async function updatePayment(id) {
 
+	if(!checkPermission("write")) return;
+
   let account = document.getElementById("account").value;
 let category = document.getElementById("category").value;
 let date = document.getElementById("date").value;
@@ -2853,6 +2839,8 @@ function editContra(id) {
 
 async function updateContra(id) {
 
+	if(!checkPermission("write")) return;										   
+
   let from = document.getElementById("from").value;
 let to = document.getElementById("to").value;
 let date = document.getElementById("date").value;
@@ -3012,6 +3000,8 @@ function editTransaction(id) {
 
 async function updateTransaction(id) {
 
+	if(!checkPermission("write")) return;
+
   let account = document.getElementById("account").value;
 let date = document.getElementById("date").value;
 let narration = document.getElementById("narration").value.trim();
@@ -3123,24 +3113,35 @@ formatAllAmounts();
 
 function deleteTransaction(id){
 
-openPopup(`
-  <h3>Confirm Delete</h3>
-  <p>Are you sure you want to delete?</p>
-  <button onclick="confirmDelete('${id}')">Yes, Delete</button>
-`);
+  if(!checkPermission("delete")) return;
 
+  openPopup(`
+    <h3>Confirm Delete</h3>
+    <p>Are you sure you want to delete?</p>
+    <button onclick="confirmDelete('${id}')">Yes, Delete</button>
+  `);
 }
 
 async function confirmDelete(id){
 
-showLoader();
+  if(!checkPermission("delete")) return;
 
-await db.collection("transactions").doc(id).delete();
+  try{
 
-hideLoader();
-showToast("Deleted Successfully 🗑️");
+    showLoader();
+    await db.collection("transactions").doc(id).delete();
 
-closePopup();
+    hideLoader();
+    showToast("Deleted Successfully 🗑️");
+
+  }catch(e){
+
+    hideLoader();
+    showToast("Not authorized to delete ❌","error");
+
+  }
+
+  closePopup();
 
 let currentReport = sessionStorage.getItem("currentReport");
 
