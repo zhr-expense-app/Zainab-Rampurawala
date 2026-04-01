@@ -1322,8 +1322,6 @@ function loadOpeningBalance() {
 
 function showOpening() {
 
-	if(!checkPermission("admin")) return;
-
   // First Time Entry
   if (!openingBalances.openingDate) {
 
@@ -1333,18 +1331,18 @@ function showOpening() {
 <input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
 `;
 
-accountsList.forEach(acc => {
+    accountsList.forEach(acc => {
 
-  html += `
-    <label>${acc}</label>
-    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-  `;
+      html += `
+        <label>${acc}</label>
+        <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+      `;
 
-});
+    });
 
-html += `<button onclick="saveOpening()">Save</button>`;
+    html += `<button onclick="saveOpening()">Save</button>`;
 
-openPopup(html);
+    openPopup(html);
 
   } else {
 
@@ -1353,17 +1351,18 @@ openPopup(html);
 <p><b>Date:</b> ${openingBalances.openingDate}</p>
 `;
 
-accountsList.forEach(acc => {
-  html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
-});
+    accountsList.forEach(acc => {
+      html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
+    });
 
-html += `<button onclick="editOpening()">Modify</button>`;
+    html += `<button onclick="editOpening()">Modify</button>`;
 
-openPopup(html);
+    openPopup(html);
 
   }
 }
 
+	
 //////////////////////////////////////////////////
 // SAVE OPENING BALANCE
 //////////////////////////////////////////////////
@@ -1394,19 +1393,30 @@ closePopup();
 // EDIT OPENING (ADMIN LOGIN)
 //////////////////////////////////////////////////
 
-function editOpening() {
+function editOpening(){
 
-  openPopup(`
-    <h3>Admin Login Required</h3>
+  // 🔐 Only admin allowed
+  if(!checkPermission("admin")) return;
 
-    <label>Admin ID</label>
-    <input type="text" id="adminId">
+  let html = `<h3>Modify Opening Balance</h3>
 
-    <label>Password</label>
-    <input type="password" id="adminPass" onkeydown="if(event.key==='Enter'){verifyAdmin()}">
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
 
-    <button onclick="verifyAdmin()">Login</button>
-  `);
+  accountsList.forEach(acc => {
+
+    html += `
+      <label>${acc}</label>
+      <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+    `;
+
+  });
+
+  html += `<button onclick="saveOpening()">Update</button>`;
+
+  openPopup(html);
+
 }
 
 
