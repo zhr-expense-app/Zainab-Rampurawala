@@ -1121,24 +1121,7 @@ resetInactivityTimer();
 });
 
 
-//////////////////////////////////////////////////
-// DATE RANGE
-//////////////////////////////////////////////////
 
-function validateDateRange(fromDate, toDate){
-
-  if(!fromDate || !toDate){
-    showToast("Please select both From Date and To Date","error");
-    return false;
-  }
-
-  if(fromDate > toDate){
-    showToast("From Date cannot be after To Date ❌","error");
-    return false;
-  }
-
-  return true;
-}
 	
 
 //////////////////////////////////////////////////
@@ -3948,6 +3931,27 @@ function formatDateLocal(date){
   let day = String(d.getDate()).padStart(2,"0");
   return `${d.getFullYear()}-${month}-${day}`;
 }
+
+
+//////////////////////////////////////////////////
+// DATE RANGE VALIDATION (GLOBAL)
+//////////////////////////////////////////////////
+
+function validateDateRange(fromDate, toDate){
+
+  if(!fromDate || !toDate){
+    showToast("Please select both From Date and To Date","error");
+    return false;
+  }
+
+  if(fromDate > toDate){
+    showToast("From Date cannot be after To Date ❌","error");
+    return false;
+  }
+
+  return true;
+}
+
 	
 	
 </script>
