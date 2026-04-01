@@ -3514,45 +3514,47 @@ openPopup(`
 
 async function exportMiniStatement(){
 
-showLoader(); // ADD	
+  let fromDate = document.getElementById("miniFrom").value;
+  let toDate = document.getElementById("miniTo").value;
 
-let fromDate = document.getElementById("miniFrom").value;
-let toDate = document.getElementById("miniTo").value;
+  // ✅ VALIDATE FIRST
+  if(!validateDateRange(fromDate,toDate)){
+    return;
+  }
 
-if(!validateDateRange(fromDate,toDate)){
-  hideLoader();
-  return;
-}
+  // ✅ THEN show loader
+  showLoader();
 
-closePopup();
+  closePopup();
 
-const workbook = new ExcelJS.Workbook();
+  const workbook = new ExcelJS.Workbook();
 
-//////////////////////////////////////////////////
-// CALCULATE EXPENSE SUMMARY
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // CALCULATE EXPENSE SUMMARY
+  //////////////////////////////////////////////////
 
-let expenses = {
-  Personal: 0,
-  Home: 0,
-  "Office Reimbursement": 0,
-  "Qardan Given": 0
-};
+  let expenses = {
+    Personal: 0,
+    Home: 0,
+    "Office Reimbursement": 0,
+    "Qardan Given": 0
+  };
 
-transactionsCache.forEach(t=>{
+  transactionsCache.forEach(t=>{
 
-if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
+    if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
 
-if(!expenses[t.category]){
-  expenses[t.category] = 0;
-}
+      if(!expenses[t.category]){
+        expenses[t.category] = 0;
+      }
 
-expenses[t.category] += Number(t.amount);
+      expenses[t.category] += Number(t.amount);
 
-}
+    }
 
-});
+  });
 
+	
 //////////////////////////////////////////////////
 // SHEET 1 : SUMMARY
 //////////////////////////////////////////////////
