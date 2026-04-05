@@ -23,94 +23,75 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
-    authDomain: "zhr-expense-app-4747f.firebaseapp.com",
-    projectId: "zhr-expense-app-4747f",
-    storageBucket: "zhr-expense-app-4747f.firebasestorage.app",
-    messagingSenderId: "386125567038",
-    appId: "1:386125567038:web:a2570fa8341d024ccf6d6f"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
+      authDomain: "zhr-expense-app-4747f.firebaseapp.com",
+      projectId: "zhr-expense-app-4747f",
+      storageBucket: "zhr-expense-app-4747f.firebasestorage.app",
+      messagingSenderId: "386125567038",
+      appId: "1:386125567038:web:a2570fa8341d024ccf6d6f"
+    };
 
-  firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
 
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-  ////////////////////////////////////////////////
-  // AUTH STATE (SAFE + CORRECT)
-  ////////////////////////////////////////////////
-
-  window.onload = function(){
-
-    lucide.createIcons();
+    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
     auth.onAuthStateChanged(user => {
 
-      if (user) {
-        showDashboard();
-        startInactivityTracking();
-      } else {
-        document.getElementById("login").style.display = "block";
-        document.getElementById("dashboard").style.display = "none";
-      }
+  if (user) {
+    showDashboard();
+    startInactivityTracking(); // ✅ restart timer after refresh
+  } else {
+    document.getElementById("login").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+  }
 
-    });
+});
+	  
+  </script>
 
-  };
-</script>
+  <style>
 
- <style>
+    body {
+      font-family:'Segoe UI',sans-serif;
+      text-align: center;
+      background: #f8f9fb;
+      margin: 0;
+	}
 
-body {
-  font-family:'Segoe UI',sans-serif;
-  text-align: center;
-  background: #f8f9fb;
-  margin: 0;
-}
-
-.logo {
-  width: 320px;
-  margin: 20px 0;
-}
+    .logo {
+      width: 320px;
+      margin: 20px 0;
+    }
 
 .page-title{
-  text-align:center;
-  font-size:30px;
-  color:#001d4c;
-  margin:20px 0 10px;
-  font-weight:700;
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:20px 0 10px;
+font-weight:700;
 }
 
-h2,h3 {
-  margin-bottom: 15px;
-}
+	  
+    h2,
+    h3 {
+      margin-bottom: 15px;
+    }
 
-input,select {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
 
-* {
-  box-sizing: border-box;
-}
-
-#login{
-  width: 400px;
-  margin: 80px auto;
-  display: block;
-  text-align: center;
-}
-
-body{
-  display: block !important;
-}	 
-	 
-/* BUTTON GROUP */
+    /* BUTTON GROUP */
 .action-buttons{
   display:flex;
   flex-wrap:wrap;
@@ -119,7 +100,7 @@ body{
   margin-bottom:20px;
 }
 
-/* BUTTON */
+/* MODERN BUTTON */
 button{
   display:inline-flex;
   align-items:center;
@@ -135,73 +116,41 @@ button{
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
+/* ICON SIZE */
 button i{
   width:16px;
   height:16px;
 }
 
+/* HOVER EFFECT */
 button:hover{
   transform: translateY(-2px);
   box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  opacity:1;
 }
 
+/* CLICK EFFECT */
 button:active{
   transform: scale(0.96);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* ICON BUTTON (EDIT / DELETE) */
-.icon-btn{
-  background:none;
-  border:none;
-  cursor:pointer;
-  padding:6px;
+	  
+    * {
+      box-sizing: border-box;
+    }
+  
+
+/* FIX LOGIN BUTTON ALIGNMENT */
+#login button{
+  display:block;
+  margin:15px auto 0;
+  text-align:center;
+  justify-content:center; /* 👈 important */
 }
 
-.icon-btn i{
-  width:18px;
-  height:18px;
-}
 
-.icon-btn.edit{
-  color:#1976d2;
-}
 
-.icon-btn.delete{
-  color:#e53935;
-}
-
-/* LOGIN */
-#login {
-  width: 400px;
-  margin: 60px auto;
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.08);
-  text-align: center;
-}
-
-#login input {
-  padding: 14px;
-  margin: 12px 0;
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-#login button {
-  width: 120px;
-  padding: 12px;
-  margin-top: 15px;
-}
-
-#userEmail {
-  background:#eef3ff;
-  padding:6px 12px;
-  border-radius:20px;
-  font-size:13px;
-}
-
-/* TOAST */
 .toast{
   position:fixed;
   bottom:30px;
@@ -222,7 +171,7 @@ button:active{
   bottom:50px;
 }
 
-/* LOADER */
+	  
 .loader-overlay{
   position:fixed;
   top:0;
@@ -246,203 +195,445 @@ button:active{
 }
 
 @keyframes spin{
+  0%{transform:rotate(0deg);}
   100%{transform:rotate(360deg);}
 }
 
-/* DASHBOARD */
-.dashboard-container {
-  max-width: 1200px;
-  margin:20px auto 0;
-  padding: 20px;
+	  
+	  
+    /* LOGIN BOX */
+
+    #login {
+      width: 400px;
+      margin: 60px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    #login input {
+      width: 100%;
+      padding: 14px;
+      margin: 12px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    #login button {
+      width: 120px;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 6px;
+    }
+
+#userEmail {
+  background:#eef3ff;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:13px;
 }
 
-/* SUMMARY */
-.summary-container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin: 20px 0;
-  flex-wrap: wrap;
+	  
+    /* SUMMARY TABLES */
+
+    .summary-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .summary-box {
+      background: white;
+      padding: 15px;
+      border: 1px solid #001d4c;
+      border-radius: 6px;
+      width: 320px;
+    }
+
+    .summary-box table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .summary-box th,
+    .summary-box td {
+      border: 1px solid #001d4c;
+      padding: 8px;
+    }
+
+    /* CHART SECTION */
+
+    .charts-container {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      margin-top: 20px;
+      margin-bottom: 90px;
+    }
+
+    .chart-box {
+      border-radius: 6px;
+      width: 400px;
+      height: 300px;
+    }
+
+    .chart-box canvas {
+      width: 100% !important;
+      height: 300px !important;
+    }
+
+    #expensePieChart,
+    #cashFlowChart {
+      width: 100% !important;
+      height: 300px !important;
+    }
+
+    /* REPORT TABLE */
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .report-table th,
+    .report-table td {
+      border: 1px solid #001d4c;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .report-table th {
+      background: #001d4c;
+      color: white;
+    }
+
+    /* POPUP */
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 8% auto;
+      padding: 25px;
+      width: 400px;
+      border-radius: 8px;
+      text-align: left;
+    }
+
+    .close {
+      float: right;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin:20px auto 0;
+      padding: 20px;
+    }
+
+    #reportOutput {
+      max-width: 1100px;
+      margin: 30px auto;
+    }
+
+    .summary-title {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* MOBILE */
+
+    @media screen and (max-width: 768px) {
+
+      
+
+      #login {
+        width: 95%;
+        
+      }
+
+      .logo {
+        width: 200px;
+      }
+
+      .summary-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+      }
+
+      .summary-box {
+        width: 100%;
+      }
+
+      .charts-container{
+flex-direction:column;
+align-items:stretch;
+gap:30px;
 }
 
-.summary-title{
-  font-weight:600;
-  margin-bottom:10px;
-  color:#001d4c;
-}
-	 
-.summary-box {
-  background: white;
-  padding: 15px;
-  border: 1px solid #001d4c;
-  border-radius: 6px;
-  width: 320px;
+.chart-box{
+width:100%;
+height:auto;
 }
 
-.summary-box table {
-  width: 100%;
-  border-collapse: collapse;
+
+.chart-box canvas{
+width:100% !important;
+height:260px !important;
 }
 
-.summary-box th,
-.summary-box td {
-  border: 1px solid #001d4c;
-  padding: 8px;
+/* BUTTONS FULL WIDTH */
+
+button{
+width:100%;
+margin:6px 0;
 }
 
-.summary-box td:first-child{
-  text-align:left;
+     /* POPUP FIX */
+
+.modal-content{
+width:95%;
+margin:20% auto;
 }
 
-.summary-box td:last-child{
-  text-align:right;
+/* REPORT TABLE SCROLL */
+
+.report-table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
 }
 
-/* CHART */
-.charts-container {
-  display: flex;
-  justify-content: center;
-  gap: 50px;
-  margin: 20px 0 90px;
+/* INPUTS BIGGER FOR MOBILE */
+
+input, select{
+font-size:16px;
 }
 
-.chart-box {
-  width: 400px;
-  height: 300px;
+/* DASHBOARD PADDING */
+
+.dashboard-container{
+padding:10px;
 }
 
-/* REPORT TABLE */
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
+/* PERSONAL MONTHLY TABLE */
+
+#personalMonthlySummary table{
+font-size:14px;
 }
 
-.report-table th,
-.report-table td {
-  border: 1px solid #001d4c;
-  padding: 10px;
-  text-align: center;
 }
 
-.report-table th {
-  background: #001d4c;
-  color: white;
+@media (max-width:768px){
+  .page-title{
+    font-size:24px;
+    margin-top:10px;
+  }
+
+	.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin:20px 0 10px;
+font-weight:700;
+	}
 }
 
-/* LEDGER TABLE (NEW) */
-.ledger-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
 
-.ledger-table th,
-.ledger-table td{
-  border:1px solid #001d4c;
-  padding:8px;
-  text-align:center;
-}
-
-.ledger-table td:first-child{
-  text-align:left;
-}
-
-/* POPUP */
-.modal {
-  display:none;
-  position:fixed;
-  z-index:1000;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-}
-
-.modal-content {
-  background:white;
-  margin:8% auto;
-  padding:25px;
-  width:400px;
-  border-radius:8px;
-  text-align:left;
-}
-
-.close {
-  float:right;
-  font-size:22px;
-  cursor:pointer;
-}
-
-/* ================= MOBILE (ALL IN ONE PLACE) ================= */
+	  
+/* Mobile button spacing */
 
 @media screen and (max-width:768px){
 
-  body{
-    margin:0;
-  }
+button{
+width:auto;
+padding:8px 14px;
+margin:6px 6px;
+font-size:14px;
+}
 
-  .page-title{
-    font-size:24px;
-  }
+/* BUTTON GROUP */
+.action-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
 
-  #login{
-    width:95%;
-    margin:50px auto;
-  }
+/* MODERN BUTTON */
+button{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#001d4c;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  transition: all 0.2s ease;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
 
-  .summary-container{
-    flex-direction:column;
-    gap:15px;
-  }
+/* ICON SIZE */
+button i{
+  width:16px;
+  height:16px;
+}
 
-  .summary-box{
-    width:100%;
-  }
+/* HOVER EFFECT */
+button:hover{
+  transform: translateY(-2px);
+  box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  opacity:1;
+}
 
-  .charts-container{
-    flex-direction:column;
-    gap:30px;
-  }
+/* CLICK EFFECT */
+button:active{
+  transform: scale(0.96);
+  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
 
-  .chart-box{
-    width:100%;
-    height:auto;
-  }
+	
+#login {
+	margin: 50px auto;
+}
 
-  button{
-    width:auto;
-    padding:8px 14px;
-    font-size:14px;
-  }
+body {
+      font-family:'Segoe UI',sans-serif;
+      text-align: center;
+      background: #f8f9fb;
+      margin: 0;
+}
+	
+.dashboard-container{
+padding:15px;
+}
 
-  /* horizontal scroll buttons */
-  .action-buttons{
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    gap:10px;
-    padding:0 10px;
-  }
-
-  .action-buttons::-webkit-scrollbar{
-    display:none;
-  }
-
-  .action-buttons button{
-    flex:0 0 auto;
-  }
-
-  .modal-content{
-    width:95%;
-    margin:20% auto;
-  }
-
-  .report-table{
-    display:block;
-    overflow-x:auto;
-    white-space:nowrap;
-  }
+.summary-box{
+padding:12px;
+}
 
 }
+
+.summary-box td{
+text-align:right;
+}
+
+/* UNIVERSAL REPORT TABLE ALIGNMENT */
+
+/* Default center alignment */
+
+.report-table td{
+text-align:center;
+}
+
+/* Amount column always right aligned */
+
+.report-table td:nth-last-child(3){
+text-align:right;
+}
+
+/* Edit button column */
+
+.report-table td:nth-last-child(2){
+text-align:center;
+}
+
+/* Delete button column */
+
+.report-table td:nth-last-child(1){
+text-align:center;
+}
+
+
+/* SUMMARY TABLE ALIGNMENT */
+
+/* Headers stay centered */
+.summary-box th{
+text-align:center;
+}
+
+/* First column text left aligned */
+.summary-box td:first-child{
+text-align:left;
+}
+
+/* Numbers right aligned */
+.summary-box td:last-child{
+text-align:right;
+}
+
+/* Monthly personal expense table */
+
+#personalMonthlySummary th{
+text-align:center;
+}
+
+#personalMonthlySummary td:first-child{
+text-align:left;
+}
+
+#personalMonthlySummary td:last-child{
+text-align:right;
+}
+
+
+
+@media screen and (max-width:768px){
+
+/* HORIZONTAL SCROLL BUTTONS */
+.action-buttons{
+  display:flex;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+
+  justify-content:flex-start;   /* ✅ start from left */
+  padding:0 10px;
+  gap:10px;
+
+  scroll-behavior:smooth;       /* ✅ smooth scroll */
+  scroll-snap-type:x mandatory; /* ✅ snap scroll */
+}
+
+/* Hide scrollbar (clean UI) */
+.action-buttons::-webkit-scrollbar{
+  display:none;
+}
+
+/* BUTTON STYLE INSIDE SCROLL */
+.action-buttons button{
+  flex:0 0 auto;
+  white-space:nowrap;
+
+  scroll-snap-align:start;      /* ✅ snap each button */
+}
+
+}
+
+	  
 
 </style>
 
@@ -467,22 +658,34 @@ button:active{
 <div id="dashboard" style="display:none;">
 <div class="dashboard-container">
 
-<h1 class="page-title">Cash Accounting System</h1>
+<h1 class="page-title">Expense Tracker</h1>
 
 	
-<!-- TOP BUTTONS -->
-<div class="action-buttons">
+	<!-- BUTTONS -->
+    <div class="action-buttons">
 
-<button onclick="openDashboardFilter()">
-  <i data-lucide="layout-dashboard"></i> Custom Dashboard
+<button onclick="showCurrentMonth()">
+  <i data-lucide="calendar"></i> Current Month
+</button>
+
+<button onclick="showLastMonth()">
+  <i data-lucide="calendar-days"></i> Last Month
+</button>
+
+<button onclick="showFullYear()">
+  <i data-lucide="bar-chart"></i> Full Year
+</button>
+
+<button onclick="showCustomSummary()">
+  <i data-lucide="filter"></i> Custom Filter
 </button>
 
 <button onclick="exportSummaryExcel()">
-  <i data-lucide="download"></i> Export
+  <i data-lucide="download"></i> Export Dashboard
 </button>
 
-<button onclick="manageLedgers()">
-  <i data-lucide="book"></i> Manage Ledgers
+<button onclick="manageAccounts()">
+  <i data-lucide="settings"></i> Accounts
 </button>
 
 <button onclick="confirmLogout()" style="background:green;">
@@ -492,7 +695,7 @@ button:active{
 </div>
 
 
-<!-- FIRST ROW : SUMMARY -->
+<!-- FIRST ROW : 3 TABLES -->
 
 <div class="summary-container">
 
@@ -537,8 +740,12 @@ button:active{
   <i data-lucide="arrow-up-circle"></i> Payments
 </button>
 
-<button onclick="showForm('journal')">
-  <i data-lucide="book-open"></i> Journals
+<button onclick="showForm('contra')">
+  <i data-lucide="repeat"></i> Contra
+</button>
+
+<button onclick="showOpening()">
+  <i data-lucide="wallet"></i> Opening Balance
 </button>
 
 </div>
@@ -548,28 +755,29 @@ button:active{
 
 <div class="action-buttons">
 
-<button onclick="showFinancials()">
-  <i data-lucide="file-text"></i> Financials
+<button onclick="showReceiptsReport()">
+  <i data-lucide="file-text"></i> Receipts Report
 </button>
 
-<button onclick="showStatements()">
-  <i data-lucide="list"></i> Statements
+<button onclick="showPaymentsReport()">
+  <i data-lucide="bar-chart-3"></i> Payments Report
 </button>
 
-<button onclick="showLedgerReport()">
-  <i data-lucide="book"></i> Reports
+<button onclick="showContraReport()">
+  <i data-lucide="shuffle"></i> Contra Report
+</button>
+
+<button onclick="showMiniStatement()">
+  <i data-lucide="book-open"></i> Mini Statement
 </button>
 
 <button onclick="exportCurrentReport()">
-  <i data-lucide="download"></i> Export
+  <i data-lucide="download"></i> Export Report
 </button>
 
 </div>
-
 </div>
 
-
-<!-- POPUP -->
 <div id="popupModal" class="modal">
 <div class="modal-content">
 <span class="close" onclick="closePopup()">&times;</span>
@@ -577,25 +785,20 @@ button:active{
 </div>
 </div>
 
-
-<!-- REPORT OUTPUT -->
 <div id="reportOutput" style="margin-top:20px;"></div>
 
+
+
 <script>
+
 let currentReport = null;
 let currentReportCategory = null;
 let currentFromDate = null;
 let currentToDate = null;
 let expenseChart = null;
 let personalExpenseChart = null;
-
-// ❌ REMOVE accounts
-// let accountsList = [];
-// let activeAccounts = [];
-
-// ✅ NEW LEDGER SYSTEM
-let ledgerList = [];
-
+let accountsList = [];
+let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
 
 //////////////////////////////////////////////////
@@ -622,10 +825,12 @@ function checkPermission(action){
   return true;
 }
 
+
+	
 //////////////////////////////////////////////////
 // LOAD USER
 //////////////////////////////////////////////////
-
+	
 async function loadUserRole(){
 
   let user = auth.currentUser;
@@ -637,24 +842,27 @@ async function loadUserRole(){
   if(doc.exists){
     currentUserRole = doc.data().role;
   }else{
-    currentUserRole = "viewer";
+    currentUserRole = "viewer"; // safety fallback
   }
 
-  console.log("User Role:", currentUserRole);
+  console.log("User Role:", currentUserRole); // for testing
+
 }
+	
 
 //////////////////////////////////////////////////
-// LOAD LEDGERS FROM FIREBASE
+// LOAD ACCOUNTS FROM FIREBASE 	
 //////////////////////////////////////////////////
 
-function loadLedgers() {
+function loadAccounts() {
 
-  db.collection("ledgers").onSnapshot(snapshot => {
+  db.collection("accounts").onSnapshot(snapshot => {
 
-    ledgerList = [];
+    accountsList = [];
+    activeAccounts = [];
 
     if (snapshot.empty) {
-      console.log("❌ No ledgers found");
+      console.log("❌ No accounts found in Firebase");
       return;
     }
 
@@ -662,272 +870,145 @@ function loadLedgers() {
 
       let data = doc.data();
 
+      console.log("Account Doc:", data);
+
       if (data.name) {
-        ledgerList.push({
-          id: doc.id,
-          name: data.name,
-          group: data.group,
-          openingBalance: data.openingBalance || 0,
-          openingDate: data.openingDate || ""
-        });
+        accountsList.push(data.name);
+      }
+
+      if (data.active !== false && data.name) {
+        activeAccounts.push(data.name);
       }
 
     });
 
-    console.log("✅ Ledgers Loaded:", ledgerList);
+    console.log("✅ Accounts Loaded:", accountsList);
 
-    // refresh dashboard
+    // ✅ ONLY PLACE where dashboard should run
     setTimeout(() => {
       calculateDashboard();
     }, 100);
 
   });
 
-}
+}	
 
 //////////////////////////////////////////////////
-// MANAGE LEDGERS
+// MANAGE ACCOUNTS
 //////////////////////////////////////////////////
 
-function manageLedgers(){
+function manageAccounts(){
 
   if(!checkPermission("admin")) return;
 
-  showLedgerManager();
+  showAccountManager();
 }
+	
+
 
 //////////////////////////////////////////////////
-// LEDGER MANAGER UI
-//////////////////////////////////////////////////
+// ACCOUNT MANAGER UI
+//////////////////////////////////////////////////	
 
-function showLedgerManager(){
+function showAccountManager(){
 
-let html = `<h3>Manage Ledgers</h3>
+let html = `<h3>Manage Accounts</h3>`;
 
-<button onclick="showAddLedgerPopup()">+ Add New Ledger</button>
+accountsList.forEach(acc=>{
 
-<table class="ledger-table">
-<tr>
-  <th>Ledger Name</th>
-  <th>Edit</th>
-  <th>Delete</th>
-</tr>
-`;
-
-ledgerList.forEach(l=>{
+let isActive = activeAccounts.includes(acc);
 
 html += `
-<tr>
-  <td>${l.name}</td>
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+  <span>${acc}</span>
 
-  <td>
-    <button class="icon-btn edit" onclick="editLedger('${l.id}')">
-      <i data-lucide="edit"></i>
-    </button>
-  </td>
-
-  <td>
-    <button class="icon-btn delete" onclick="confirmDeleteLedger('${l.id}')">
-      <i data-lucide="trash"></i>
-    </button>
-  </td>
-</tr>
+  <button onclick="toggleAccount('${acc}', ${isActive})">
+    ${isActive ? "Deactivate" : "Activate"}
+  </button>
+</div>
 `;
 
 });
 
-html += `</table>`;
+html += `
+<hr>
 
-openPopup(html);
+<label>Add New Account</label>
+<input type="text" id="newAccount" placeholder="Enter account name">
 
-lucide.createIcons();
-}
-
-//////////////////////////////////////////////////
-// ADD LEDGER POPUP
-//////////////////////////////////////////////////
-
-function showAddLedgerPopup(){
-
-let html = `
-<h3>Add New Ledger</h3>
-
-<label>Ledger Name</label>
-<input type="text" id="ledgerName">
-
-<label>Grouping</label>
-<select id="ledgerGroup">
-  <option>Asset</option>
-  <option>Liability</option>
-  <option>Income</option>
-  <option>Expense</option>
-  <option>Capital</option>
-  <option>Cash Bank</option>
-</select>
-
-<label>Opening Balance</label>
-<input type="number" id="openingBalance">
-
-<label>Opening Date</label>
-<input type="date" id="openingDate">
-
-<button onclick="saveLedger()">Save</button>
+<button onclick="addAccount()">Add Account</button>
 `;
 
 openPopup(html);
+
 }
+	
 
 //////////////////////////////////////////////////
-// SAVE LEDGER
+// ADD ACCOUNT FUNCTION
 //////////////////////////////////////////////////
 
-async function saveLedger(){
+async function addAccount(){
 
-if(!checkPermission("admin")) return;
+	if(!checkPermission("admin")) return;
 
-let name = document.getElementById("ledgerName").value.trim();
-let group = document.getElementById("ledgerGroup").value;
-let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
-let openingDate = document.getElementById("openingDate").value;
+let name = document.getElementById("newAccount").value.trim();
 
 if(!name){
-  showToast("Enter ledger name ❌","error");
+  showToast("Enter account name","error");
   return;
 }
 
 showLoader();
 
-await db.collection("ledgers").add({
-  name,
-  group,
-  openingBalance,
-  openingDate
+await db.collection("accounts").add({
+  name: name,
+  active: true
 });
 
 hideLoader();
-showToast("Ledger Added ✅");
+showToast("Account Added ✅");
 
 closePopup();
-}
+}	
 
-//////////////////////////////////////////////////
-// EDIT LEDGER
-//////////////////////////////////////////////////
-
-function editLedger(id){
-
-let l = ledgerList.find(x=>x.id===id);
-
-let html = `
-<h3>Edit Ledger</h3>
-
-<label>Ledger Name</label>
-<input type="text" id="ledgerName" value="${l.name}">
-
-<label>Grouping</label>
-<select id="ledgerGroup">
-  <option ${l.group==="Asset"?"selected":""}>Asset</option>
-  <option ${l.group==="Liability"?"selected":""}>Liability</option>
-  <option ${l.group==="Income"?"selected":""}>Income</option>
-  <option ${l.group==="Expense"?"selected":""}>Expense</option>
-  <option ${l.group==="Capital"?"selected":""}>Capital</option>
-  <option ${l.group==="Cash Bank"?"selected":""}>Cash Bank</option>
-</select>
-
-<label>Opening Balance</label>
-<input type="number" id="openingBalance" value="${l.openingBalance}">
-
-<label>Opening Date</label>
-<input type="date" id="openingDate" value="${l.openingDate}">
-
-<button onclick="updateLedger('${id}')">Update</button>
-`;
-
-openPopup(html);
-}
-
-//////////////////////////////////////////////////
-// UPDATE LEDGER
-//////////////////////////////////////////////////
-
-async function updateLedger(id){
-
-if(!checkPermission("admin")) return;
-
-let name = document.getElementById("ledgerName").value.trim();
-let group = document.getElementById("ledgerGroup").value;
-let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
-let openingDate = document.getElementById("openingDate").value;
-
-if(!name){
-  showToast("Enter ledger name ❌","error");
-  return;
-}
-
-showLoader();
-
-await db.collection("ledgers").doc(id).update({
-  name,
-  group,
-  openingBalance,
-  openingDate
-});
-
-hideLoader();
-showToast("Ledger Updated ✏️");
-
-closePopup();
-}
-
-//////////////////////////////////////////////////
-// DELETE LEDGER (WITH ADMIN RE-AUTH)
-//////////////////////////////////////////////////
-
-function confirmDeleteLedger(id){
-
-openPopup(`
-<h3>Admin Authentication Required</h3>
-
-<input type="email" id="adminEmail" placeholder="Admin Email">
-<input type="password" id="adminPassword" placeholder="Password">
-
-<button onclick="deleteLedger('${id}')">Confirm Delete</button>
-`);
-}
-
-async function deleteLedger(id){
-
-let email = document.getElementById("adminEmail").value;
-let password = document.getElementById("adminPassword").value;
-
-if(!email || !password){
-  showToast("Enter admin credentials ❌","error");
-  return;
-}
-
-try{
-
-showLoader();
-
-await auth.signInWithEmailAndPassword(email,password);
-
-await db.collection("ledgers").doc(id).delete();
-
-hideLoader();
-showToast("Ledger Deleted 🗑️");
-
-closePopup();
-
-}catch(e){
-
-hideLoader();
-showToast("Invalid admin credentials ❌","error");
-
-}
-}
 
 //////////////////////////////////////////////////////////
-// AUTO FORMAT AMOUNTS (KEEP SAME)
+// ACTIVATE / DEACTIVATE
+//////////////////////////////////////////////////////////
+
+	
+async function toggleAccount(name, isActive){
+
+	if(!checkPermission("admin")) return;
+
+showLoader();
+
+let snapshot = await db.collection("accounts")
+.where("name","==",name).get();
+
+let updates = [];
+
+snapshot.forEach(doc=>{
+  updates.push(
+    db.collection("accounts").doc(doc.id).update({
+      active: !isActive
+    })
+  );
+});
+
+await Promise.all(updates);
+
+hideLoader();
+showToast("Account Updated ✅");
+
+showAccountManager();
+}
+	
+	
+	
+//////////////////////////////////////////////////////////
+// AUTO FORMAT AMOUNTS (INDIAN + DECIMAL + RIGHT ALIGN)
 //////////////////////////////////////////////////////////
 
 function formatAllAmounts(){
@@ -935,8 +1016,10 @@ function formatAllAmounts(){
 document.querySelectorAll("td").forEach((cell,index)=>{
 
 let column = cell.cellIndex;
+
 let value = cell.innerText.replace(/,/g,"").trim();
 
+/* Skip Serial Number column */
 if(column === 0) return;
 
 if(value === "0"){
@@ -959,9 +1042,11 @@ cell.innerText = formatted;
 }
 
 cell.style.textAlign = "right";
+
 }
 
 });
+
 }
 
 //////////////////////////////////////////////////
@@ -976,33 +1061,25 @@ function getMonthName(monthIndex){
   return months[monthIndex];
 }
 
+	
 //////////////////////////////////////////////////
-// DYNAMIC LEDGER DROPDOWNS
+// DYNAMIC DROPDOWNS (SAFE REPLACEMENT)
 //////////////////////////////////////////////////
 
-function getLedgerOptions(selected=""){
+function getAccountOptions(selected=""){
 
-  return ledgerList.map(l =>
-    `<option ${l.name===selected?"selected":""}>${l.name}</option>`
+  return activeAccounts.map(acc =>
+    `<option ${acc===selected?"selected":""}>${acc}</option>`
   ).join("");
 
 }
 
-// ✅ Filter by group (IMPORTANT FOR YOUR LOGIC)
-
-function getLedgerByGroup(groups=[], selected=""){
-
-  return ledgerList
-    .filter(l => groups.includes(l.group))
-    .map(l =>
-      `<option ${l.name===selected?"selected":""}>${l.name}</option>`
-    ).join("");
-
-}
+	
 
 //////////////////////////////////////////////////
 // ADMIN
 //////////////////////////////////////////////////
+
 
 let openingBalances = {};
 let transactionsCache = [];
@@ -1010,6 +1087,7 @@ let transactionsCache = [];
 //////////////////////////////////////////////////
 // SESSION LOGIN SYSTEM
 //////////////////////////////////////////////////
+
 
 async function login(){
 
@@ -1020,13 +1098,9 @@ async function login(){
 
   try{
 
-    // ✅ Clear old session
+	  // ✅ CLEAR OLD SESSION (IMPORTANT)
     sessionStorage.clear();
-
-    // ✅ SET SESSION PERSISTENCE FIRST
-    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
-
-    // ✅ THEN LOGIN
+	  
     await auth.signInWithEmailAndPassword(email,password);
 
     hideLoader();
@@ -1038,11 +1112,9 @@ async function login(){
 
     hideLoader();
 
-    console.log("Login Error:", e); // ✅ DEBUG
-
     setTimeout(()=>{
       showToast("Invalid Login ❌","error");
-    },100);
+    },100); // 👈 important delay
 
   }
 }
@@ -1055,19 +1127,13 @@ async function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
+	await loadUserRole(); // ✅ VERY IMPORTANT
 
-  await loadUserRole();
-
+  loadOpeningBalance();
   loadTransactions();
+loadAccounts();
 
-  // ❌ REMOVE OLD
-  // loadAccounts();
 
-  // ❌ REMOVE opening balance (now ledger-based)
-  // loadOpeningBalance();
-
-  // ✅ NEW
-  loadLedgers();
 
 //////////////////////////////////////////////////
 // ENTER KEY LOGIN
@@ -1087,68 +1153,73 @@ resetInactivityTimer();
 
 });
 
-}	
+
+
+	
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
 //////////////////////////////////////////////////
 
-setTimeout(function(){
+  setTimeout(function(){
 
-  let activeSummary = sessionStorage.getItem("activeSummary");
+    let activeSummary = sessionStorage.getItem("activeSummary");
 
-  if(activeSummary === "currentMonth"){
-    showCurrentMonth();
-  }
+    if(activeSummary === "currentMonth"){
+      showCurrentMonth();
+    }
 
-  else if(activeSummary === "lastMonth"){
-    showLastMonth();
-  }
+    else if(activeSummary === "lastMonth"){
+      showLastMonth();
+    }
 
-  else if(activeSummary === "fullYear"){
-    showFullYear();
-  }
+    else if(activeSummary === "fullYear"){
+      showFullYear();
+    }
 
-  else if(activeSummary === "customSummary"){
+    else if(activeSummary === "customSummary"){
 
-    let fromDate = sessionStorage.getItem("summaryFromDate");
-    let toDate = sessionStorage.getItem("summaryToDate");
+      let fromDate = sessionStorage.getItem("summaryFromDate");
+      let toDate = sessionStorage.getItem("summaryToDate");
 
-    let balanceTitle = `Balance as on ${toDate}`;
-    let expenseTitle = `From ${fromDate} till ${toDate}`;
+      let balanceTitle = `Balance as on ${toDate}`;
+      let expenseTitle = `From ${fromDate} till ${toDate}`;
 
-    calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+      calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
 
-  }
+    }
 
-  else{
-    showCurrentMonth();
-  }
+    else{
+      showCurrentMonth(); // default
+    }
 
-},600);
+  },600);
 
-//////////////////////////////////////////////////
-// RESTORE LAST REPORT
-//////////////////////////////////////////////////
 
-setTimeout(function(){
+  //////////////////////////////////////////////////
+  // RESTORE LAST REPORT
+  //////////////////////////////////////////////////
 
-  let savedReport = sessionStorage.getItem("currentReport");
+  setTimeout(function(){
 
-  if(savedReport === "receipts"){
-    refreshReceiptsReport();
-  }
+    let savedReport = sessionStorage.getItem("currentReport");
 
-  if(savedReport === "payments"){
-    refreshPaymentReport();
-  }
+    if(savedReport === "receipts"){
+      refreshReceiptsReport();
+    }
 
-  // ❌ REMOVE CONTRA → ✅ REPLACE WITH JOURNAL
-  if(savedReport === "journal"){
-    refreshJournalReport();
-  }
+    if(savedReport === "payments"){
+      refreshPaymentReport();
+    }
 
-}, 600);
+    if(savedReport === "contra"){
+      refreshContraReport();
+    }
+
+  }, 600);
+
+}
+
 
 //////////////////////////////////////////////////
 // POPUP
@@ -1158,7 +1229,7 @@ function openPopup(content) {
   document.getElementById("popupContent").innerHTML = content;
   document.getElementById("popupModal").style.display = "block";
 
-  lucide.createIcons();
+	lucide.createIcons(); // ✅ IMPORTANT
 }
 
 function closePopup() {
@@ -1169,15 +1240,16 @@ function closePopup() {
 // LOAD DATA
 //////////////////////////////////////////////////
 
+
 function loadTransactions() {
 
-  let firstLoad = true;
+  let firstLoad = true; // ✅ ADD HERE
 
   db.collection("transactions")
     .onSnapshot(snapshot => {
 
       if(firstLoad){
-        showLoader();
+        showLoader(); // ✅ only first time
       }
 
       transactionsCache = [];
@@ -1187,27 +1259,20 @@ function loadTransactions() {
       });
 
       if(firstLoad){
-        hideLoader();
+        hideLoader(); // ✅ only first time
         firstLoad = false;
       }
 
-      //////////////////////////////////////////////////
-      // DASHBOARD REFRESH
-      //////////////////////////////////////////////////
-
+      // ✅ ALWAYS refresh dashboard
       calculateDashboard();
 
-      //////////////////////////////////////////////////
-      // SUMMARY REFRESH
-      //////////////////////////////////////////////////
-
+      // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
 
       if (activeSummary === "currentMonth") showCurrentMonth();
       else if (activeSummary === "lastMonth") showLastMonth();
       else if (activeSummary === "fullYear") showFullYear();
       else if (activeSummary === "customSummary") {
-
         let fromDate = sessionStorage.getItem("summaryFromDate");
         let toDate = sessionStorage.getItem("summaryToDate");
 
@@ -1217,10 +1282,7 @@ function loadTransactions() {
         calculateSummary(fromDate, toDate, expenseTitle, balanceTitle);
       }
 
-      //////////////////////////////////////////////////
-      // REPORT REFRESH
-      //////////////////////////////////////////////////
-
+      // ✅ Refresh current report
       let currentReport = sessionStorage.getItem("currentReport");
 
       if (currentReport === "receipts") {
@@ -1231,149 +1293,147 @@ function loadTransactions() {
         refreshPaymentReport();
       }
 
-      // ❌ REMOVE CONTRA → ✅ JOURNAL
-      if (currentReport === "journal") {
-        refreshJournalReport();
+      if (currentReport === "contra") {
+        refreshContraReport();
       }
 
     });
 }
 
-	
-//////////////////////////////////////////////////
-// LOAD OPENING BALANCE (REMOVED - NOW LEDGER BASED)
-//////////////////////////////////////////////////
-
-// ❌ NOT REQUIRED ANYMORE
-// Opening balance will be stored per ledger
-
 
 //////////////////////////////////////////////////
-// SHOW OPENING BALANCE (REMOVED)
+// LOAD OPENING BALANCE (REAL TIME)
 //////////////////////////////////////////////////
 
-// ❌ NOT REQUIRED
-// Opening is handled inside ledger creation/edit
+function loadOpeningBalance() {
+  db.collection("settings").doc("openingBalance")
+    .onSnapshot(doc => {
 
+      if (doc.exists) {
+        openingBalances = doc.data();
+      } else {
+        openingBalances = {};
+      }
 
-//////////////////////////////////////////////////
-// SAVE OPENING BALANCE (REMOVED)
-//////////////////////////////////////////////////
+      
 
-// ❌ NOT REQUIRED
-
-
-//////////////////////////////////////////////////
-// EDIT OPENING (REMOVED)
-//////////////////////////////////////////////////
-
-// ❌ NOT REQUIRED
-
-
-//////////////////////////////////////////////////
-// NEW: GET LEDGER OPENING BALANCE
-//////////////////////////////////////////////////
-
-function getLedgerOpeningBalance(ledgerName){
-
-  let ledger = ledgerList.find(l => l.name === ledgerName);
-
-  return ledger ? Number(ledger.openingBalance || 0) : 0;
-
-}
-
-
-//////////////////////////////////////////////////
-// NEW: GET LEDGER OPENING DATE
-//////////////////////////////////////////////////
-
-function getLedgerOpeningDate(ledgerName){
-
-  let ledger = ledgerList.find(l => l.name === ledgerName);
-
-  return ledger ? ledger.openingDate : null;
-
+    });
 }
 
 //////////////////////////////////////////////////
-// DASHBOARD FILTER (NEW MAIN ENTRY)
+// SHOW OPENING BALANCE
 //////////////////////////////////////////////////
 
-function openDashboardFilter(){
+function showOpening() {
 
-let selected = sessionStorage.getItem("activeSummary") || "currentMonth";
+  // First Time Entry
+  if (!openingBalances.openingDate) {
 
-let html = `
-<h3>Custom Dashboard</h3>
+    let html = `<h3>Opening Balance</h3>
 
-<label>Select Period</label>
-<select id="dashboardType" onchange="toggleCustomDate()">
-  <option value="currentMonth" ${selected==="currentMonth"?"selected":""}>Current Month</option>
-  <option value="lastMonth" ${selected==="lastMonth"?"selected":""}>Last Month</option>
-  <option value="fullYear" ${selected==="fullYear"?"selected":""}>Full Year</option>
-  <option value="custom" ${selected==="customSummary"?"selected":""}>Custom</option>
-</select>
-
-<div id="customDateSection" style="display:none;">
-
-<label>From Date</label>
-<input type="date" id="summaryFrom">
-
-<label>To Date</label>
-<input type="date" id="summaryTo">
-
-</div>
-
-<button onclick="runDashboard()">Run</button>
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
 `;
 
-openPopup(html);
+    accountsList.forEach(acc => {
 
-setTimeout(toggleCustomDate,100);
+      html += `
+        <label>${acc}</label>
+        <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+      `;
+
+    });
+
+    html += `<button onclick="saveOpening()">Save</button>`;
+
+    openPopup(html);
+
+  } else {
+
+    let html = `<h3>Opening Balance</h3>
+
+<p><b>Date:</b> ${openingBalances.openingDate}</p>
+`;
+
+    accountsList.forEach(acc => {
+      html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
+    });
+
+    html += `<button onclick="editOpening()">Modify</button>`;
+
+    openPopup(html);
+
+  }
+}
+
+	
+//////////////////////////////////////////////////
+// SAVE OPENING BALANCE
+//////////////////////////////////////////////////
+
+async function saveOpening(){
+
+if(!checkPermission("admin")) return;						
+
+showLoader();
+
+let data = {
+  openingDate: document.getElementById("openingDate").value
+};
+
+accountsList.forEach(acc=>{
+  data[acc] = Number(document.getElementById(acc).value) || 0;
+});
+
+await db.collection("settings").doc("openingBalance").set(data);
+
+hideLoader();
+showToast("Opening Balance Saved ✅");
+
+closePopup();
 }
 
 //////////////////////////////////////////////////
-// TOGGLE DATE INPUT
+// EDIT OPENING (ADMIN LOGIN)
 //////////////////////////////////////////////////
 
-function toggleCustomDate(){
+function editOpening(){
 
-let type = document.getElementById("dashboardType").value;
+  // 🔐 Only admin allowed
+  if(!checkPermission("admin")) return;
 
-let section = document.getElementById("customDateSection");
+  let html = `<h3>Modify Opening Balance</h3>
 
-if(type === "custom"){
-  section.style.display = "block";
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
 
-  document.getElementById("summaryFrom").value =
-    sessionStorage.getItem("summaryFromDate") || "";
+  accountsList.forEach(acc => {
 
-  document.getElementById("summaryTo").value =
-    sessionStorage.getItem("summaryToDate") || "";
+    html += `
+      <label>${acc}</label>
+      <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+    `;
 
-}else{
-  section.style.display = "none";
+  });
+
+  html += `<button onclick="saveOpening()">Update</button>`;
+
+  openPopup(html);
+
 }
 
-}
+
 
 //////////////////////////////////////////////////
-// RUN DASHBOARD
+// Current Month Button
 //////////////////////////////////////////////////
 
-function runDashboard(){
-
-let type = document.getElementById("dashboardType").value;
-
-let today = new Date();
-
-//////////////////////////////////////////////////
-// CURRENT MONTH
-//////////////////////////////////////////////////
-
-if(type === "currentMonth"){
+function showCurrentMonth(){
 
   sessionStorage.setItem("activeSummary","currentMonth");
+
+  let today = new Date();
 
   let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -1385,16 +1445,20 @@ if(type === "currentMonth"){
   let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `For the month of ${monthName} ${today.getFullYear()}`;
 
-  calculateSummary(from,to,expenseTitle,balanceTitle);
+  calculateSummary(from, to, expenseTitle, balanceTitle);
+
 }
 
+
 //////////////////////////////////////////////////
-// LAST MONTH
+// Last Month Button
 //////////////////////////////////////////////////
 
-else if(type === "lastMonth"){
+function showLastMonth(){
 
   sessionStorage.setItem("activeSummary","lastMonth");
+
+  let today = new Date();
 
   let firstDay = new Date(today.getFullYear(), today.getMonth()-1, 1);
   let lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
@@ -1407,16 +1471,19 @@ else if(type === "lastMonth"){
   let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `For the month of ${monthName} ${firstDay.getFullYear()}`;
 
-  calculateSummary(from,to,expenseTitle,balanceTitle);
+  calculateSummary(from, to, expenseTitle, balanceTitle);
+
 }
 
 //////////////////////////////////////////////////
-// FULL YEAR
+// Full Year Button (Calendar Year)
 //////////////////////////////////////////////////
 
-else if(type === "fullYear"){
+function showFullYear(){
 
   sessionStorage.setItem("activeSummary","fullYear");
+
+  let today = new Date();
 
   let start = new Date(today.getFullYear(),0,1);
 
@@ -1426,25 +1493,36 @@ else if(type === "fullYear"){
   let balanceTitle = `Balance as on ${to}`;
   let expenseTitle = `FY ${today.getFullYear()}`;
 
-  calculateSummary(from,to,expenseTitle,balanceTitle);
+  calculateSummary(
+    from,
+    to,
+    expenseTitle,
+    balanceTitle
+  );
+
 }
 
+
 //////////////////////////////////////////////////
-// CUSTOM
+// Custom Date Filter Button
 //////////////////////////////////////////////////
 
-else if(type === "custom"){
+function runCustomSummary(){
 
   let fromDate = document.getElementById("summaryFrom").value;
   let toDate = document.getElementById("summaryTo").value;
 
+  // ❗ Empty check
   if(!fromDate || !toDate){
-    showToast("Select From & To date ❌","error");
+    showToast("Please select both From Date and To Date","error");
+    document.getElementById("summaryFrom").focus();
     return;
   }
 
+  // ❗ Date logic check
   if(fromDate > toDate){
     showToast("From Date cannot be after To Date ❌","error");
+    document.getElementById("summaryFrom").focus();
     return;
   }
 
@@ -1452,189 +1530,196 @@ else if(type === "custom"){
   sessionStorage.setItem("summaryFromDate",fromDate);
   sessionStorage.setItem("summaryToDate",toDate);
 
+  closePopup();
+
   let balanceTitle = `Balance as on ${toDate}`;
   let expenseTitle = `From ${fromDate} till ${toDate}`;
 
   calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+
 }
 
-closePopup();
-}
 
 //////////////////////////////////////////////////
-// Summary Calculation Engine (LEDGER BASED)
+// Custom Date Filter Popup
+//////////////////////////////////////////////////
+
+function showCustomSummary(){
+
+let from = sessionStorage.getItem("summaryFromDate") || "";
+let to = sessionStorage.getItem("summaryToDate") || "";
+
+openPopup(`
+<h3>Custom Date Filter</h3>
+
+<label>From Date</label>
+<input type="date" id="summaryFrom" value="${from}">
+
+<label>To Date</label>
+<input type="date" id="summaryTo" value="${to}">
+
+<button onclick="runCustomSummary()">Run</button>
+`);
+
+}
+
+
+//////////////////////////////////////////////////
+// Summary Calculation Engine
 //////////////////////////////////////////////////
 
 function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
   let balances = {};
 
-  //////////////////////////////////////////////////
-  // INITIALIZE BALANCES (LEDGER OPENING)
-  //////////////////////////////////////////////////
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
-  ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.openingBalance || 0);
-  });
+  let expenses = {
+    Personal:0,
+    Home:0,
+    "Office Reimbursement":0,
+  	"Qardan Given":0
+  };
 
-  //////////////////////////////////////////////////
-  // TRACKING VARIABLES
-  //////////////////////////////////////////////////
 
-  let personalExpense = 0;
-  let drawings = 0;
-  let officeReimbursement = 0;
-  let qardanGiven = 0;
-
-  //////////////////////////////////////////////////
-  // PROCESS TRANSACTIONS
-  //////////////////////////////////////////////////
 
   transactionsCache.forEach(t=>{
 
-    //////////////////////////////////////////////////
-    // CLOSING BALANCE (DOUBLE ENTRY)
-    //////////////////////////////////////////////////
-
+    // Closing Balance calculation (till TO date)
     if(t.date <= toDate){
 
-      if(t.debitLedger){
-        balances[t.debitLedger] = (balances[t.debitLedger] || 0) + Number(t.amount);
-      }
+      if (t.type === "receipt" || t.type === "inflow")
+        balances[t.account] += Number(t.amount);
 
-      if(t.creditLedger){
-        balances[t.creditLedger] = (balances[t.creditLedger] || 0) - Number(t.amount);
-      }
+      if (t.type === "payment" || t.type === "outflow")
+        balances[t.account] -= Number(t.amount);
 
+      if (t.type === "contra"){
+        balances[t.from] -= Number(t.amount);
+        balances[t.to] += Number(t.amount);
+      }
     }
 
-    //////////////////////////////////////////////////
-    // PERIOD ANALYSIS
-    //////////////////////////////////////////////////
-
+    // Expense summary (within selected range)
     if(t.date >= fromDate && t.date <= toDate){
 
-      // Expense Ledgers
-      let debitLedgerObj = ledgerList.find(l=>l.name === t.debitLedger);
+      if (t.type === "payment" || t.type === "outflow"){
+        if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
 
-      if(debitLedgerObj){
-
-        if(debitLedgerObj.group === "Expense"){
-          personalExpense += Number(t.amount);
-        }
-
-        if(debitLedgerObj.name === "Drawing"){
-          drawings += Number(t.amount);
-        }
-
-        if(debitLedgerObj.name === "Office Reimbursement"){
-          officeReimbursement += Number(t.amount);
-        }
-
-        if(debitLedgerObj.name === "Qardan Given"){
-          qardanGiven += Number(t.amount);
-        }
-
+expenses[t.category] += Number(t.amount);
       }
 
     }
 
   });
 
-  //////////////////////////////////////////////////
-  // TOTAL BALANCE
-  //////////////////////////////////////////////////
+let totalBalance = 0;
 
-  let totalBalance = 0;
+accountsList.forEach(acc=>{
+  totalBalance += balances[acc];
+});
 
-  ledgerList.forEach(l=>{
-    totalBalance += balances[l.name] || 0;
-  });
+let totalExpense = 
+  expenses.Personal + 
+  expenses.Home + 
+  expenses["Office Reimbursement"] +
+  expenses["Qardan Given"];
 
-  //////////////////////////////////////////////////
-  // RENDER BALANCE TABLE
-  //////////////////////////////////////////////////
+let rows = "";
 
-  let rows = "";
+accountsList.forEach(acc => {
 
-  ledgerList.forEach(l => {
+  let isActive = activeAccounts.includes(acc);
 
-    rows += `
-    <tr>
-      <td>${l.name}</td>
-      <td>${balances[l.name] || 0}</td>
-    </tr>
-    `;
-  });
+let dot = isActive
+  ? '<span style="color:green;font-size:18px;">●</span>'
+  : '<span style="color:red;font-size:18px;">●</span>';
 
+rows += `
+<tr>
+  <td>${dot} ${acc}</td>
+  <td>${balances[acc] || 0}</td>
+</tr>
+`;
+
+});
+	
   document.getElementById("closingSummary").innerHTML = `
-  <div class="summary-title">${balanceTitle}</div>
-  <table>
-    <tr><th>Ledger</th><th>Balance</th></tr>
-    ${rows}
-    <tr><td><b>Total</b></td><td><b>${totalBalance}</b></td></tr>
-  </table>
+
+<div class="summary-title">${balanceTitle}</div>
+    <table>
+      <tr><th>Account</th><th>Balance</th></tr>
+      ${rows}
+<tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
+    </table>
   `;
-
-  //////////////////////////////////////////////////
-  // EXPENSE SUMMARY (NEW STRUCTURE)
-  //////////////////////////////////////////////////
-
-  let totalExpense =
-    personalExpense +
-    drawings +
-    officeReimbursement +
-    qardanGiven;
 
   document.getElementById("expenseSummary").innerHTML = `
-  <div class="summary-title">${expenseTitle}</div>
-  <table>
-    <tr><th>Particulars</th><th>Total</th></tr>
-    <tr><td>Personal Expense</td><td>${personalExpense}</td></tr>
-    <tr><td>Drawings</td><td>${drawings}</td></tr>
-    <tr><td>Office Reimbursement</td><td>${officeReimbursement}</td></tr>
-    <tr><td>Qardan Given</td><td>${qardanGiven}</td></tr>
-    <tr><td><b>Total</b></td><td><b>${totalExpense}</b></td></tr>
-  </table>
+ <div class="summary-title">${expenseTitle}</div>
+    <table>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+	  <tr><td>Qardan Given</td><td> ${expenses["Qardan Given"]}</td></tr>
+<tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
+    </table>
   `;
 
-  //////////////////////////////////////////////////
-  // CHARTS (UPDATED)
-  //////////////////////////////////////////////////
+renderExpenseChart(
+  expenses.Personal,
+  expenses.Home,
+  expenses["Office Reimbursement"],
+  expenses["Qardan Given"]
+);
 
-  renderExpenseChart(
-    personalExpense,
-    officeReimbursement,
-    qardanGiven
-  );
+renderPersonalMonthlySummary();
 
-  renderPersonalMonthlySummary();
+renderPersonalExpenseChart();
 
-  renderPersonalExpenseChart();
-
-  formatAllAmounts();
-
-  lucide.createIcons();
+formatAllAmounts();
+	
+lucide.createIcons();
+	
 }
 
+
+
 //////////////////////////////////////////////////
-// Final Export Function (NO CHANGE REQUIRED)
+// Final Export Function
 //////////////////////////////////////////////////
+
 
 async function exportSummaryExcel(){
 
-showLoader();	
+showLoader(); // ADD at top	
+
+//////////////////////////////////////////////////
+// GET TITLES
+//////////////////////////////////////////////////
 
 let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
 let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
 
+//////////////////////////////////////////////////
+// CREATE WORKBOOK
+//////////////////////////////////////////////////
+
 const workbook = new ExcelJS.Workbook();
 const sheet = workbook.addWorksheet("Dashboard");
+
+//////////////////////////////////////////////////
+// BALANCE TABLE
+//////////////////////////////////////////////////
 
 sheet.addRow([balanceTitle]);
 sheet.addRow([]);
 
-sheet.addRow(["Ledger","Balance"]);
+sheet.addRow(["Account","Balance"]);
 
 document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
   if(i===0) return;
@@ -1645,10 +1730,14 @@ document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
 sheet.addRow([]);
 sheet.addRow([]);
 
+//////////////////////////////////////////////////
+// EXPENSE TABLE
+//////////////////////////////////////////////////
+
 sheet.addRow([expenseTitle]);
 sheet.addRow([]);
 
-sheet.addRow(["Particulars","Total"]);
+sheet.addRow(["Category","Total"]);
 
 document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
   if(i===0) return;
@@ -1658,6 +1747,10 @@ document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
 
 sheet.addRow([]);
 sheet.addRow([]);
+
+//////////////////////////////////////////////////
+// MONTHLY PERSONAL EXPENSE TABLE
+//////////////////////////////////////////////////
 
 sheet.addRow(["Monthly Personal Expense"]);
 sheet.addRow([]);
@@ -1669,11 +1762,19 @@ document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
   sheet.addRow(data);
 });
 
+//////////////////////////////////////////////////
+// CAPTURE CHART IMAGES
+//////////////////////////////////////////////////
+
 let pieCanvas = document.getElementById("expensePieChart");
 let barCanvas = document.getElementById("personalExpenseChart");
 
 let pieImage = pieCanvas.toDataURL("image/png");
 let barImage = barCanvas.toDataURL("image/png");
+
+//////////////////////////////////////////////////
+// ADD PIE CHART
+//////////////////////////////////////////////////
 
 const pieId = workbook.addImage({
   base64: pieImage,
@@ -1685,6 +1786,10 @@ sheet.addImage(pieId,{
   ext: { width: 400, height: 300 }
 });
 
+//////////////////////////////////////////////////
+// ADD BAR CHART
+//////////////////////////////////////////////////
+
 const barId = workbook.addImage({
   base64: barImage,
   extension: 'png',
@@ -1695,18 +1800,30 @@ sheet.addImage(barId,{
   ext: { width: 400, height: 300 }
 });
 
+//////////////////////////////////////////////////
+// FILE NAME BASED ON PERIOD
+//////////////////////////////////////////////////
+
 let title = expenseTitle
 .replaceAll(" ","_")
 .replaceAll("/","-")
 .replaceAll(":","");
 
-let fileName = `Accounting_Dashboard_${title}.xlsx`;
+let fileName = `Expense_Dashboard_${title}.xlsx`;
+
+//////////////////////////////////////////////////
+// ALIGN ALL CELLS RIGHT
+//////////////////////////////////////////////////
 
 sheet.eachRow(row=>{
 row.eachCell(cell=>{
 cell.alignment = { horizontal: "right" };
 });
 });
+
+//////////////////////////////////////////////////
+// DOWNLOAD FILE
+//////////////////////////////////////////////////
 
 const buffer = await workbook.xlsx.writeBuffer();
 saveAs(new Blob([buffer]), fileName);
@@ -1716,151 +1833,128 @@ showToast("Dashboard Exported 📊");
 
 }
 
+
 //////////////////////////////////////////////////
-// DASHBOARD CALCULATION (LEDGER BASED)
+// DASHBOARD CALCULATION
 //////////////////////////////////////////////////
 
 function calculateDashboard() {
 
   let balances = {};
 
-  //////////////////////////////////////////////////
-  // INITIALIZE LEDGER OPENING BALANCE
-  //////////////////////////////////////////////////
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
-  ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.openingBalance || 0);
-  });
-
-  //////////////////////////////////////////////////
-  // TRACKING VARIABLES
-  //////////////////////////////////////////////////
-
-  let personalExpense = 0;
-  let officeReimbursement = 0;
-  let qardanGiven = 0;
-
-  //////////////////////////////////////////////////
-  // PROCESS TRANSACTIONS (DOUBLE ENTRY)
-  //////////////////////////////////////////////////
+  let expenses = {
+    Personal: 0,
+    Home: 0,
+    "Office Reimbursement": 0
+  };
 
   transactionsCache.forEach(t => {
 
-    // Debit → Increase
-    if (t.debitLedger) {
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + Number(t.amount);
+    // RECEIPTS
+    if (t.type === "receipt" || t.type === "inflow") {
+      balances[t.account] += Number(t.amount);
     }
 
-    // Credit → Decrease
-    if (t.creditLedger) {
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - Number(t.amount);
+    // PAYMENTS
+    if (t.type === "payment" || t.type === "outflow") {
+      balances[t.account] -= Number(t.amount);
+      if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
+
+expenses[t.category] += Number(t.amount);
     }
 
-    //////////////////////////////////////////////////
-    // EXPENSE TRACKING
-    //////////////////////////////////////////////////
-
-    let debitLedgerObj = ledgerList.find(l=>l.name === t.debitLedger);
-
-    if(debitLedgerObj){
-
-      if(debitLedgerObj.group === "Expense"){
-        personalExpense += Number(t.amount);
-      }
-
-      if(debitLedgerObj.name === "Office Reimbursement"){
-        officeReimbursement += Number(t.amount);
-      }
-
-      if(debitLedgerObj.name === "Qardan Given"){
-        qardanGiven += Number(t.amount);
-      }
-
+    // CONTRA
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
     }
 
   });
 
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////
   // DISPLAY CLOSING BALANCE
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////
 
-  let rows = "";
 
-  ledgerList.forEach(l => {
+let rows = "";
 
-    rows += `
-      <tr>
-        <td>${l.name}</td>
-        <td>${balances[l.name] || 0}</td>
-      </tr>
-    `;
+accountsList.forEach(acc => {
 
-  });
+  rows += `
+    <tr>
+      <td>${acc}</td>
+      <td>${balances[acc] || 0}</td>
+    </tr>
+  `;
 
+});
+	
   document.getElementById("closingSummary").innerHTML = `
     <table>
-      <tr><th>Ledger</th><th>Balance</th></tr>
+      <tr><th>Account</th><th>Balance</th></tr>
       ${rows}
     </table>
   `;
 
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////
   // EXPENSE SUMMARY
-  //////////////////////////////////////////////////
+  //////////////////////////////////////////////
 
   document.getElementById("expenseSummary").innerHTML = `
     <table>
-      <tr><th>Particulars</th><th>Total</th></tr>
-      <tr><td>Personal Expense</td><td>${personalExpense}</td></tr>
-      <tr><td>Office Reimbursement</td><td>${officeReimbursement}</td></tr>
-      <tr><td>Qardan Given</td><td>${qardanGiven}</td></tr>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
     </table>
   `;
-
-  lucide.createIcons();
+lucide.createIcons(); // ✅ HERE
+	
 }
 
 //////////////////////////////////////////////////
-// BALANCE CHECKER (LEDGER BASED)
+// Balance Checker Function
 //////////////////////////////////////////////////
 
-function getCurrentBalance(ledgerName) {
+
+function getCurrentBalance(account) {
 
   let balances = {};
 
-  //////////////////////////////////////////////////
-  // INITIALIZE OPENING
-  //////////////////////////////////////////////////
-
-  ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.openingBalance || 0);
-  });
-
-  //////////////////////////////////////////////////
-  // APPLY TRANSACTIONS
-  //////////////////////////////////////////////////
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   transactionsCache.forEach(t => {
 
-    if (t.debitLedger) {
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + Number(t.amount);
-    }
+    if (t.type === "receipt" || t.type === "inflow")
+      balances[t.account] += Number(t.amount);
 
-    if (t.creditLedger) {
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - Number(t.amount);
+    if (t.type === "payment" || t.type === "outflow")
+      balances[t.account] -= Number(t.amount);
+
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
     }
 
   });
 
-  return balances[ledgerName] || 0;
+  return balances[account];
 }
 
-		
+
 //////////////////////////////////////////////////
-// Pie Chart Function (UPDATED)
+// Pie Chart Function
 //////////////////////////////////////////////////
 
-function renderExpenseChart(personal, office, qardan){
+function renderExpenseChart(personal, home, office, qardan){
 
   const ctx = document.getElementById("expensePieChart");
 
@@ -1871,11 +1965,12 @@ function renderExpenseChart(personal, office, qardan){
   expenseChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Expense","Office Reimbursement","Qardan Given"],
+      labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
       datasets: [{
-        data: [personal, office, qardan],
+        data: [personal, home, office, qardan], // ✅ FIXED
         backgroundColor: [
           "#4CAF50",
+          "#2196F3",
           "#FF9800",
           "#9C27B0"
         ]
@@ -1894,7 +1989,7 @@ function renderExpenseChart(personal, office, qardan){
 }
 
 //////////////////////////////////////////////////
-// Personal Expense Chart Function (LEDGER BASED)
+// Personal Expense Chart Function
 //////////////////////////////////////////////////
 
 function renderPersonalExpenseChart(){
@@ -1910,15 +2005,14 @@ function renderPersonalExpenseChart(){
 
   transactionsCache.forEach(t => {
 
-    // ONLY DEBIT SIDE (EXPENSE IMPACT)
-    let debitLedgerObj = ledgerList.find(l=>l.name === t.debitLedger);
-
-    if(debitLedgerObj && debitLedgerObj.group === "Expense"){
+    if(t.type === "payment" && t.category === "Personal"){
 
       let d = new Date(t.date);
 
       if(d.getFullYear() === currentYear){
+
         personal[d.getMonth()] += Number(t.amount);
+
       }
 
     }
@@ -1933,56 +2027,59 @@ function renderPersonalExpenseChart(){
 
   personalExpenseChart = new Chart(ctx, {
 
-    type: "bar",
+type: "bar",
 
-    data: {
+data: {
 
-      labels: months,
+labels: months,
 
-      datasets: [
+datasets: [
 
-        {
-          label: "Personal Expense",
-          data: personal,
-          backgroundColor: "#001d4c"
-        },
+{
+label: "Personal Expense",
+data: personal,
+backgroundColor: "#001d4c"
+},
 
-        {
-          type: "line",
-          label: "Budget Limit (2000)",
-          data: new Array(12).fill(2000),
-          borderColor: "red",
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false
-        }
+{
+type: "line",
+label: "Budget Limit (2000)",
+data: new Array(12).fill(2000),
+borderColor: "red",
+borderWidth: 2,
+pointRadius: 0,
+fill: false
+}
 
-      ]
+]
 
-    },
+},
 
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{
-          position:"bottom"
-        }
-      },
-      scales:{
-        y:{
-          beginAtZero:true
-        }
-      }
-    }
+options:{
 
-  });
+responsive:true,
+
+plugins:{
+legend:{
+position:"bottom"
+}
+},
+
+scales:{
+y:{
+beginAtZero:true
+}
+}
+
+}
+
+});
 
 }
 
 
-		
 //////////////////////////////////////////////////
-// Monthly Personal Expense Summary (LEDGER BASED)
+// Monthly Personal Expense Summary
 //////////////////////////////////////////////////
 
 function renderPersonalMonthlySummary(){
@@ -1998,14 +2095,14 @@ function renderPersonalMonthlySummary(){
 
   transactionsCache.forEach(t => {
 
-    let debitLedgerObj = ledgerList.find(l=>l.name === t.debitLedger);
-
-    if(debitLedgerObj && debitLedgerObj.group === "Expense"){
+    if(t.type === "payment" && t.category === "Personal"){
 
       let d = new Date(t.date);
 
       if(d.getFullYear() === currentYear){
+
         monthly[d.getMonth()] += Number(t.amount);
+
       }
 
     }
@@ -2036,155 +2133,97 @@ function renderPersonalMonthlySummary(){
   html += "</table></div>";
 
   document.getElementById("personalMonthlySummary").innerHTML = html;
+
 }
 
+
 //////////////////////////////////////////////////
-// TRANSACTION ENTRY FORMS (NEW SYSTEM)
+// TRANSACTION ENTRY FORMS
 //////////////////////////////////////////////////
+
 
 function showForm(type) {
 
-//////////////////////////////////////////////////
-// RECEIPT
-//////////////////////////////////////////////////
+  if (type === "receipt") {
+    openPopup(`
+      <h3>Record Receipt</h3>
+      <label>Mode</label>
+      <select id="account">
+        ${getAccountOptions()}
+      </select>
 
-if (type === "receipt") {
+      <label>Date</label>
+      <input type="date" id="date">
 
-  // ✅ Capital WITHOUT Drawing
-  let capitalLedgers = ledgerList
-    .filter(l => l.group === "Capital" && l.name !== "Drawing")
-    .map(l => `<option>${l.name}</option>`).join("");
+      <label>Particular</label>
+      <input type="text" id="narration">
 
-  let incomeLiability = getLedgerByGroup(["Income","Liability"]);
+      <label>Amount</label>
+      <input type="number" id="amount">
 
-  openPopup(`
-    <h3>Record Receipt</h3>
+      <button onclick="saveReceipt()">Save</button>
+    `);
+  }
 
-    <label>Date</label>
-    <input type="date" id="date">
+  if (type === "payment") {
+    openPopup(`
+      <h3>Record Payment</h3>
+      <label>Mode</label>
+      <select id="account">
+        ${getAccountOptions()}
+      </select>
 
-    <label>Ledger (Credit)</label>
-    <select id="creditLedger">
-      ${capitalLedgers}
-      ${incomeLiability}
-    </select>
+      <label>Category</label>
+      <select id="category">
+        <option>Personal</option>
+        <option>Home</option>
+        <option>Office Reimbursement</option>
+		<option>Qardan Given</option>
+      </select>
 
-    <label>Mode (Debit - Cash/Bank)</label>
-    <select id="debitLedger">
-      ${getLedgerByGroup(["Cash Bank"])}
-    </select>
+      <label>Date</label>
+      <input type="date" id="date">
 
-    <label>Narration</label>
-    <input type="text" id="narration">
+      <label>Particular</label>
+      <input type="text" id="narration">
 
-    <label>Amount</label>
-    <input type="number" id="amount">
+      <label>Amount</label>
+      <input type="number" id="amount">
 
-    <button onclick="saveReceipt()">Save</button>
-  `);
-}
+      <button onclick="savePayment()">Save</button>
+    `);
+  }
 
-//////////////////////////////////////////////////
-// PAYMENT
-//////////////////////////////////////////////////
+  if (type === "contra") {
+    openPopup(`
+      <h3>Record Contra</h3>
 
-if (type === "payment") {
+      <label>From Account</label>
+      <select id="from">
+        ${getAccountOptions()}
+      </select>
 
-  // ✅ Drawing ONLY from Capital
-  let drawingLedger = ledgerList
-    .filter(l => l.name === "Drawing")
-    .map(l => `<option>${l.name}</option>`).join("");
+      <label>To Account</label>
+      <select id="to">
+        ${getAccountOptions()}
+      </select>
 
-  let expenseAsset = getLedgerByGroup(["Expense","Asset"]);
+      <label>Date</label>
+      <input type="date" id="date">
 
-  openPopup(`
-    <h3>Record Payment</h3>
+      <label>Particular</label>
+      <input type="text" id="narration">
 
-    <label>Date</label>
-    <input type="date" id="date">
+      <label>Amount</label>
+      <input type="number" id="amount">
 
-    <label>Ledger (Debit)</label>
-    <select id="debitLedger">
-      ${drawingLedger}
-      ${expenseAsset}
-    </select>
-
-    <label>Mode (Credit - Cash/Bank)</label>
-    <select id="creditLedger">
-      ${getLedgerByGroup(["Cash Bank"])}
-    </select>
-
-    <label>Narration</label>
-    <input type="text" id="narration">
-
-    <label>Amount</label>
-    <input type="number" id="amount">
-
-    <button onclick="savePayment()">Save</button>
-  `);
-}
-
-//////////////////////////////////////////////////
-// JOURNAL (NO CHANGE - ALREADY CORRECT)
-//////////////////////////////////////////////////
-
-if (type === "journal") {
-
-  openPopup(`
-    <h3>Journal Entry</h3>
-
-    <label>Date</label>
-    <input type="date" id="date">
-
-    <label>Debit</label>
-    <select id="debitLedger">
-      ${getLedgerOptions()}
-    </select>
-
-    <label>Credit</label>
-    <select id="creditLedger">
-      ${getLedgerOptions()}
-    </select>
-
-    <label>Narration</label>
-    <input type="text" id="narration">
-
-    <label>Amount</label>
-    <input type="number" id="amount">
-
-    <button onclick="saveJournal()">Save</button>
-  `);
-}
-
+      <button onclick="saveContra()">Save</button>
+    `);
+  }
 }
 
 
-//////////////////////////////////////////////////
-// AUTO TRANSACTION NUMBER GENERATOR
-//////////////////////////////////////////////////
 
-async function getNextTransactionNumber(type){
-
-  let prefix = {
-    receipt: "R",
-    payment: "P",
-    journal: "J"
-  };
-
-  let snapshot = await db.collection("transactions")
-    .where("type","==",type)
-    .get();
-
-  let max = 0;
-
-  snapshot.forEach(doc=>{
-    let num = doc.data().txnNumber || "";
-    let n = Number(num.replace(prefix[type],""));
-    if(n > max) max = n;
-  });
-
-  return prefix[type] + (max + 1);
-}
 
 //////////////////////////////////////////////////
 // SAVE RECEIPT
@@ -2194,20 +2233,22 @@ async function saveReceipt() {
 
 	if(!checkPermission("write")) return;
 
-  let debitLedger = document.getElementById("debitLedger").value;   // Cash/Bank
-  let creditLedger = document.getElementById("creditLedger").value; // Income/Capital
+  let account = document.getElementById("account").value;
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if(!date){
-    showToast("Please select Date ❌","error");
-    return;
-  }
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
 
-  if (!debitLedger || !creditLedger || !narration || isNaN(amount)) {
+	
+  if (!account || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
-    return;
+document.getElementById("amount").focus();
+return;
   }
 
   if (amount <= 0) {
@@ -2215,21 +2256,16 @@ async function saveReceipt() {
     return;
   }
 
-  showLoader();
-
-  let txnNumber = await getNextTransactionNumber("receipt");
-
+showLoader();
+	
   await db.collection("transactions").add({
     type: "receipt",
-    txnNumber,
-    debitLedger,
-    creditLedger,
-    amount,
-    date,
-    narration
+    account: account,
+    amount: amount,
+    date: date,
+    narration: narration
   });
-
-  hideLoader();
+hideLoader();
   showToast("Receipt Saved ✅");
   closePopup();
 }
@@ -2242,20 +2278,23 @@ async function savePayment() {
 
 	if(!checkPermission("write")) return;
 
-  let debitLedger = document.getElementById("debitLedger").value;   // Expense/Asset
-  let creditLedger = document.getElementById("creditLedger").value; // Cash/Bank
+  let account = document.getElementById("account").value;
+  let category = document.getElementById("category").value;
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if(!date){
-    showToast("Please select Date ❌","error");
-    return;
-  }
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
 
-  if (!debitLedger || !creditLedger || !narration || isNaN(amount)) {
+	
+  if (!account || !category || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
-    return;
+    document.getElementById("amount").focus();
+	  return;
   }
 
   if (amount <= 0) {
@@ -2263,59 +2302,61 @@ async function savePayment() {
     return;
   }
 
-  // ✅ CHECK CASH/BANK BALANCE
-  let balance = getCurrentBalance(creditLedger);
+  let balance = getCurrentBalance(account);
 
   if (balance < amount) {
-    showToast("Insufficient balance in " + creditLedger,"error");
+    showToast("Insufficient balance in " + account,"error");
     return;
   }
 
-  showLoader();
-
-  let txnNumber = await getNextTransactionNumber("payment");
-
+showLoader();
+	
   await db.collection("transactions").add({
     type: "payment",
-    txnNumber,
-    debitLedger,
-    creditLedger,
-    amount,
-    date,
-    narration
+    account: account,
+    category: category,
+    date: date,
+    narration: narration,
+    amount: amount
   });
 
-  hideLoader();
+hideLoader();
   showToast("Payment Saved ✅");
+	
   closePopup();
 }
 
+
+
 //////////////////////////////////////////////////
-// SAVE JOURNAL (REPLACES CONTRA)
+// Apply Validation for Contra
 //////////////////////////////////////////////////
 
-async function saveJournal() {
+async function saveContra() {
 
 	if(!checkPermission("write")) return;
 
-  let debitLedger = document.getElementById("debitLedger").value;
-  let creditLedger = document.getElementById("creditLedger").value;
+  let from = document.getElementById("from").value;
+  let to = document.getElementById("to").value;
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  if(!date){
-    showToast("Please select Date ❌","error");
-    return;
-  }
+// ✅ ADD HERE
+if(!date){
+  showToast("Please select Date ❌","error");
+  return;
+}
 
-  if (!debitLedger || !creditLedger || !narration || isNaN(amount)) {
+	
+  if (!from || !to || !date || !narration || !amount) {
     showToast("All fields are mandatory","error");
-    return;
+    document.getElementById("amount").focus();
+	  return;
   }
 
-  if (debitLedger === creditLedger) {
-    showToast("Debit and Credit cannot be same ❌","error");
+  if (from === to) {
+    showToast("From and To account cannot be the same ❌","error");
     return;
   }
 
@@ -2324,30 +2365,31 @@ async function saveJournal() {
     return;
   }
 
-  showLoader();
+  let balance = getCurrentBalance(from);
 
-  let txnNumber = await getNextTransactionNumber("journal");
+  if (balance < amount) {
+    showToast("Insufficient balance in " + from + " ❌","error");
+    return;
+  }
 
+showLoader();
+	
   await db.collection("transactions").add({
-    type: "journal",
-    txnNumber,
-    debitLedger,
-    creditLedger,
-    amount,
-    date,
-    narration
+    type: "contra",
+    from: from,
+    to: to,
+    date: date,
+    narration: narration,
+    amount: amount
   });
-
-  hideLoader();
-  showToast("Journal Saved ✅");
+hideLoader();
+  showToast("Contra Saved ✅");
   closePopup();
 }
 
 
-
-	  
 //////////////////////////////////////////////////
-// RECEIPTS REPORT
+// RECEIPTS REPORT (DISPLAY BELOW)
 //////////////////////////////////////////////////
 
 function showReceiptsReport() {
@@ -2372,32 +2414,45 @@ function showReceiptsReport() {
 
 function runReceiptsReport() {
 
-  let fromDate = document.getElementById("fromDate").value;
+let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-  if(!validateDateRange(fromDate,toDate)) return;
+if(!validateDateRange(fromDate,toDate)) return;
 
   currentReport = "receipts";
   sessionStorage.setItem("currentReport","receipts");
-  sessionStorage.setItem("currentFromDate",fromDate);
+sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
+
+  
 
   closePopup();
 
   let receipts = transactionsCache
-  .filter(t => {
+.filter(t => {
 
-    let isReceipt = (t.type === "receipt");
+  let isReceipt = (t.type === "receipt" || t.type === "inflow");
 
-    let isInRange = true;
+  let isInRange = true;
 
-    if (fromDate) isInRange = t.date >= fromDate;
-    if (toDate) isInRange = isInRange && t.date <= toDate;
+  if (fromDate)
+    isInRange = t.date >= fromDate;
 
-    return isReceipt && isInRange;
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return isReceipt && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
 
   let html = `
     <h3>Receipts Report</h3>
@@ -2405,11 +2460,8 @@ function runReceiptsReport() {
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
         <th>Mode</th>
-        <th>Ledger</th>
-        <th>Narration</th>
+        <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -2421,12 +2473,9 @@ function runReceiptsReport() {
       <tr>
         <td>${index+1}</td>
         <td>${r.date}</td>
-        <td>${r.txnNumber || ""}</td>
-        <td>${r.type}</td>
-        <td>${r.debitLedger}</td>
-        <td>${r.creditLedger}</td>
+        <td>${r.account}</td>
         <td>${r.narration}</td>
-        <td>${r.amount}</td>
+        <td> ${r.amount}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
       </tr>
@@ -2436,18 +2485,27 @@ function runReceiptsReport() {
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
 
-  formatAllAmounts();
 }
 
+
 //////////////////////////////////////////////////
-// PAYMENTS REPORT POPUP
+// PAYMENT REPORT FILTER POPUP
 //////////////////////////////////////////////////
 
 function showPaymentsReport() {
 
   openPopup(`
-    <h3>Payments Report</h3>
+    <h3>Select Expense Category</h3>
+
+    <label>Category</label>
+    <select id="paymentCategory">
+      <option>Personal</option>
+      <option>Home</option>
+      <option>Office Reimbursement</option>
+	  <option>Qardan Given</option>
+    </select>
 
     <label>From Date</label>
     <input type="date" id="fromDate">
@@ -2460,56 +2518,71 @@ function showPaymentsReport() {
 }
 
 
-
-		
-
 //////////////////////////////////////////////////
-// RUN PAYMENT REPORT (LEDGER BASED)
+// RUN PAYMENT REPORT
 //////////////////////////////////////////////////
 
 function runPaymentReport() {
 
+  let category = document.getElementById("paymentCategory").value;
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-  if(!validateDateRange(fromDate,toDate)) return;
+if(!category){
+  showToast("Please select Category ❌","error");
+  return;
+}
 
+if(!validateDateRange(fromDate,toDate)) return;
+
+  // remember current report
   sessionStorage.setItem("currentReport","payments");
-  sessionStorage.setItem("currentFromDate",fromDate);
-  sessionStorage.setItem("currentToDate",toDate);
+sessionStorage.setItem("currentCategory",category);
+sessionStorage.setItem("currentFromDate",fromDate);
+sessionStorage.setItem("currentToDate",toDate);
 
   currentReport = "payments";
+  currentReportCategory = category;
   currentFromDate = fromDate;
   currentToDate = toDate;
 
   closePopup();
 
   let payments = transactionsCache
-  .filter(t => {
+.filter(t => {
 
-    let isPayment = (t.type === "payment");
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
 
-    let isInRange = true;
+  let isInRange = true;
 
-    if (fromDate) isInRange = t.date >= fromDate;
-    if (toDate) isInRange = isInRange && t.date <= toDate;
+  if (fromDate)
+    isInRange = t.date >= fromDate;
 
-    return isPayment && isInRange;
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
 
   let html = `
-    <h3>Payments Report</h3>
+    <h3>${category} Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
         <th>Mode</th>
-        <th>Ledger</th>
-        <th>Narration</th>
+        <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -2521,12 +2594,9 @@ function runPaymentReport() {
       <tr>
         <td>${index + 1}</td>
         <td>${p.date}</td>
-        <td>${p.txnNumber || ""}</td>
-        <td>${p.type}</td>
-        <td>${p.creditLedger}</td>
-        <td>${p.debitLedger}</td>
+        <td>${p.account}</td>
         <td>${p.narration}</td>
-        <td>${p.amount}</td>
+        <td> ${p.amount}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
       </tr>
@@ -2536,12 +2606,11 @@ function runPaymentReport() {
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
+formatAllAmounts();
 }
 
 //////////////////////////////////////////////////
-// EDIT PAYMENT (LEDGER BASED)
+// EDIT PAYMENT (FULL OPTIONS)
 //////////////////////////////////////////////////
 
 function editPayment(id) {
@@ -2551,20 +2620,23 @@ function editPayment(id) {
   openPopup(`
     <h3>Edit Payment</h3>
 
+    <label>Mode</label>
+    <select id="account">
+  ${getAccountOptions(t.account)}
+</select>
+
+    <label>Category</label>
+    <select id="category">
+      <option ${t.category==="Personal"?"selected":""}>Personal</option>
+      <option ${t.category==="Home"?"selected":""}>Home</option>
+      <option ${t.category==="Office Reimbursement"?"selected":""}>Office Reimbursement</option>
+	  <option ${t.category==="Qardan Given"?"selected":""}>Qardan Given</option>
+    </select>
+
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Ledger (Debit)</label>
-    <select id="debitLedger">
-      ${getLedgerByGroup(["Expense","Asset","Capital"], t.debitLedger)}
-    </select>
-
-    <label>Mode (Credit - Cash/Bank)</label>
-    <select id="creditLedger">
-      ${getLedgerByGroup(["Cash Bank"], t.creditLedger)}
-    </select>
-
-    <label>Narration</label>
+    <label>Particular</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
@@ -2574,94 +2646,102 @@ function editPayment(id) {
   `);
 }
 
-
-
-	  
 //////////////////////////////////////////////////
-// UPDATE PAYMENT (LEDGER BASED)
+// UPDATE PAYMENT
 //////////////////////////////////////////////////
 
 async function updatePayment(id) {
 
 	if(!checkPermission("write")) return;
 
-  let debitLedger = document.getElementById("debitLedger").value;
-  let creditLedger = document.getElementById("creditLedger").value;
-  let date = document.getElementById("date").value;
-  let narration = document.getElementById("narration").value.trim();
-  let amount = Number(document.getElementById("amount").value);
+  let account = document.getElementById("account").value;
+let category = document.getElementById("category").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (!debitLedger || !creditLedger || !date || !narration || isNaN(amount)) {
-    showToast("All fields are mandatory","error");
-    return;
-  }
+if (!account || !category || !date || !narration || isNaN(amount)) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
 
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
 
-  // ✅ CHECK BALANCE (EXCLUDING CURRENT TRANSACTION)
-  let balance = getBalanceExcludingTransaction(creditLedger, id);
+  let balance = getBalanceExcludingTransaction(account, id);
 
   if (balance < amount) {
-    showToast("Insufficient balance in " + creditLedger,"error");
+    showToast("Insufficient balance in " + account,"error");
     return;
   }
 
-  showLoader();
+	  showLoader();
 
   await db.collection("transactions").doc(id).update({
-    debitLedger,
-    creditLedger,
-    date,
-    narration,
-    amount
+    account: account,
+    category: document.getElementById("category").value,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
   });
 
   hideLoader();
-  showToast("Payment Updated ✏️");
+showToast("Payment Updated ✏️");
 
-  closePopup();
+closePopup();
 
+  // reload report with same filter
   setTimeout(refreshPaymentReport,300);
 }
 
 //////////////////////////////////////////////////
-// REFRESH PAYMENT REPORT (LEDGER BASED)
+// REFRESH PAYMENT REPORT WITH SAME FILTER
 //////////////////////////////////////////////////
 
 function refreshPaymentReport() {
 
+  let category = sessionStorage.getItem("currentCategory");
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
   let payments = transactionsCache
-  .filter(t => {
+.filter(t => {
 
-    let isPayment = (t.type === "payment");
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
 
-    let isInRange = true;
+  let isInRange = true;
 
-    if (fromDate) isInRange = t.date >= fromDate;
-    if (toDate) isInRange = isInRange && t.date <= toDate;
+  if (fromDate)
+    isInRange = t.date >= fromDate;
 
-    return isPayment && isInRange;
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
 
   let html = `
-    <h3>Payments Report</h3>
+    <h3>${category} Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
         <th>Mode</th>
-        <th>Ledger</th>
-        <th>Narration</th>
+        <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -2673,12 +2753,9 @@ function refreshPaymentReport() {
       <tr>
         <td>${index + 1}</td>
         <td>${p.date}</td>
-        <td>${p.txnNumber || ""}</td>
-        <td>${p.type}</td>
-        <td>${p.creditLedger}</td>
-        <td>${p.debitLedger}</td>
+        <td>${p.account}</td>
         <td>${p.narration}</td>
-        <td>${p.amount}</td>
+        <td> ${p.amount}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
       </tr>
@@ -2688,18 +2765,18 @@ function refreshPaymentReport() {
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
+formatAllAmounts();
 }
 
+
 //////////////////////////////////////////////////
-// JOURNAL REPORT POPUP (REPLACES CONTRA)
+// CONTRA REPORT FILTER POPUP
 //////////////////////////////////////////////////
 
-function showJournalReport() {
+function showContraReport() {
 
   openPopup(`
-    <h3>Journal Report</h3>
+    <h3>Contra Report</h3>
 
     <label>From Date</label>
     <input type="date" id="fromDate">
@@ -2707,171 +2784,189 @@ function showJournalReport() {
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runJournalReport()">Run</button>
+    <button onclick="runContraReport()">Run</button>
   `);
 
 }
 
+
 //////////////////////////////////////////////////
-// RUN JOURNAL REPORT
+// RUN CONTRA REPORT
 //////////////////////////////////////////////////
 
-function runJournalReport(){
+function runContraReport(){
 
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-  if(!validateDateRange(fromDate,toDate)) return;
+if(!validateDateRange(fromDate,toDate)) return;
 
-  sessionStorage.setItem("currentReport","journal");
+  sessionStorage.setItem("currentReport","contra");
   sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
 
   closePopup();
 
-  refreshJournalReport();
+  refreshContraReport();
+
 }
 
 
 
 //////////////////////////////////////////////////
-// EDIT JOURNAL (REPLACES CONTRA)
+// EDIT CONTRA (FULL ENTRY OPTIONS)
 //////////////////////////////////////////////////
 
-function editJournal(id) {
+function editContra(id) {
 
   let t = transactionsCache.find(x => x.id === id);
 
   openPopup(`
-    <h3>Edit Journal Entry</h3>
+    <h3>Edit Contra</h3>
+
+    <label>From Account</label>
+    <select id="from">
+  ${getAccountOptions(t.from)}
+</select>
+
+    <label>To Account</label>
+    <select id="to">
+  ${getAccountOptions(t.to)}
+</select>
 
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Debit</label>
-    <select id="debitLedger">
-      ${getLedgerOptions(t.debitLedger)}
-    </select>
-
-    <label>Credit</label>
-    <select id="creditLedger">
-      ${getLedgerOptions(t.creditLedger)}
-    </select>
-
-    <label>Narration</label>
+    <label>Particular</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
     <input type="number" id="amount" value="${t.amount}">
 
-    <button onclick="updateJournal('${id}')">Update</button>
+    <button onclick="updateContra('${id}')">Update</button>
   `);
 }
 
 //////////////////////////////////////////////////
-// UPDATE JOURNAL
+// UPDATE CONTRA
 //////////////////////////////////////////////////
 
-async function updateJournal(id) {
+async function updateContra(id) {
 
-	if(!checkPermission("write")) return;
+	if(!checkPermission("write")) return;										   
 
-  let debitLedger = document.getElementById("debitLedger").value;
-  let creditLedger = document.getElementById("creditLedger").value;
-  let date = document.getElementById("date").value;
-  let narration = document.getElementById("narration").value.trim();
-  let amount = Number(document.getElementById("amount").value);
+  let from = document.getElementById("from").value;
+let to = document.getElementById("to").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (!debitLedger || !creditLedger || !date || !narration || isNaN(amount)) {
-    showToast("All fields are mandatory","error");
+if (!from || !to || !date || !narration || !amount) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
+
+if (from === to) {
+  showToast("From and To account cannot be the same ❌","error");
+  return;
+}
+
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
+
+  let balance = getBalanceExcludingTransaction(from, id);
+
+  if (balance < amount) {
+    showToast("Insufficient balance in " + from + " ❌","error");
     return;
   }
-
-  if (debitLedger === creditLedger) {
-    showToast("Debit and Credit cannot be same ❌","error");
-    return;
-  }
-
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
-
-  showLoader();
-
+showLoader();
   await db.collection("transactions").doc(id).update({
-    debitLedger,
-    creditLedger,
-    date,
-    narration,
-    amount
+    from: from,
+    to: to,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
   });
 
   hideLoader();
-  showToast("Journal Updated ✏️");
+showToast("Contra Updated ✏️");
 
-  closePopup();
+closePopup();
 
-  if(sessionStorage.getItem("currentReport") === "journal"){
-    setTimeout(refreshJournalReport,300);
+  // refresh contra report automatically
+  if(sessionStorage.getItem("currentReport") === "contra"){
+    setTimeout(refreshContraReport,300);
   }
+
 }
 
+
 //////////////////////////////////////////////////
-// REFRESH JOURNAL REPORT
+// REFRESH CONTRA REPORT WITH SAME FILTER
 //////////////////////////////////////////////////
 
-function refreshJournalReport(){
+function refreshContraReport(){
 
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
-  let journal = transactionsCache
-  .filter(t => {
+  let contra = transactionsCache
+.filter(t => {
 
-    let isJournal = t.type === "journal";
+  let isContra = t.type === "contra";
 
-    let isInRange = true;
+  let isInRange = true;
 
-    if(fromDate) isInRange = t.date >= fromDate;
-    if(toDate) isInRange = isInRange && t.date <= toDate;
+  if(fromDate)
+    isInRange = t.date >= fromDate;
 
-    return isJournal && isInRange;
+  if(toDate)
+    isInRange = isInRange && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return isContra && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
 
   let html = `
-    <h3>Journal Report</h3>
+    <h3>Contra Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
-        <th>Debit</th>
-        <th>Credit</th>
-        <th>Narration</th>
+        <th>From Account</th>
+        <th>To Account</th>
+        <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
       </tr>
   `;
 
-  journal.forEach((j,index)=>{
+  contra.forEach((c,index)=>{
 
     html += `
       <tr>
         <td>${index+1}</td>
-        <td>${j.date}</td>
-        <td>${j.txnNumber || ""}</td>
-        <td>${j.type}</td>
-        <td>${j.debitLedger}</td>
-        <td>${j.creditLedger}</td>
-        <td>${j.narration}</td>
-        <td>${j.amount}</td>
-        <td><button onclick="editJournal('${j.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${j.id}')">Delete</button></td>
+        <td>${c.date}</td>
+        <td>${c.from}</td>
+        <td>${c.to}</td>
+        <td>${c.narration}</td>
+        <td> ${c.amount}</td>
+        <td><button onclick="editContra('${c.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${c.id}')">Delete</button></td>
       </tr>
     `;
 
@@ -2880,13 +2975,12 @@ function refreshJournalReport(){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
+formatAllAmounts();
 }
 
 
 //////////////////////////////////////////////////
-// EDIT RECEIPT (LEDGER BASED)
+// EDIT TRANSACTION (FULL EDIT)
 //////////////////////////////////////////////////
 
 function editTransaction(id) {
@@ -2896,20 +2990,15 @@ function editTransaction(id) {
   openPopup(`
     <h3>Edit Receipt</h3>
 
+    <label>Mode</label>
+    <select id="account">
+  ${getAccountOptions(t.account)}
+</select>
+
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Ledger (Credit)</label>
-    <select id="creditLedger">
-      ${getLedgerByGroup(["Income","Liability","Capital"], t.creditLedger)}
-    </select>
-
-    <label>Mode (Debit - Cash/Bank)</label>
-    <select id="debitLedger">
-      ${getLedgerByGroup(["Cash Bank"], t.debitLedger)}
-    </select>
-
-    <label>Narration</label>
+    <label>Particular</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
@@ -2927,44 +3016,43 @@ async function updateTransaction(id) {
 
 	if(!checkPermission("write")) return;
 
-  let debitLedger = document.getElementById("debitLedger").value;
-  let creditLedger = document.getElementById("creditLedger").value;
-  let date = document.getElementById("date").value;
-  let narration = document.getElementById("narration").value.trim();
-  let amount = Number(document.getElementById("amount").value);
+  let account = document.getElementById("account").value;
+let date = document.getElementById("date").value;
+let narration = document.getElementById("narration").value.trim();
+let amount = Number(document.getElementById("amount").value);
 
-  if (!debitLedger || !creditLedger || !date || !narration || isNaN(amount)) {
-    showToast("All fields are mandatory","error");
-    return;
-  }
+if (!account || !date || !narration || isNaN(amount)) {
+  showToast("All fields are mandatory","error");
+  document.getElementById("amount").focus();
+  return;
+}
 
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
-
-  showLoader();
-
+if (amount <= 0) {
+  showToast("Amount must be greater than 0","error");
+  return;
+}
+showLoader();
   await db.collection("transactions").doc(id).update({
-    debitLedger,
-    creditLedger,
-    date,
-    narration,
-    amount
+    account: document.getElementById("account").value,
+    date: document.getElementById("date").value,
+    narration: document.getElementById("narration").value,
+    amount: amount
   });
 
   hideLoader();
-  showToast("Receipt Updated ✏️");
+showToast("Receipt Updated ✏️");
 
-  closePopup();
+closePopup();
 
+  // refresh receipts report automatically
   if(sessionStorage.getItem("currentReport") === "receipts"){
     setTimeout(refreshReceiptsReport,300);
   }
+
 }
 
 //////////////////////////////////////////////////
-// REFRESH RECEIPTS REPORT (LEDGER BASED)
+// REFRESH RECEIPTS REPORT WITH SAME FILTER
 //////////////////////////////////////////////////
 
 function refreshReceiptsReport(){
@@ -2973,19 +3061,30 @@ function refreshReceiptsReport(){
   let toDate = sessionStorage.getItem("currentToDate");
 
   let receipts = transactionsCache
-  .filter(t => {
+.filter(t => {
 
-    let isReceipt = (t.type === "receipt");
+  let isReceipt = (t.type === "receipt" || t.type === "inflow");
 
-    let isInRange = true;
+  let isInRange = true;
 
-    if(fromDate) isInRange = t.date >= fromDate;
-    if(toDate) isInRange = isInRange && t.date <= toDate;
+  if(fromDate)
+    isInRange = t.date >= fromDate;
 
-    return isReceipt && isInRange;
+  if(toDate)
+    isInRange = isInRange && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+  return isReceipt && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
+  }
+
+  return new Date(a.date) - new Date(b.date);
+
+});
 
   let html = `
     <h3>Receipts Report</h3>
@@ -2993,11 +3092,8 @@ function refreshReceiptsReport(){
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
         <th>Mode</th>
-        <th>Ledger</th>
-        <th>Narration</th>
+        <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -3009,12 +3105,9 @@ function refreshReceiptsReport(){
       <tr>
         <td>${index+1}</td>
         <td>${r.date}</td>
-        <td>${r.txnNumber || ""}</td>
-        <td>${r.type}</td>
-        <td>${r.debitLedger}</td>
-        <td>${r.creditLedger}</td>
+        <td>${r.account}</td>
         <td>${r.narration}</td>
-        <td>${r.amount}</td>
+        <td> ${r.amount}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
       </tr>
@@ -3024,12 +3117,12 @@ function refreshReceiptsReport(){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
+formatAllAmounts();
 }
 
+
 //////////////////////////////////////////////////
-// DELETE TRANSACTION (NO CHANGE LOGIC)
+// DELETE TRANSACTION
 //////////////////////////////////////////////////
 
 function deleteTransaction(id){
@@ -3064,88 +3157,118 @@ async function confirmDelete(id){
 
   closePopup();
 
-  let currentReport = sessionStorage.getItem("currentReport");
+let currentReport = sessionStorage.getItem("currentReport");
 
-  if(currentReport === "receipts") setTimeout(refreshReceiptsReport,300);
-  if(currentReport === "payments") setTimeout(refreshPaymentReport,300);
-  if(currentReport === "journal") setTimeout(refreshJournalReport,300);
+if(currentReport === "receipts") setTimeout(refreshReceiptsReport,300);
+if(currentReport === "payments") setTimeout(refreshPaymentReport,300);
+if(currentReport === "contra") setTimeout(refreshContraReport,300);
 }
 
-
-		
 //////////////////////////////////////////////////
-// Function That Reopens Last Report (UPDATED)
+// Function That Reopens Last Report
 //////////////////////////////////////////////////
 
 function refreshCurrentReport(){
 
   if(currentReport === "receipts"){
-    refreshReceiptsReport();
+    showReceiptsReport();
   }
 
   if(currentReport === "payments"){
-    refreshPaymentReport();
+
+    let payments = transactionsCache
+.filter(t => {
+
+  let isPayment = (t.type === "payment" || t.type === "outflow");
+  let isCategory = t.category === category;
+
+  let isInRange = true;
+
+  if (fromDate)
+    isInRange = t.date >= fromDate;
+
+  if (toDate)
+    isInRange = isInRange && t.date <= toDate;
+
+  return isPayment && isCategory && isInRange;
+
+})
+.sort((a,b)=>{
+
+  if(a.date === b.date){
+    return a.id.localeCompare(b.id);
   }
 
-  if(currentReport === "journal"){
-    refreshJournalReport();
+  return new Date(a.date) - new Date(b.date);
+
+});
+
+    renderPaymentReport(payments, currentReportCategory);
+  }
+
+  if(currentReport === "contra"){
+    showContraReport();
   }
 
 }
 
+
+
 //////////////////////////////////////////////////
-// GET BALANCE EXCLUDING CURRENT TRANSACTION (LEDGER BASED)
+// GET BALANCE EXCLUDING CURRENT TRANSACTION
 //////////////////////////////////////////////////
 
-function getBalanceExcludingTransaction(ledger, transactionId) {
+function getBalanceExcludingTransaction(account, transactionId) {
 
   let balances = {};
 
-  ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.openingBalance || 0);
-  });
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
   transactionsCache.forEach(t => {
 
     if (t.id === transactionId) return;
 
-    let amount = Number(t.amount);
+    if (t.type === "receipt" || t.type === "inflow")
+      balances[t.account] += Number(t.amount);
 
-    if(t.debitLedger){
-      balances[t.debitLedger] += amount;
-    }
+    if (t.type === "payment" || t.type === "outflow")
+      balances[t.account] -= Number(t.amount);
 
-    if(t.creditLedger){
-      balances[t.creditLedger] -= amount;
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
     }
 
   });
 
-  return balances[ledger] || 0;
+  return balances[account];
 }
 
+
 //////////////////////////////////////////////////
-// EXPORT REPORTS (LEDGER BASED) - FINAL CLEAN
+// EXPORT REPORTS
 //////////////////////////////////////////////////
 
-async function exportCurrentReport(){
+function exportCurrentReport(){
 
-  showLoader();
+showLoader(); // ADD	
 
-  let reportType = sessionStorage.getItem("currentReport");
+let reportType = sessionStorage.getItem("currentReport");
 
-  if(!reportType){
-    hideLoader();
-    showToast("Please run a report first ❌","error");
-    return;
-  }
+if(!reportType){
+  hideLoader(); // ✅ ADD THIS
+  showToast("Please run a report first ❌","error");
+  return;
+}
 
-  let rows = [];
-  let title = "";
-  let total = 0;
+let rows = [];
+let title = "";
+let total = 0;
 
-  let fromDate = sessionStorage.getItem("currentFromDate");
-  let toDate = sessionStorage.getItem("currentToDate");
+let fromDate = sessionStorage.getItem("currentFromDate");
+let toDate = sessionStorage.getItem("currentToDate");
 
 //////////////////////////////////////////////////
 // RECEIPTS REPORT
@@ -3153,132 +3276,131 @@ async function exportCurrentReport(){
 
 if(reportType === "receipts"){
 
-  title = "Receipts_Report";
+title = "Receipts_Report";
 
-  rows.push([
-    "Serial No","Date","Txn No","Type","Mode","Ledger","Narration","Amount"
-  ]);
+rows.push(["Serial No","Date","Mode","Particular","Amount"]);
 
-  let receipts = transactionsCache
-  .filter(t=>{
+let receipts = transactionsCache
+.filter(t=>{
 
-    let isReceipt = (t.type === "receipt");
+let isReceipt = (t.type === "receipt" || t.type === "inflow");
 
-    let isInRange = true;
-    if(fromDate) isInRange = t.date >= fromDate;
-    if(toDate) isInRange = isInRange && t.date <= toDate;
+return isReceipt && t.date >= fromDate && t.date <= toDate;
 
-    return isReceipt && isInRange;
+})
+.sort((a,b)=>{
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
 
-  receipts.forEach((r,i)=>{
+return new Date(a.date) - new Date(b.date);
 
-    total += Number(r.amount);
+});
 
-    rows.push([
-      i+1,
-      r.date,
-      r.txnNumber || "",
-      r.type,
-      r.debitLedger,
-      r.creditLedger,
-      r.narration,
-      Number(r.amount)
-    ]);
+receipts.forEach((r,i)=>{
 
-  });
+total += Number(r.amount);
+
+rows.push([
+i+1,
+r.date,
+r.account,
+r.narration,
+Number(r.amount)
+]);
+
+});
 
 }
 
 //////////////////////////////////////////////////
-// PAYMENTS REPORT
+// PAYMENT REPORT
 //////////////////////////////////////////////////
 
 if(reportType === "payments"){
 
-  title = "Payments_Report";
+let category = sessionStorage.getItem("currentCategory");
 
-  rows.push([
-    "Serial No","Date","Txn No","Type","Mode","Ledger","Narration","Amount"
-  ]);
+title = category+"_Payments_Report";
 
-  let payments = transactionsCache
-  .filter(t=>{
+rows.push(["Serial No","Date","Mode","Particular","Amount"]);
 
-    let isPayment = (t.type === "payment");
+let payments = transactionsCache
+.filter(t=>{
 
-    let isInRange = true;
-    if(fromDate) isInRange = t.date >= fromDate;
-    if(toDate) isInRange = isInRange && t.date <= toDate;
+let isPayment = (t.type === "payment" || t.type === "outflow");
+let isCategory = t.category === category;
 
-    return isPayment && isInRange;
+return isPayment && isCategory && t.date >= fromDate && t.date <= toDate;
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+})
+.sort((a,b)=>{
 
-  payments.forEach((p,i)=>{
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
 
-    total += Number(p.amount);
+return new Date(a.date) - new Date(b.date);
 
-    rows.push([
-      i+1,
-      p.date,
-      p.txnNumber || "",
-      p.type,
-      p.creditLedger,   // Mode (Cash/Bank)
-      p.debitLedger,    // Ledger
-      p.narration,
-      Number(p.amount)
-    ]);
+});
 
-  });
+payments.forEach((p,i)=>{
+
+total += Number(p.amount);
+
+rows.push([
+i+1,
+p.date,
+p.account,
+p.narration,
+Number(p.amount)
+]);
+
+});
 
 }
 
 //////////////////////////////////////////////////
-// JOURNAL REPORT
+// CONTRA REPORT
 //////////////////////////////////////////////////
 
-if(reportType === "journal"){
+if(reportType === "contra"){
 
-  title = "Journal_Report";
+title = "Contra_Report";
 
-  rows.push([
-    "Serial No","Date","Txn No","Type","Debit","Credit","Narration","Amount"
-  ]);
+rows.push(["Serial No","Date","From Account","To Account","Particular","Amount"]);
 
-  let journal = transactionsCache
-  .filter(t=>{
+let contra = transactionsCache
+.filter(t=>{
 
-    let isJournal = (t.type === "journal");
+return t.type === "contra" && t.date >= fromDate && t.date <= toDate;
 
-    let isInRange = true;
-    if(fromDate) isInRange = t.date >= fromDate;
-    if(toDate) isInRange = isInRange && t.date <= toDate;
+})
+.sort((a,b)=>{
 
-    return isJournal && isInRange;
+if(a.date === b.date){
+return a.id.localeCompare(b.id);
+}
 
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
+return new Date(a.date) - new Date(b.date);
 
-  journal.forEach((j,i)=>{
+});
 
-    total += Number(j.amount);
+contra.forEach((c,i)=>{
 
-    rows.push([
-      i+1,
-      j.date,
-      j.txnNumber || "",
-      j.type,
-      j.debitLedger,
-      j.creditLedger,
-      j.narration,
-      Number(j.amount)
-    ]);
+total += Number(c.amount);
 
-  });
+rows.push([
+i+1,
+c.date,
+c.from,
+c.to,
+c.narration,
+Number(c.amount)
+]);
+
+});
 
 }
 
@@ -3287,7 +3409,7 @@ if(reportType === "journal"){
 //////////////////////////////////////////////////
 
 rows.push([]);
-rows.push(["","","","","","","Total Amount",total]);
+rows.push(["","","","Total Amount",total]);
 
 //////////////////////////////////////////////////
 // CREATE SHEET
@@ -3302,16 +3424,13 @@ let worksheet = XLSX.utils.aoa_to_sheet(rows);
 worksheet["!cols"] = [
 {wch:10},
 {wch:12},
-{wch:12},
-{wch:10},
-{wch:18},
-{wch:18},
+{wch:15},
 {wch:30},
 {wch:15}
 ];
 
 //////////////////////////////////////////////////
-// BOLD HEADER
+// BOLD HEADER STYLE
 //////////////////////////////////////////////////
 
 let headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
@@ -3321,7 +3440,9 @@ for(let C = headerRange.s.c; C <= headerRange.e.c; ++C){
 let cell = worksheet[XLSX.utils.encode_cell({r:0,c:C})];
 
 if(cell){
-cell.s = { font:{bold:true} };
+cell.s = {
+font:{bold:true}
+};
 }
 
 }
@@ -3332,13 +3453,15 @@ cell.s = { font:{bold:true} };
 
 for(let i=1;i<rows.length;i++){
 
-let cellRef = XLSX.utils.encode_cell({r:i,c:7});
+let cellRef = XLSX.utils.encode_cell({r:i,c:4});
 
 if(worksheet[cellRef]){
+
 worksheet[cellRef].z = '#,##0.00';
 worksheet[cellRef].s = {
 alignment:{horizontal:"right"}
 };
+
 }
 
 }
@@ -3349,12 +3472,16 @@ alignment:{horizontal:"right"}
 
 let totalRowIndex = rows.length - 1;
 
-for(let c=0;c<8;c++){
+for(let c=0;c<5;c++){
 
 let cellRef = XLSX.utils.encode_cell({r:totalRowIndex,c:c});
 
 if(worksheet[cellRef]){
-worksheet[cellRef].s = { font:{bold:true} };
+
+worksheet[cellRef].s = {
+font:{bold:true}
+};
+
 }
 
 }
@@ -3370,7 +3497,7 @@ XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 // FILE NAME
 //////////////////////////////////////////////////
 
-let fileName = `${title}_${fromDate || "All"}_to_${toDate || "All"}.xlsx`;
+let fileName = `${title}_${fromDate}_to_${toDate}.xlsx`;
 
 //////////////////////////////////////////////////
 // DOWNLOAD
@@ -3378,11 +3505,11 @@ let fileName = `${title}_${fromDate || "All"}_to_${toDate || "All"}.xlsx`;
 
 XLSX.writeFile(workbook,fileName);
 
-hideLoader();
-showToast("Report Exported 📊");
+hideLoader(); // ADD
+showToast("Report Exported 📊");	
 
 }
-	
+
 
 //////////////////////////////////////////////////
 // Mini Statement Popup Form
@@ -3405,7 +3532,7 @@ openPopup(`
 }
 
 //////////////////////////////////////////////////
-// Full Mini Statement Export Function (LEDGER BASED)
+// Full Mini Statement Export Function
 //////////////////////////////////////////////////
 
 async function exportMiniStatement(){
@@ -3413,51 +3540,44 @@ async function exportMiniStatement(){
   let fromDate = document.getElementById("miniFrom").value;
   let toDate = document.getElementById("miniTo").value;
 
+  // ✅ VALIDATE FIRST
   if(!validateDateRange(fromDate,toDate)){
     return;
   }
 
+  // ✅ THEN show loader
   showLoader();
+
   closePopup();
 
   const workbook = new ExcelJS.Workbook();
 
-//////////////////////////////////////////////////
-// CALCULATE EXPENSE SUMMARY (LEDGER BASED)
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // CALCULATE EXPENSE SUMMARY
+  //////////////////////////////////////////////////
 
-let personalExpense = 0;
-let officeReimbursement = 0;
-let qardanGiven = 0;
+  let expenses = {
+    Personal: 0,
+    Home: 0,
+    "Office Reimbursement": 0,
+    "Qardan Given": 0
+  };
 
-transactionsCache.forEach(t=>{
+  transactionsCache.forEach(t=>{
 
-  if(t.date>=fromDate && t.date<=toDate){
+    if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
 
-    let debitLedgerObj = ledgerList.find(l=>l.name === t.debitLedger);
-
-    if(debitLedgerObj){
-
-      // Expense Group
-      if(debitLedgerObj.group === "Expense"){
-        personalExpense += Number(t.amount);
+      if(!expenses[t.category]){
+        expenses[t.category] = 0;
       }
 
-      // Specific Ledgers
-      if(t.debitLedger === "Office Reimbursement"){
-        officeReimbursement += Number(t.amount);
-      }
-
-      if(t.debitLedger === "Qardan Given"){
-        qardanGiven += Number(t.amount);
-      }
+      expenses[t.category] += Number(t.amount);
 
     }
 
-  }
+  });
 
-});
-
+	
 //////////////////////////////////////////////////
 // SHEET 1 : SUMMARY
 //////////////////////////////////////////////////
@@ -3467,24 +3587,17 @@ const summarySheet = workbook.addWorksheet("Summary");
 summarySheet.addRow(["Expense Summary"]);
 summarySheet.addRow([]);
 
-summarySheet.addRow(["Particular","Amount"]);
-summarySheet.addRow(["Personal Expense",personalExpense]);
-summarySheet.addRow(["Office Reimbursement",officeReimbursement]);
-summarySheet.addRow(["Qardan Given",qardanGiven]);
-
-summarySheet.addRow([]);
-summarySheet.addRow(["Total",
-  personalExpense + officeReimbursement + qardanGiven
-]);
+summarySheet.addRow(["Category","Amount"]);
+summarySheet.addRow(["Personal",expenses.Personal]);
+summarySheet.addRow(["Home",expenses.Home]);
+summarySheet.addRow(["Office Reimbursement",expenses["Office Reimbursement"]]);
+summarySheet.addRow(["Qardan Given",expenses["Qardan Given"]]); // ✅ ADD THIS
 
 //////////////////////////////////////////////////
 // PIE CHART IMAGE
 //////////////////////////////////////////////////
 
 let pieCanvas = document.getElementById("expensePieChart");
-
-if(pieCanvas){
-
 let pieImage = pieCanvas.toDataURL("image/png");
 
 const pieId = workbook.addImage({
@@ -3497,68 +3610,51 @@ tl:{col:4,row:1},
 ext:{width:400,height:300}
 });
 
-}
-
 //////////////////////////////////////////////////
-// DOWNLOAD FILE
-//////////////////////////////////////////////////
-
-const buffer = await workbook.xlsx.writeBuffer();
-saveAs(new Blob([buffer]), `Mini_Statement_${fromDate}_to_${toDate}.xlsx`);
-
-hideLoader();
-showToast("Mini Statement Exported 📊");
-
-}
-
-
-	  
-//////////////////////////////////////////////////
-// FUNCTION TO CREATE LEDGER STATEMENT
+// FUNCTION TO CREATE ACCOUNT STATEMENT
 //////////////////////////////////////////////////
 
 function createAccountSheet(name){
 
 let sheet = workbook.addWorksheet(name);
 
-sheet.addRow([
-  "Serial No","Date","Txn No","Type","Particular",
-  "Debit","Credit","Balance"
-]);
+sheet.addRow(["Serial No","Date","Type","Category","Particular","Amount","Balance"]);
 
 //////////////////////////////////////////////////
-// CALCULATE OPENING BALANCE
+// CALCULATE OPENING BALANCE AS ON FROM DATE
 //////////////////////////////////////////////////
 
-let ledgerObj = ledgerList.find(l=>l.name === name);
-
-let runningBalance = Number(ledgerObj?.openingBalance || 0);
+let runningBalance = Number(openingBalances[name] || 0);
 
 transactionsCache.forEach(t=>{
 
 if(t.date < fromDate){
 
-let amount = Number(t.amount);
-
-// Debit increases
-if(t.debitLedger === name){
-  runningBalance += amount;
+if(t.type === "receipt" && t.account === name){
+runningBalance += Number(t.amount);
 }
 
-// Credit decreases
-if(t.creditLedger === name){
-  runningBalance -= amount;
+if(t.type === "payment" && t.account === name){
+runningBalance -= Number(t.amount);
+}
+
+if(t.type === "contra"){
+
+if(t.from === name){
+runningBalance -= Number(t.amount);
+}
+
+if(t.to === name){
+runningBalance += Number(t.amount);
+}
+
 }
 
 }
 
 });
 
-sheet.addRow(["","","","","Opening Balance","","",runningBalance]);
-
-//////////////////////////////////////////////////
-// TRANSACTIONS
-//////////////////////////////////////////////////
+sheet.addRow(["","", "", "", "Opening Balance","",runningBalance]);
 
 let serial = 1;
 
@@ -3567,69 +3663,77 @@ transactionsCache
 .sort((a,b)=> new Date(a.date) - new Date(b.date))
 .forEach(t=>{
 
-let debit = "";
-let credit = "";
-let type = t.type;
-let narration = t.narration;
-let txnNo = t.txnNumber || "";
+let type="";
+let category="";
+let amount=0;
 
-let amount = Number(t.amount);
+if(t.type==="receipt" && t.account===name){
 
-// If ledger is debited
-if(t.debitLedger === name){
-
-  debit = amount;
-  runningBalance += amount;
+type="Inflow";
+amount=Number(t.amount);
+runningBalance+=amount;
 
 }
 
-// If ledger is credited
-if(t.creditLedger === name){
+if(t.type==="payment" && t.account===name){
 
-  credit = amount;
-  runningBalance -= amount;
+type="Outflow";
+category=t.category;
+amount=Number(t.amount);
+runningBalance-=amount;
 
 }
 
-// Only show relevant entries
-if(debit || credit){
+if(t.type==="contra"){
 
-let counterLedger = 
-  t.debitLedger === name ? t.creditLedger : t.debitLedger;
+if(t.from===name){
+type="Contra";
+amount=Number(t.amount);
+runningBalance-=amount;
+}
+
+if(t.to===name){
+type="Contra";
+amount=Number(t.amount);
+runningBalance+=amount;
+}
+
+}
+
+if(type!==""){
 
 let row = sheet.addRow([
-  serial,
-  t.date,
-  txnNo,
-  type,
-  counterLedger + " - " + narration,
-  debit,
-  credit,
-  runningBalance
+serial,
+t.date,
+type,
+category,
+t.narration,
+amount,
+runningBalance
 ]);
 
-//////////////////////////////////////////////////
-// FORMAT
-//////////////////////////////////////////////////
+// Format Amount & Balance Columns
 
 row.getCell(6).numFmt = '#,##0.00';
 row.getCell(7).numFmt = '#,##0.00';
-row.getCell(8).numFmt = '#,##0.00';
 
 row.getCell(6).alignment = { horizontal: "right" };
 row.getCell(7).alignment = { horizontal: "right" };
-row.getCell(8).alignment = { horizontal: "right" };
 
 //////////////////////////////////////////////////
-// COLOR LOGIC
+// COLOR TEXT
 //////////////////////////////////////////////////
 
-if(debit){
-  row.getCell(6).font = { color:{argb:"FF008000"} }; // green
+if(type==="Inflow"){
+row.getCell(6).font={color:{argb:"FF008000"}};
 }
 
-if(credit){
-  row.getCell(7).font = { color:{argb:"FFFF0000"} }; // red
+if(type==="Outflow"){
+row.getCell(6).font={color:{argb:"FFFF0000"}};
+}
+
+if(type==="Contra"){
+row.getCell(6).font={color:{argb:"FF000000"}};
 }
 
 serial++;
@@ -3638,55 +3742,34 @@ serial++;
 
 });
 
-//////////////////////////////////////////////////
-// CLOSING BALANCE
-//////////////////////////////////////////////////
-
-sheet.addRow(["","","","","Closing Balance","","",runningBalance]);
+sheet.addRow(["","","","","Closing Balance","",runningBalance]);
 
 }
 
 //////////////////////////////////////////////////
-// CREATE SHEETS FOR ALL LEDGERS
+// CREATE SHEETS FOR ALL ACCOUNTS
 //////////////////////////////////////////////////
 
-ledgerList.forEach(l=>{
-  createAccountSheet(l.name);
+accountsList.forEach(acc=>{
+  createAccountSheet(acc);
 });
 
 //////////////////////////////////////////////////
 // EXPORT FILE
 //////////////////////////////////////////////////
 
-let fileName = `Ledger_Statement_${fromDate}_to_${toDate}.xlsx`;
+let fileName = `Mini_Statement_${fromDate}_to_${toDate}.xlsx`;
 
 const buffer = await workbook.xlsx.writeBuffer();
 
 saveAs(new Blob([buffer]),fileName);
 
-hideLoader();
-showToast("Ledger Report Exported 📊");
+hideLoader(); // ADD
+showToast("Report Exported 📊");	
 
 }
 
 
-//////////////////////////////////////////////////
-// SHOW STATEMENTS
-//////////////////////////////////////////////////
-	
-function showStatements(){
-
-  openPopup(`
-    <h3>Statements</h3>
-
-    <button onclick="showReceiptsReport()">Receipts</button>
-    <button onclick="showPaymentsReport()">Payments</button>
-    <button onclick="showJournalReport()">Journal</button>
-  `);
-
-}	
-
-	
 //////////////////////////////////////////////////
 // LOGOUT
 //////////////////////////////////////////////////
@@ -3707,18 +3790,14 @@ function logout() {
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
 
-  // ✅ firebase logout (non-blocking)
+  // ✅ try firebase logout but don't block UI
   auth.signOut().catch((error) => {
     console.log("Logout error:", error);
   });
 
 }
 
-//////////////////////////////////////////////////
-// CONFIRM LOGOUT
-//////////////////////////////////////////////////
-
-function confirmLogout() {
+	function confirmLogout() {
 
   openPopup(`
     <h3>Confirm Logout</h3>
@@ -3726,13 +3805,14 @@ function confirmLogout() {
     <button onclick="confirmLogoutNow()">Yes, Logout</button>
   `);
 
-}
+	}
 
 
 //////////////////////////////////////////////////
 // AUTO LOGOUT AFTER INACTIVITY
 //////////////////////////////////////////////////
 
+	
 let inactivityTimer;
 
 function resetInactivityTimer() {
@@ -3740,16 +3820,17 @@ function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
 
   inactivityTimer = setTimeout(() => {
-
+    
     showToast("Session expired due to inactivity ⏳","error");
 
-    setTimeout(()=>{
-      logout();
-    },1000);
+setTimeout(()=>{
+    logout();
+  },1000);
+    
 
   }, 2 * 60 * 1000); // 2 minutes
-
-}
+	
+}	
 
 //////////////////////////////////////////////////
 // START INACTIVITY TRACKING
@@ -3761,26 +3842,21 @@ function startInactivityTracking() {
     document.addEventListener(event, resetInactivityTimer);
   });
 
-  resetInactivityTimer();
+  resetInactivityTimer(); // start timer immediately
 
 }
 
-//////////////////////////////////////////////////
-// STOP INACTIVITY TRACKING
-//////////////////////////////////////////////////
-
 function stopInactivityTracking() {
-
   ["click","mousemove","keydown","scroll","touchstart"].forEach(event => {
     document.removeEventListener(event, resetInactivityTimer);
   });
-
-}
+}	
+	
 
 //////////////////////////////////////////////////
 // BUTTON SOUND EFFECT
 //////////////////////////////////////////////////
-
+	
 document.addEventListener("click", function(e){
 
   if(e.target.closest("button")){
@@ -3796,7 +3872,7 @@ document.addEventListener("click", function(e){
 
       if(playPromise !== undefined){
         playPromise.catch(() => {
-          // ignore autoplay restriction
+          // 🔇 Ignore autoplay error (mobile restriction)
         });
       }
 
@@ -3807,7 +3883,7 @@ document.addEventListener("click", function(e){
 });
 
 //////////////////////////////////////////////////
-// SOUND INIT (MOBILE FIX)
+// SOUND
 //////////////////////////////////////////////////
 
 document.addEventListener("touchstart", function initSound(){
@@ -3825,36 +3901,27 @@ document.addEventListener("touchstart", function initSound(){
 
 });
 
+	
 //////////////////////////////////////////////////
 // ON LOAD
 //////////////////////////////////////////////////
 
 window.onload = function(){
-
   lucide.createIcons();
-
-  // ✅ ensure inactivity tracking starts after login
-  if(document.getElementById("dashboard").style.display !== "none"){
-    startInactivityTracking();
-  }
-
 };
-
 
 //////////////////////////////////////////////////
 // LOADER
 //////////////////////////////////////////////////
-
+	
 function showLoader(){
-  let el = document.getElementById("loader");
-  if(el) el.style.display = "flex";
+  document.getElementById("loader").style.display = "flex";
 }
 
 function hideLoader(){
-  let el = document.getElementById("loader");
-  if(el) el.style.display = "none";
+  document.getElementById("loader").style.display = "none";
 }
-
+	
 //////////////////////////////////////////////////
 // SHOW TOAST
 //////////////////////////////////////////////////
@@ -3863,7 +3930,7 @@ function showToast(message, type="success"){
 
   const toast = document.getElementById("toast");
 
-  if(!toast) return;
+  if(!toast) return; // safety
 
   toast.innerText = message;
 
@@ -3881,8 +3948,8 @@ function showToast(message, type="success"){
 }
 
 //////////////////////////////////////////////////
-// CONFIRM LOGOUT (SAFE FINAL)
-//////////////////////////////////////////////////
+// CONFIRM LOGOUT
+//////////////////////////////////////////////////	
 
 function confirmLogoutNow(){
 
@@ -3890,25 +3957,21 @@ function confirmLogoutNow(){
 
   setTimeout(()=>{
     logout();
-  },800);
+  },800); // 👈 allow toast to show first
 
 }
 
 //////////////////////////////////////////////////
-// DATE LOCAL FORMAT
+// DATE LOCAL
 //////////////////////////////////////////////////
 
 function formatDateLocal(date){
-
   let d = new Date(date);
-
-  if(isNaN(d)) return "";
-
   let month = String(d.getMonth()+1).padStart(2,"0");
   let day = String(d.getDate()).padStart(2,"0");
-
   return `${d.getFullYear()}-${month}-${day}`;
 }
+
 
 //////////////////////////////////////////////////
 // DATE RANGE VALIDATION (GLOBAL)
@@ -3916,18 +3979,8 @@ function formatDateLocal(date){
 
 function validateDateRange(fromDate, toDate){
 
-  // Allow empty for reports (as per your requirement)
-  if(!fromDate && !toDate){
-    return true;
-  }
-
-  if(fromDate && !toDate){
-    showToast("Please select To Date","error");
-    return false;
-  }
-
-  if(!fromDate && toDate){
-    showToast("Please select From Date","error");
+  if(!fromDate || !toDate){
+    showToast("Please select both From Date and To Date","error");
     return false;
   }
 
@@ -3939,561 +3992,9 @@ function validateDateRange(fromDate, toDate){
   return true;
 }
 
-//////////////////////////////////////////////////
-// HELPER: SAFE NUMBER FORMAT
-//////////////////////////////////////////////////
-
-function toNumber(val){
-  return Number(val) || 0;
-}
-
-//////////////////////////////////////////////////
-// HELPER: GET LEDGER BY NAME
-//////////////////////////////////////////////////
-
-function getLedger(name){
-  return ledgerList.find(l=>l.name === name) || {};
-}
-
-
-//////////////////////////////////////////////////
-// Export ledger statement
-//////////////////////////////////////////////////
-	
-async function exportLedgerStatement(fromDate,toDate){
-
-  showLoader();
-
-  const workbook = new ExcelJS.Workbook();
-
-  ledgerList.forEach(l=>{
-    createAccountSheet(l.name);
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-
-  saveAs(
-    new Blob([buffer]),
-    `Ledger_Statement_${fromDate}_to_${toDate}.xlsx`
-  );
-
-  hideLoader();
-  showToast("Ledger Report Exported 📊");
-}	
-
-
-//////////////////////////////////////////////////
-// SHOW LEDGER REPORT
-//////////////////////////////////////////////////
-	
-function showLedgerReport(){
-
-  let ledgerOptions = ledgerList.map(l =>
-    `<option>${l.name}</option>`
-  ).join("");
-
-  openPopup(`
-    <h3>Ledger Report</h3>
-
-    <label>Select Ledger</label>
-    <select id="ledgerName">
-      ${ledgerOptions}
-    </select>
-
-    <label>From Date</label>
-    <input type="date" id="ledgerFrom">
-
-    <label>To Date</label>
-    <input type="date" id="ledgerTo">
-
-    <button onclick="runLedgerReport()">Run</button>
-  `);
-
-}
-
-//////////////////////////////////////////////////
-// RUN LEDGER REPORT
-//////////////////////////////////////////////////
-	
-function runLedgerReport(){
-
-  let ledgerName = document.getElementById("ledgerName").value;
-  let fromDate = document.getElementById("ledgerFrom").value;
-  let toDate = document.getElementById("ledgerTo").value;
-
-  let currentYear = new Date().getFullYear();
-
-  // ✅ Default FY logic
-  if(!fromDate && !toDate){
-    fromDate = `${currentYear}-01-01`;
-    toDate = formatDateLocal(new Date());
-  }
-
-  if(fromDate && toDate){
-    if(!validateDateRange(fromDate,toDate)) return;
-  }
-
-  closePopup();
-
-  generateLedgerReport(ledgerName, fromDate, toDate);
-}
-	
- //////////////////////////////////////////////////
-  // GENERATE LEDGER REPORT
-  //////////////////////////////////////////////////
-
-function generateLedgerReport(name, fromDate, toDate){
-
-  let ledgerObj = ledgerList.find(l=>l.name === name);
-
-  let runningBalance = Number(ledgerObj?.openingBalance || 0);
-
-  //////////////////////////////////////////////////
-  // OPENING BALANCE
-  //////////////////////////////////////////////////
-
-  transactionsCache.forEach(t=>{
-
-    if(t.date < fromDate){
-
-      let amt = Number(t.amount);
-
-      if(t.debitLedger === name) runningBalance += amt;
-      if(t.creditLedger === name) runningBalance -= amt;
-
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // TABLE BUILD
-  //////////////////////////////////////////////////
-
-  let html = `
-    <h3>Ledger Report - ${name}</h3>
-
-    <table class="report-table">
-      <tr>
-        <th>Serial No</th>
-        <th>Date</th>
-        <th>Txn No</th>
-        <th>Particulars</th>
-        <th>Narration</th>
-        <th>Debit</th>
-        <th>Credit</th>
-        <th>Balance</th>
-        <th>Edit</th>
-        <th>Delete</th>
-      </tr>
-  `;
-
-  let serial = 1;
-
-  html += `
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td><b>Opening Balance</b></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>${runningBalance}</td>
-      <td></td>
-      <td></td>
-    </tr>
-  `;
-
-  //////////////////////////////////////////////////
-  // TRANSACTIONS
-  //////////////////////////////////////////////////
-
-  transactionsCache
-  .filter(t => t.date >= fromDate && t.date <= toDate)
-  .sort((a,b)=> new Date(a.date) - new Date(b.date))
-  .forEach(t=>{
-
-    let debit = "";
-    let credit = "";
-
-    let amt = Number(t.amount);
-
-    if(t.debitLedger === name){
-      debit = amt;
-      runningBalance += amt;
-    }
-
-    if(t.creditLedger === name){
-      credit = amt;
-      runningBalance -= amt;
-    }
-
-    if(debit || credit){
-
-      let counterLedger =
-        t.debitLedger === name ? t.creditLedger : t.debitLedger;
-
-      html += `
-        <tr>
-          <td>${serial++}</td>
-          <td>${t.date}</td>
-          <td>${t.txnNumber || ""}</td>
-          <td>${counterLedger}</td>
-          <td>${t.narration}</td>
-          <td>${debit}</td>
-          <td>${credit}</td>
-          <td>${runningBalance}</td>
-          <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
-          <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
-        </tr>
-      `;
-    }
-
-  });
-
-  html += "</table>";
-
-  document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
-}
-
-	
-//////////////////////////////////////////////////
-// FINANCIALS POPUP
-//////////////////////////////////////////////////
-
-function showFinancials(){
-
-  let currentYear = new Date().getFullYear();
-
-  let yearOptions = "";
-  for(let y = 2026; y <= currentYear + 5; y++){
-    yearOptions += `<option ${y===currentYear?"selected":""}>${y}</option>`;
-  }
-
-  openPopup(`
-    <h3>Financials</h3>
-
-    <label>Year *</label>
-    <select id="finYear">${yearOptions}</select>
-
-    <label>From Date (Optional)</label>
-    <input type="date" id="finFrom">
-
-    <label>To Date (Optional)</label>
-    <input type="date" id="finTo">
-
-    <button onclick="runFinancials()">Run</button>
-  `);
-}
-
-//////////////////////////////////////////////////
-// RUN FINANCIALS
-//////////////////////////////////////////////////
-
-function runFinancials(){
-
-  let year = document.getElementById("finYear").value;
-  let fromDate = document.getElementById("finFrom").value;
-  let toDate = document.getElementById("finTo").value;
-
-  let start = `${year}-01-01`;
-  let end = formatDateLocal(new Date());
-
-  if(fromDate && toDate){
-    if(!validateDateRange(fromDate,toDate)) return;
-    start = fromDate;
-    end = toDate;
-  }
-
-  closePopup();
-
-  generateFinancials(start,end,year);
-}
-
-//////////////////////////////////////////////////
-// MAIN FINANCIAL ENGINE
-//////////////////////////////////////////////////
-
-function generateFinancials(fromDate,toDate,year){
-
-  //////////////////////////////////////////////////
-  // P&L CALCULATION
-  //////////////////////////////////////////////////
-
-  let incomeMap = {};
-  let expenseMap = {};
-
-  let totalIncome = 0;
-  let totalExpense = 0;
-
-  transactionsCache.forEach(t=>{
-
-    if(t.date >= fromDate && t.date <= toDate){
-
-      let amount = Number(t.amount);
-
-      let debit = getLedger(t.debitLedger);
-      let credit = getLedger(t.creditLedger);
-
-      // Expense (Debit)
-      if(debit.group === "Expense"){
-        expenseMap[debit.name] = (expenseMap[debit.name] || 0) + amount;
-        totalExpense += amount;
-      }
-
-      // Income (Credit)
-      if(credit.group === "Income"){
-        incomeMap[credit.name] = (incomeMap[credit.name] || 0) + amount;
-        totalIncome += amount;
-      }
-
-    }
-
-  });
-
-  let netProfit = totalIncome - totalExpense;
-
-  //////////////////////////////////////////////////
-  // RETAINED EARNINGS (BEFORE PERIOD)
-  //////////////////////////////////////////////////
-
-  let retained = 0;
-
-  transactionsCache.forEach(t=>{
-
-    if(t.date < fromDate){
-
-      let amount = Number(t.amount);
-
-      let debit = getLedger(t.debitLedger);
-      let credit = getLedger(t.creditLedger);
-
-      if(credit.group === "Income") retained += amount;
-      if(debit.group === "Expense") retained -= amount;
-
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // BALANCE SHEET CALCULATION
-  //////////////////////////////////////////////////
-
-  let balances = {};
-
-  ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.openingBalance || 0);
-  });
-
-  transactionsCache.forEach(t=>{
-
-    if(t.date <= toDate){
-
-      let amt = Number(t.amount);
-
-      balances[t.debitLedger] += amt;
-      balances[t.creditLedger] -= amt;
-
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-// DRAWINGS (ALL TYPES)
-//////////////////////////////////////////////////
-
-let drawings = 0;
-
-ledgerList.forEach(l=>{
-  if(l.name.toLowerCase().includes("drawing")){
-    drawings += balances[l.name] || 0;
-  }
-});
-
-
-//////////////////////////////////////////////////
-// FINAL CAPITAL
-//////////////////////////////////////////////////
-
-let closingCapital =
-  openingCapital +
-  retained +
-  netProfit -
-  drawings;
-
-
-//////////////////////////////////////////////////
-// TOTAL LIABILITIES
-//////////////////////////////////////////////////
-
-let totalLiabilities = closingCapital;
-
-ledgerList.forEach(l=>{
-  if(l.group === "Liability"){
-    totalLiabilities += balances[l.name] || 0;
-  }
-});
-
-//////////////////////////////////////////////////
-// TOTAL ASSETS
-//////////////////////////////////////////////////
-
-let totalAssets = 0;
-
-ledgerList.forEach(l=>{
-  if(l.group === "Asset" || l.group === "Cash Bank"){
-    totalAssets += balances[l.name] || 0;
-  }
-});	
-	
-
-  //////////////////////////////////////////////////
-  // HTML BUILD
-  //////////////////////////////////////////////////
-
-  let plLeft = "";
-  let plRight = "";
-
-  Object.entries(expenseMap).forEach(([k,v])=>{
-    plLeft += `<tr><td>${k}</td><td>${v}</td></tr>`;
-  });
-
-  Object.entries(incomeMap).forEach(([k,v])=>{
-    plRight += `<tr><td>${k}</td><td>${v}</td></tr>`;
-  });
-
-  let profitText = netProfit >= 0
-    ? `Net Profit ${netProfit}`
-    : `Net Loss (${Math.abs(netProfit)})`;
-
-  //////////////////////////////////////////////////
-  // BALANCE SHEET
-  //////////////////////////////////////////////////
-
-  //////////////////////////////////////////////////
-// CAPITAL (OPENING ONLY)
-//////////////////////////////////////////////////
-
-let openingCapital = 0;
-
-ledgerList.forEach(l=>{
-  if(l.group === "Capital" && !l.name.toLowerCase().includes("drawing")){
-    openingCapital += Number(l.openingBalance || 0);
-  }
-});
-
-  let liabilityRows = "";
-  let assetRows = "";
-  let cashRows = "";
-
-  ledgerList.forEach(l=>{
-
-    let val = balances[l.name] || 0;
-
-    if(l.group === "Liability"){
-      liabilityRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
-    }
-
-    if(l.group === "Asset"){
-      assetRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
-    }
-
-    if(l.group === "Cash Bank"){
-      cashRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // OUTPUT
-  //////////////////////////////////////////////////
-
-  let html = `
-
-  <h3>Profit & Loss for the year ended ${year}</h3>
-
-  <table class="report-table">
-    <tr>
-      <th>Particulars</th><th>Amount</th>
-      <th>Particulars</th><th>Amount</th>
-    </tr>
-
-    <tr>
-      <td><b>Expenses</b></td><td></td>
-      <td><b>Income</b></td><td></td>
-    </tr>
-
-    <tr>
-      <td>
-        <table>${plLeft}</table>
-      </td>
-      <td>${totalExpense}</td>
-
-      <td>
-        <table>${plRight}</table>
-      </td>
-      <td>${totalIncome}</td>
-    </tr>
-
-    <tr>
-      <td><b>${profitText}</b></td>
-      <td></td>
-      <td></td><td></td>
-    </tr>
-
-  </table>
-
-  <br>
-
-  <h3>Balance Sheet as on ${toDate}</h3>
-
-  <table class="report-table">
-    <tr>
-      <th>Liabilities</th><th>Amount</th>
-      <th>Assets</th><th>Amount</th>
-    </tr>
-
-    <tr>
-      <td>
-        <b>Capital</b><br>
-        Opening Capital ${openingCapital}<br>
-Add: Retained Earnings ${retained}<br>
-Add: ${profitText}<br>
-Less: Drawings ${drawings}<br>
-<b>Closing Capital ${closingCapital}</b>
-        <br><br>
-        <b>Liabilities</b>
-        <table>${liabilityRows}</table>
-      </td>
-
-      <td><b>${totalLiabilities}</b></td>
-
-      <td>
-        <b>Assets</b>
-        <table>${assetRows}</table>
-
-        <br>
-        <b>Cash & Bank</b>
-        <table>${cashRows}</table>
-      </td>
-
-      <td><b>${totalAssets}</b></td>
-    </tr>
-
-  </table>
-
-  `;
-
-  document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
-}
 	
 	
 </script>
-
 <script src="layout.js"></script>
 
 <audio id="clickSound" preload="auto" playsinline>
@@ -4501,7 +4002,7 @@ Less: Drawings ${drawings}<br>
 </audio>
 
 <div id="toast" class="toast"></div>
-
+	
 <div id="loader" class="loader-overlay" style="display:none;">
   <div class="loader"></div>
 </div>
