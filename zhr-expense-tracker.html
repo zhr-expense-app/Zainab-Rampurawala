@@ -23,35 +23,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
-      authDomain: "zhr-expense-app-4747f.firebaseapp.com",
-      projectId: "zhr-expense-app-4747f",
-      storageBucket: "zhr-expense-app-4747f.firebasestorage.app",
-      messagingSenderId: "386125567038",
-      appId: "1:386125567038:web:a2570fa8341d024ccf6d6f"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
+    authDomain: "zhr-expense-app-4747f.firebaseapp.com",
+    projectId: "zhr-expense-app-4747f",
+    storageBucket: "zhr-expense-app-4747f.firebasestorage.app",
+    messagingSenderId: "386125567038",
+    appId: "1:386125567038:web:a2570fa8341d024ccf6d6f"
+  };
 
-    firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
 
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+  const db = firebase.firestore();
+  const auth = firebase.auth();
 
-    auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+  ////////////////////////////////////////////////
+  // AUTH STATE (SAFE + CORRECT)
+  ////////////////////////////////////////////////
+
+  window.onload = function(){
+
+    lucide.createIcons();
 
     auth.onAuthStateChanged(user => {
 
-  if (user) {
-    showDashboard();
-    startInactivityTracking(); // ✅ restart timer after refresh
-  } else {
-    document.getElementById("login").style.display = "block";
-    document.getElementById("dashboard").style.display = "none";
-  }
+      if (user) {
+        showDashboard();
+        startInactivityTracking();
+      } else {
+        document.getElementById("login").style.display = "block";
+        document.getElementById("dashboard").style.display = "none";
+      }
 
-});
-	  
-  </script>
+    });
+
+  };
+</script>
 
  <style>
 
@@ -92,6 +99,17 @@ input,select {
   box-sizing: border-box;
 }
 
+#login{
+  width: 400px;
+  margin: 80px auto;
+  display: block;
+  text-align: center;
+}
+
+body{
+  display: block !important;
+}	 
+	 
 /* BUTTON GROUP */
 .action-buttons{
   display:flex;
@@ -1002,8 +1020,13 @@ async function login(){
 
   try{
 
+    // ✅ Clear old session
     sessionStorage.clear();
-	  
+
+    // ✅ SET SESSION PERSISTENCE FIRST
+    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
+    // ✅ THEN LOGIN
     await auth.signInWithEmailAndPassword(email,password);
 
     hideLoader();
@@ -1014,6 +1037,8 @@ async function login(){
   }catch(e){
 
     hideLoader();
+
+    console.log("Login Error:", e); // ✅ DEBUG
 
     setTimeout(()=>{
       showToast("Invalid Login ❌","error");
