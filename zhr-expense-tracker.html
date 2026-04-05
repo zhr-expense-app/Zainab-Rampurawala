@@ -247,6 +247,12 @@ button:active{
   flex-wrap: wrap;
 }
 
+.summary-title{
+  font-weight:600;
+  margin-bottom:10px;
+  color:#001d4c;
+}
+	 
 .summary-box {
   background: white;
   padding: 15px;
@@ -557,7 +563,7 @@ button:active{
 <!-- REPORT OUTPUT -->
 <div id="reportOutput" style="margin-top:20px;"></div>
 
-
+<script>
 let currentReport = null;
 let currentReportCategory = null;
 let currentFromDate = null;
@@ -2412,130 +2418,7 @@ function showPaymentsReport() {
   `);
 }
 
-//////////////////////////////////////////////////
-// RUN PAYMENT REPORT
-//////////////////////////////////////////////////
 
-function runPaymentReport() {
-
-  let fromDate = document.getElementById("fromDate").value;
-  let toDate = document.getElementById("toDate").value;
-
-  if(!validateDateRange(fromDate,toDate)) return;
-
-  currentReport = "payments";
-  sessionStorage.setItem("currentReport","payments");
-  sessionStorage.setItem("currentFromDate",fromDate);
-  sessionStorage.setItem("currentToDate",toDate);
-
-  closePopup();
-
-  let payments = transactionsCache
-  .filter(t => {
-
-    let isPayment = (t.type === "payment");
-
-    let isInRange = true;
-
-    if (fromDate) isInRange = t.date >= fromDate;
-    if (toDate) isInRange = isInRange && t.date <= toDate;
-
-    return isPayment && isInRange;
-
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
-
-  let html = `
-    <h3>Payments Report</h3>
-    <table class="report-table">
-      <tr>
-        <th>Serial No</th>
-        <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
-        <th>Mode</th>
-        <th>Ledger</th>
-        <th>Narration</th>
-        <th>Amount</th>
-        <th>Edit</th>
-        <th>Delete</th>
-      </tr>
-  `;
-
-  payments.forEach((p, index) => {
-    html += `
-      <tr>
-        <td>${index+1}</td>
-        <td>${p.date}</td>
-        <td>${p.txnNumber || ""}</td>
-        <td>${p.type}</td>
-        <td>${p.creditLedger}</td>
-        <td>${p.debitLedger}</td>
-        <td>${p.narration}</td>
-        <td>${p.amount}</td>
-        <td><button onclick="editTransaction('${p.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
-      </tr>
-    `;
-  });
-
-  html += "</table>";
-
-  document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
-}
-
-//////////////////////////////////////////////////
-// JOURNAL REPORT (NEW)
-//////////////////////////////////////////////////
-
-function refreshJournalReport(){
-
-  let journal = transactionsCache
-    .filter(t => t.type === "journal")
-    .sort((a,b)=> new Date(a.date) - new Date(b.date));
-
-  let html = `
-    <h3>Journal Report</h3>
-    <table class="report-table">
-      <tr>
-        <th>Serial No</th>
-        <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
-        <th>Debit</th>
-        <th>Credit</th>
-        <th>Narration</th>
-        <th>Amount</th>
-        <th>Edit</th>
-        <th>Delete</th>
-      </tr>
-  `;
-
-  journal.forEach((j, index) => {
-    html += `
-      <tr>
-        <td>${index+1}</td>
-        <td>${j.date}</td>
-        <td>${j.txnNumber || ""}</td>
-        <td>${j.type}</td>
-        <td>${j.debitLedger}</td>
-        <td>${j.creditLedger}</td>
-        <td>${j.narration}</td>
-        <td>${j.amount}</td>
-        <td><button onclick="editTransaction('${j.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${j.id}')">Delete</button></td>
-      </tr>
-    `;
-  });
-
-  html += "</table>";
-
-  document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
-}
 
 		
 
@@ -2650,56 +2533,7 @@ function editPayment(id) {
   `);
 }
 
-//////////////////////////////////////////////////
-// UPDATE PAYMENT
-//////////////////////////////////////////////////
 
-async function updatePayment(id){
-
-  if(!checkPermission("write")) return;
-
-  let debitLedger = document.getElementById("debitLedger").value;
-  let creditLedger = document.getElementById("creditLedger").value;
-  let date = document.getElementById("date").value;
-  let narration = document.getElementById("narration").value.trim();
-  let amount = Number(document.getElementById("amount").value);
-
-  if(!date){
-    showToast("Please select Date ❌","error");
-    return;
-  }
-
-  if (!debitLedger || !creditLedger || !narration || isNaN(amount)) {
-    showToast("All fields are mandatory","error");
-    return;
-  }
-
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
-    return;
-  }
-
-  let balance = getCurrentBalance(creditLedger);
-
-  if (balance < amount) {
-    showToast("Insufficient balance in " + creditLedger,"error");
-    return;
-  }
-
-  showLoader();
-
-  await db.collection("transactions").doc(id).update({
-    debitLedger,
-    creditLedger,
-    date,
-    narration,
-    amount
-  });
-
-  hideLoader();
-  showToast("Payment Updated ✏️");
-  closePopup();
-}
 
 	  
 //////////////////////////////////////////////////
@@ -2857,70 +2691,6 @@ function runJournalReport(){
   refreshJournalReport();
 }
 
-//////////////////////////////////////////////////
-// REFRESH JOURNAL REPORT
-//////////////////////////////////////////////////
-
-function refreshJournalReport(){
-
-  let fromDate = sessionStorage.getItem("currentFromDate");
-  let toDate = sessionStorage.getItem("currentToDate");
-
-  let journal = transactionsCache
-  .filter(t => {
-
-    let isJournal = (t.type === "journal");
-
-    let isInRange = true;
-
-    if (fromDate) isInRange = t.date >= fromDate;
-    if (toDate) isInRange = isInRange && t.date <= toDate;
-
-    return isJournal && isInRange;
-
-  })
-  .sort((a,b)=> new Date(a.date) - new Date(b.date));
-
-  let html = `
-    <h3>Journal Report</h3>
-    <table class="report-table">
-      <tr>
-        <th>Serial No</th>
-        <th>Date</th>
-        <th>Txn No</th>
-        <th>Type</th>
-        <th>Debit</th>
-        <th>Credit</th>
-        <th>Narration</th>
-        <th>Amount</th>
-        <th>Edit</th>
-        <th>Delete</th>
-      </tr>
-  `;
-
-  journal.forEach((j, index) => {
-    html += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${j.date}</td>
-        <td>${j.txnNumber || ""}</td>
-        <td>${j.type}</td>
-        <td>${j.debitLedger}</td>
-        <td>${j.creditLedger}</td>
-        <td>${j.narration}</td>
-        <td>${j.amount}</td>
-        <td><button onclick="editTransaction('${j.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${j.id}')">Delete</button></td>
-      </tr>
-    `;
-  });
-
-  html += "</table>";
-
-  document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
-}
 
 
 //////////////////////////////////////////////////
@@ -3291,7 +3061,7 @@ function getBalanceExcludingTransaction(ledger, transactionId) {
   let balances = {};
 
   ledgerList.forEach(l=>{
-    balances[l.name] = Number(l.opening || 0);
+    balances[l.name] = Number(l.openingBalance || 0);
   });
 
   transactionsCache.forEach(t => {
@@ -3721,7 +3491,7 @@ sheet.addRow([
 
 let ledgerObj = ledgerList.find(l=>l.name === name);
 
-let runningBalance = Number(ledgerObj?.opening || 0);
+let runningBalance = Number(ledgerObj?.openingBalance || 0);
 
 transactionsCache.forEach(t=>{
 
@@ -3858,6 +3628,24 @@ showToast("Ledger Report Exported 📊");
 
 }
 
+
+//////////////////////////////////////////////////
+// SHOW STATEMENTS
+//////////////////////////////////////////////////
+	
+function showStatements(){
+
+  openPopup(`
+    <h3>Statements</h3>
+
+    <button onclick="showReceiptsReport()">Receipts</button>
+    <button onclick="showPaymentsReport()">Payments</button>
+    <button onclick="showJournalReport()">Journal</button>
+  `);
+
+}	
+
+	
 //////////////////////////////////////////////////
 // LOGOUT
 //////////////////////////////////////////////////
@@ -3899,13 +3687,6 @@ function confirmLogout() {
 
 }
 
-//////////////////////////////////////////////////
-// FINAL LOGOUT ACTION (ADDED SAFE FUNCTION)
-//////////////////////////////////////////////////
-
-function confirmLogoutNow(){
-  logout();
-}
 
 //////////////////////////////////////////////////
 // AUTO LOGOUT AFTER INACTIVITY
@@ -4018,8 +3799,7 @@ window.onload = function(){
 
 };
 
-	
-<script>
+
 //////////////////////////////////////////////////
 // LOADER
 //////////////////////////////////////////////////
@@ -4134,6 +3914,59 @@ function getLedger(name){
   return ledgerList.find(l=>l.name === name) || {};
 }
 
+
+//////////////////////////////////////////////////
+// Export ledger statement
+//////////////////////////////////////////////////
+	
+async function exportLedgerStatement(fromDate,toDate){
+
+  showLoader();
+
+  const workbook = new ExcelJS.Workbook();
+
+  ledgerList.forEach(l=>{
+    createAccountSheet(l.name);
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  saveAs(
+    new Blob([buffer]),
+    `Ledger_Statement_${fromDate}_to_${toDate}.xlsx`
+  );
+
+  hideLoader();
+  showToast("Ledger Report Exported 📊");
+}	
+
+
+//////////////////////////////////////////////////
+// SHOW LEDGER REPORT
+//////////////////////////////////////////////////
+	
+function showLedgerReport(){
+
+  openPopup(`
+    <h3>Ledger Report</h3>
+
+    <label>From Date</label>
+    <input type="date" id="ledgerFrom">
+
+    <label>To Date</label>
+    <input type="date" id="ledgerTo">
+
+    <button onclick="
+      exportLedgerStatement(
+        document.getElementById('ledgerFrom').value,
+        document.getElementById('ledgerTo').value
+      )
+    ">Export</button>
+  `);
+
+}
+	
+	
 </script>
 
 <script src="layout.js"></script>
