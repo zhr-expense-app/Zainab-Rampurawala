@@ -2025,6 +2025,13 @@ function showForm(type) {
 
 if (type === "receipt") {
 
+  // ✅ Capital WITHOUT Drawing
+  let capitalLedgers = ledgerList
+    .filter(l => l.group === "Capital" && l.name !== "Drawing")
+    .map(l => `<option>${l.name}</option>`).join("");
+
+  let incomeLiability = getLedgerByGroup(["Income","Liability"]);
+
   openPopup(`
     <h3>Record Receipt</h3>
 
@@ -2033,7 +2040,8 @@ if (type === "receipt") {
 
     <label>Ledger (Credit)</label>
     <select id="creditLedger">
-      ${getLedgerByGroup(["Income","Liability","Capital"])}
+      ${capitalLedgers}
+      ${incomeLiability}
     </select>
 
     <label>Mode (Debit - Cash/Bank)</label>
@@ -2057,6 +2065,13 @@ if (type === "receipt") {
 
 if (type === "payment") {
 
+  // ✅ Drawing ONLY from Capital
+  let drawingLedger = ledgerList
+    .filter(l => l.name === "Drawing")
+    .map(l => `<option>${l.name}</option>`).join("");
+
+  let expenseAsset = getLedgerByGroup(["Expense","Asset"]);
+
   openPopup(`
     <h3>Record Payment</h3>
 
@@ -2065,7 +2080,8 @@ if (type === "payment") {
 
     <label>Ledger (Debit)</label>
     <select id="debitLedger">
-      ${getLedgerByGroup(["Expense","Asset","Capital"])}
+      ${drawingLedger}
+      ${expenseAsset}
     </select>
 
     <label>Mode (Credit - Cash/Bank)</label>
@@ -2084,7 +2100,7 @@ if (type === "payment") {
 }
 
 //////////////////////////////////////////////////
-// JOURNAL (JV)
+// JOURNAL (NO CHANGE - ALREADY CORRECT)
 //////////////////////////////////////////////////
 
 if (type === "journal") {
@@ -3947,8 +3963,17 @@ async function exportLedgerStatement(fromDate,toDate){
 	
 function showLedgerReport(){
 
+  let ledgerOptions = ledgerList.map(l =>
+    `<option>${l.name}</option>`
+  ).join("");
+
   openPopup(`
     <h3>Ledger Report</h3>
+
+    <label>Select Ledger</label>
+    <select id="ledgerName">
+      ${ledgerOptions}
+    </select>
 
     <label>From Date</label>
     <input type="date" id="ledgerFrom">
@@ -3956,14 +3981,435 @@ function showLedgerReport(){
     <label>To Date</label>
     <input type="date" id="ledgerTo">
 
-    <button onclick="
-      exportLedgerStatement(
-        document.getElementById('ledgerFrom').value,
-        document.getElementById('ledgerTo').value
-      )
-    ">Export</button>
+    <button onclick="runLedgerReport()">Run</button>
   `);
 
+}
+
+//////////////////////////////////////////////////
+// RUN LEDGER REPORT
+//////////////////////////////////////////////////
+	
+function runLedgerReport(){
+
+  let ledgerName = document.getElementById("ledgerName").value;
+  let fromDate = document.getElementById("ledgerFrom").value;
+  let toDate = document.getElementById("ledgerTo").value;
+
+  let currentYear = new Date().getFullYear();
+
+  // ✅ Default FY logic
+  if(!fromDate && !toDate){
+    fromDate = `${currentYear}-01-01`;
+    toDate = formatDateLocal(new Date());
+  }
+
+  if(fromDate && toDate){
+    if(!validateDateRange(fromDate,toDate)) return;
+  }
+
+  closePopup();
+
+  generateLedgerReport(ledgerName, fromDate, toDate);
+}
+	
+ //////////////////////////////////////////////////
+  // GENERATE LEDGER REPORT
+  //////////////////////////////////////////////////
+
+function generateLedgerReport(name, fromDate, toDate){
+
+  let ledgerObj = ledgerList.find(l=>l.name === name);
+
+  let runningBalance = Number(ledgerObj?.openingBalance || 0);
+
+  //////////////////////////////////////////////////
+  // OPENING BALANCE
+  //////////////////////////////////////////////////
+
+  transactionsCache.forEach(t=>{
+
+    if(t.date < fromDate){
+
+      let amt = Number(t.amount);
+
+      if(t.debitLedger === name) runningBalance += amt;
+      if(t.creditLedger === name) runningBalance -= amt;
+
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // TABLE BUILD
+  //////////////////////////////////////////////////
+
+  let html = `
+    <h3>Ledger Report - ${name}</h3>
+
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Txn No</th>
+        <th>Particulars</th>
+        <th>Narration</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Balance</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  let serial = 1;
+
+  html += `
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><b>Opening Balance</b></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>${runningBalance}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
+  //////////////////////////////////////////////////
+  // TRANSACTIONS
+  //////////////////////////////////////////////////
+
+  transactionsCache
+  .filter(t => t.date >= fromDate && t.date <= toDate)
+  .sort((a,b)=> new Date(a.date) - new Date(b.date))
+  .forEach(t=>{
+
+    let debit = "";
+    let credit = "";
+
+    let amt = Number(t.amount);
+
+    if(t.debitLedger === name){
+      debit = amt;
+      runningBalance += amt;
+    }
+
+    if(t.creditLedger === name){
+      credit = amt;
+      runningBalance -= amt;
+    }
+
+    if(debit || credit){
+
+      let counterLedger =
+        t.debitLedger === name ? t.creditLedger : t.debitLedger;
+
+      html += `
+        <tr>
+          <td>${serial++}</td>
+          <td>${t.date}</td>
+          <td>${t.txnNumber || ""}</td>
+          <td>${counterLedger}</td>
+          <td>${t.narration}</td>
+          <td>${debit}</td>
+          <td>${credit}</td>
+          <td>${runningBalance}</td>
+          <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
+          <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
+        </tr>
+      `;
+    }
+
+  });
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
+}
+
+	
+//////////////////////////////////////////////////
+// FINANCIALS POPUP
+//////////////////////////////////////////////////
+
+function showFinancials(){
+
+  let currentYear = new Date().getFullYear();
+
+  let yearOptions = "";
+  for(let y = 2026; y <= currentYear + 5; y++){
+    yearOptions += `<option ${y===currentYear?"selected":""}>${y}</option>`;
+  }
+
+  openPopup(`
+    <h3>Financials</h3>
+
+    <label>Year *</label>
+    <select id="finYear">${yearOptions}</select>
+
+    <label>From Date (Optional)</label>
+    <input type="date" id="finFrom">
+
+    <label>To Date (Optional)</label>
+    <input type="date" id="finTo">
+
+    <button onclick="runFinancials()">Run</button>
+  `);
+}
+
+//////////////////////////////////////////////////
+// RUN FINANCIALS
+//////////////////////////////////////////////////
+
+function runFinancials(){
+
+  let year = document.getElementById("finYear").value;
+  let fromDate = document.getElementById("finFrom").value;
+  let toDate = document.getElementById("finTo").value;
+
+  let start = `${year}-01-01`;
+  let end = formatDateLocal(new Date());
+
+  if(fromDate && toDate){
+    if(!validateDateRange(fromDate,toDate)) return;
+    start = fromDate;
+    end = toDate;
+  }
+
+  closePopup();
+
+  generateFinancials(start,end,year);
+}
+
+//////////////////////////////////////////////////
+// MAIN FINANCIAL ENGINE
+//////////////////////////////////////////////////
+
+function generateFinancials(fromDate,toDate,year){
+
+  //////////////////////////////////////////////////
+  // P&L CALCULATION
+  //////////////////////////////////////////////////
+
+  let incomeMap = {};
+  let expenseMap = {};
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  transactionsCache.forEach(t=>{
+
+    if(t.date >= fromDate && t.date <= toDate){
+
+      let amount = Number(t.amount);
+
+      let debit = getLedger(t.debitLedger);
+      let credit = getLedger(t.creditLedger);
+
+      // Expense (Debit)
+      if(debit.group === "Expense"){
+        expenseMap[debit.name] = (expenseMap[debit.name] || 0) + amount;
+        totalExpense += amount;
+      }
+
+      // Income (Credit)
+      if(credit.group === "Income"){
+        incomeMap[credit.name] = (incomeMap[credit.name] || 0) + amount;
+        totalIncome += amount;
+      }
+
+    }
+
+  });
+
+  let netProfit = totalIncome - totalExpense;
+
+  //////////////////////////////////////////////////
+  // RETAINED EARNINGS (BEFORE PERIOD)
+  //////////////////////////////////////////////////
+
+  let retained = 0;
+
+  transactionsCache.forEach(t=>{
+
+    if(t.date < fromDate){
+
+      let amount = Number(t.amount);
+
+      let debit = getLedger(t.debitLedger);
+      let credit = getLedger(t.creditLedger);
+
+      if(credit.group === "Income") retained += amount;
+      if(debit.group === "Expense") retained -= amount;
+
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // BALANCE SHEET CALCULATION
+  //////////////////////////////////////////////////
+
+  let balances = {};
+
+  ledgerList.forEach(l=>{
+    balances[l.name] = Number(l.openingBalance || 0);
+  });
+
+  transactionsCache.forEach(t=>{
+
+    if(t.date <= toDate){
+
+      let amt = Number(t.amount);
+
+      balances[t.debitLedger] += amt;
+      balances[t.creditLedger] -= amt;
+
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // DRAWINGS
+  //////////////////////////////////////////////////
+
+  let drawings = balances["Drawing"] || 0;
+
+  //////////////////////////////////////////////////
+  // HTML BUILD
+  //////////////////////////////////////////////////
+
+  let plLeft = "";
+  let plRight = "";
+
+  Object.entries(expenseMap).forEach(([k,v])=>{
+    plLeft += `<tr><td>${k}</td><td>${v}</td></tr>`;
+  });
+
+  Object.entries(incomeMap).forEach(([k,v])=>{
+    plRight += `<tr><td>${k}</td><td>${v}</td></tr>`;
+  });
+
+  let profitText = netProfit >= 0
+    ? `Net Profit ${netProfit}`
+    : `Net Loss (${Math.abs(netProfit)})`;
+
+  //////////////////////////////////////////////////
+  // BALANCE SHEET
+  //////////////////////////////////////////////////
+
+  let capital = balances["Capital"] || 0;
+
+  let liabilityRows = "";
+  let assetRows = "";
+  let cashRows = "";
+
+  ledgerList.forEach(l=>{
+
+    let val = balances[l.name] || 0;
+
+    if(l.group === "Liability"){
+      liabilityRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
+    }
+
+    if(l.group === "Asset"){
+      assetRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
+    }
+
+    if(l.group === "Cash Bank"){
+      cashRows += `<tr><td>${l.name}</td><td>${val}</td></tr>`;
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // OUTPUT
+  //////////////////////////////////////////////////
+
+  let html = `
+
+  <h3>Profit & Loss for the year ended ${year}</h3>
+
+  <table class="report-table">
+    <tr>
+      <th>Particulars</th><th>Amount</th>
+      <th>Particulars</th><th>Amount</th>
+    </tr>
+
+    <tr>
+      <td><b>Expenses</b></td><td></td>
+      <td><b>Income</b></td><td></td>
+    </tr>
+
+    <tr>
+      <td>
+        <table>${plLeft}</table>
+      </td>
+      <td>${totalExpense}</td>
+
+      <td>
+        <table>${plRight}</table>
+      </td>
+      <td>${totalIncome}</td>
+    </tr>
+
+    <tr>
+      <td><b>${profitText}</b></td>
+      <td></td>
+      <td></td><td></td>
+    </tr>
+
+  </table>
+
+  <br>
+
+  <h3>Balance Sheet as on ${toDate}</h3>
+
+  <table class="report-table">
+    <tr>
+      <th>Liabilities</th><th>Amount</th>
+      <th>Assets</th><th>Amount</th>
+    </tr>
+
+    <tr>
+      <td>
+        <b>Capital</b><br>
+        Capital ${capital}<br>
+        Retained Earnings ${retained}<br>
+        Add: ${profitText}<br>
+        Less: Drawings ${drawings}
+        <br><br>
+        <b>Liabilities</b>
+        <table>${liabilityRows}</table>
+      </td>
+
+      <td></td>
+
+      <td>
+        <b>Assets</b>
+        <table>${assetRows}</table>
+
+        <br>
+        <b>Cash & Bank</b>
+        <table>${cashRows}</table>
+      </td>
+
+      <td></td>
+    </tr>
+
+  </table>
+
+  `;
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
 }
 	
 	
