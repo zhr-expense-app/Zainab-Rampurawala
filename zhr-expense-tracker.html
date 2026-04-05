@@ -4276,10 +4276,53 @@ function generateFinancials(fromDate,toDate,year){
   });
 
   //////////////////////////////////////////////////
-  // DRAWINGS
-  //////////////////////////////////////////////////
+// DRAWINGS (ALL TYPES)
+//////////////////////////////////////////////////
 
-  let drawings = balances["Drawing"] || 0;
+let drawings = 0;
+
+ledgerList.forEach(l=>{
+  if(l.name.toLowerCase().includes("drawing")){
+    drawings += balances[l.name] || 0;
+  }
+});
+
+
+//////////////////////////////////////////////////
+// FINAL CAPITAL
+//////////////////////////////////////////////////
+
+let closingCapital =
+  openingCapital +
+  retained +
+  netProfit -
+  drawings;
+
+
+//////////////////////////////////////////////////
+// TOTAL LIABILITIES
+//////////////////////////////////////////////////
+
+let totalLiabilities = closingCapital;
+
+ledgerList.forEach(l=>{
+  if(l.group === "Liability"){
+    totalLiabilities += balances[l.name] || 0;
+  }
+});
+
+//////////////////////////////////////////////////
+// TOTAL ASSETS
+//////////////////////////////////////////////////
+
+let totalAssets = 0;
+
+ledgerList.forEach(l=>{
+  if(l.group === "Asset" || l.group === "Cash Bank"){
+    totalAssets += balances[l.name] || 0;
+  }
+});	
+	
 
   //////////////////////////////////////////////////
   // HTML BUILD
@@ -4304,7 +4347,17 @@ function generateFinancials(fromDate,toDate,year){
   // BALANCE SHEET
   //////////////////////////////////////////////////
 
-  let capital = balances["Capital"] || 0;
+  //////////////////////////////////////////////////
+// CAPITAL (OPENING ONLY)
+//////////////////////////////////////////////////
+
+let openingCapital = 0;
+
+ledgerList.forEach(l=>{
+  if(l.group === "Capital" && !l.name.toLowerCase().includes("drawing")){
+    openingCapital += Number(l.openingBalance || 0);
+  }
+});
 
   let liabilityRows = "";
   let assetRows = "";
@@ -4380,16 +4433,17 @@ function generateFinancials(fromDate,toDate,year){
     <tr>
       <td>
         <b>Capital</b><br>
-        Capital ${capital}<br>
-        Retained Earnings ${retained}<br>
-        Add: ${profitText}<br>
-        Less: Drawings ${drawings}
+        Opening Capital ${openingCapital}<br>
+Add: Retained Earnings ${retained}<br>
+Add: ${profitText}<br>
+Less: Drawings ${drawings}<br>
+<b>Closing Capital ${closingCapital}</b>
         <br><br>
         <b>Liabilities</b>
         <table>${liabilityRows}</table>
       </td>
 
-      <td></td>
+      <td><b>${totalLiabilities}</b></td>
 
       <td>
         <b>Assets</b>
@@ -4400,7 +4454,7 @@ function generateFinancials(fromDate,toDate,year){
         <table>${cashRows}</table>
       </td>
 
-      <td></td>
+      <td><b>${totalAssets}</b></td>
     </tr>
 
   </table>
