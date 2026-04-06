@@ -4218,7 +4218,7 @@ if(t.type === "payment" && t.category === "Personal"){
 
 // ✅ Add to ledger only if exists
 if(retained !== 0){
-  ledger["Retained Earnings"] = retained;
+  ledger["Retained Earnings"] = -retained;
 }
 
 	
