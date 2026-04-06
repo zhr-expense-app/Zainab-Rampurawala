@@ -4069,31 +4069,13 @@ function validateDateRange(fromDate, toDate){
 // SHOW TRAILBALANCE
 //////////////////////////////////////////////////
 
-function showTrialBalance(){
-
-openPopup(`
-<h3>Trial Balance</h3>
-
-<label>As on Date</label>
-<input type="date" id="tbDate">
-
-<button onclick="runTrialBalance()">Run</button>
-`);
-
-}
-
-//////////////////////////////////////////////////
-// RUN TRIALBALANCE
-//////////////////////////////////////////////////
-
 function runTrialBalance(){
 
-let toDate = document.getElementById("tbDate").value;
+let fromDate = document.getElementById("tbFrom").value;
+let toDate = document.getElementById("tbTo").value;
 
-if(!toDate){
-  showToast("Please select date","error");
-  return;
-}
+// ✅ validation
+if(!validateDateRange(fromDate,toDate)) return;
 
 closePopup();
 
@@ -4117,19 +4099,34 @@ let ledger = {
 
 //////////////////////////////////////////////////
 // OPENING BALANCE (CASH/BANK)
+// (CALCULATE BALANCE BEFORE FROM DATE)
 //////////////////////////////////////////////////
 
 accountsList.forEach(acc=>{
   ledger[acc] = Number(openingBalances[acc] || 0);
 });
 
+transactionsCache.forEach(t=>{
+
+if(t.date >= fromDate) return;
+
+if(t.type === "receipt"){
+  ledger[t.account] += Number(t.amount);
+}
+
+if(t.type === "payment"){
+  ledger[t.account] -= Number(t.amount);
+}
+
+});
+
 //////////////////////////////////////////////////
-// PROCESS TRANSACTIONS
+// PROCESS TRANSACTIONS (WITHIN RANGE)
 //////////////////////////////////////////////////
 
 transactionsCache.forEach(t=>{
 
-if(t.date > toDate) return;
+if(t.date < fromDate || t.date > toDate) return;
 
 //////////////////////////////////////////////////
 // RECEIPT
@@ -4168,7 +4165,7 @@ ledger[t.category] += Number(t.amount);
 //////////////////////////////////////////////////
 
 let rows = `
-<h3>Trial Balance as on ${toDate}</h3>
+<h3>Trial Balance (${fromDate} to ${toDate})</h3>
 <table class="report-table">
 <tr>
 <th>Ledger</th>
@@ -4225,7 +4222,7 @@ document.getElementById("reportOutput").innerHTML = rows;
 
 formatAllAmounts();
 
-}	
+}
 
 	
 	
