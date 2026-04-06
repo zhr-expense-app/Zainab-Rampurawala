@@ -1403,38 +1403,66 @@ bsItems.forEach(item => {
 
 async function saveOpening(){
 
-if(!checkPermission("admin")) return;						
+  if(!checkPermission("admin")) return;						
 
-showLoader();
+  showLoader();
 
-let data = {
-  openingDate: document.getElementById("openingDate").value
-};
+  let data = {
+    openingDate: document.getElementById("openingDate").value
+  };
 
-// Cash/Bank
-accountsList.forEach(acc=>{
-  data[acc] = Number(document.getElementById(acc).value) || 0;
-});
+  //////////////////////////////////////////////////
+  // CASH / BANK (AS IS)
+  //////////////////////////////////////////////////
 
-// Balance Sheet Items
-let bsItems = [
-  "Capital",
-  "Home",
-  "Qardan Given",
-  "Qardan Taken",
-  "Office Reimbursement"
-];
+  accountsList.forEach(acc=>{
+    data[acc] = Number(document.getElementById(acc).value) || 0;
+  });
 
-bsItems.forEach(item=>{
-  data[item] = Number(document.getElementById(item).value) || 0;
-});
+  //////////////////////////////////////////////////
+  // BALANCE SHEET ITEMS WITH CORRECT SIGN
+  //////////////////////////////////////////////////
 
-await db.collection("settings").doc("openingBalance").set(data);
+  let bsItems = [
+    "Capital",
+    "Home",
+    "Qardan Given",
+    "Qardan Taken",
+    "Office Reimbursement"
+  ];
 
-hideLoader();
-showToast("Opening Balance Saved ✅");
+  bsItems.forEach(item=>{
 
-closePopup();
+    let value = Number(document.getElementById(item).value) || 0;
+
+    //////////////////////////////////////////////////
+    // LIABILITY → STORE AS NEGATIVE
+    //////////////////////////////////////////////////
+
+    if(item === "Capital" || item === "Qardan Taken"){
+      data[item] = -Math.abs(value);   // ✅ Credit nature
+    }
+
+    //////////////////////////////////////////////////
+    // ASSET / DRAWINGS → STORE AS POSITIVE
+    //////////////////////////////////////////////////
+
+    else{
+      data[item] = Math.abs(value);    // ✅ Debit nature
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // SAVE
+  //////////////////////////////////////////////////
+
+  await db.collection("settings").doc("openingBalance").set(data);
+
+  hideLoader();
+  showToast("Opening Balance Saved ✅");
+
+  closePopup();
 }
 
 //////////////////////////////////////////////////
