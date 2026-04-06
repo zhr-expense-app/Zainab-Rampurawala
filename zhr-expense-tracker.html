@@ -4094,6 +4094,7 @@ function runTrialBalance(){
 let fromDate = document.getElementById("tbFrom").value;
 let toDate = document.getElementById("tbTo").value;
 
+// ✅ validation
 if(!validateDateRange(fromDate,toDate)) return;
 
 closePopup();
@@ -4117,7 +4118,7 @@ let ledger = {
 };
 
 //////////////////////////////////////////////////
-// OPENING BALANCE
+// OPENING BALANCE (CASH/BANK)
 //////////////////////////////////////////////////
 
 accountsList.forEach(acc=>{
@@ -4125,65 +4126,58 @@ accountsList.forEach(acc=>{
 });
 
 //////////////////////////////////////////////////
-// PROCESS TRANSACTIONS
+// OPENING ADJUSTMENT (BEFORE FROM DATE)
 //////////////////////////////////////////////////
 
 transactionsCache.forEach(t=>{
 
-if(t.date > toDate) return;
+if(t.date >= fromDate) return;
+
+if(t.type === "receipt"){
+  ledger[t.account] += Number(t.amount);
+}
+
+if(t.type === "payment"){
+  ledger[t.account] -= Number(t.amount);
+}
+
+});
 
 //////////////////////////////////////////////////
-// RECEIPTS
+// PROCESS TRANSACTIONS (WITHIN RANGE)
+//////////////////////////////////////////////////
+
+transactionsCache.forEach(t=>{
+
+if(t.date < fromDate || t.date > toDate) return;
+
+//////////////////////////////////////////////////
+// RECEIPT
 //////////////////////////////////////////////////
 
 if(t.type === "receipt"){
 
-  ledger[t.account] += Number(t.amount);
+// Debit Cash/Bank
+ledger[t.account] += Number(t.amount);
 
-  if(!ledger[t.category]) ledger[t.category] = 0;
-
-  // ✅ Balance Sheet (FULL)
-  if(
-    t.category === "Capital" ||
-    t.category === "Qardan Taken"
-  ){
-    ledger[t.category] -= Number(t.amount);
-  }
-
-  // ✅ Income (PERIOD)
-  else if(t.category === "Income"){
-    if(t.date >= fromDate){
-      ledger[t.category] -= Number(t.amount);
-    }
-  }
+// Credit Category
+if(!ledger[t.category]) ledger[t.category] = 0;
+ledger[t.category] -= Number(t.amount);
 
 }
 
 //////////////////////////////////////////////////
-// PAYMENTS
+// PAYMENT
 //////////////////////////////////////////////////
 
 if(t.type === "payment"){
 
-  ledger[t.account] -= Number(t.amount);
+// Credit Cash/Bank
+ledger[t.account] -= Number(t.amount);
 
-  if(!ledger[t.category]) ledger[t.category] = 0;
-
-  // ✅ BALANCE SHEET (FULL)
-  if(
-    t.category === "Qardan Given" ||
-    t.category === "Office Reimbursement" ||
-    t.category === "Home"
-  ){
-    ledger[t.category] += Number(t.amount);
-  }
-
-  // ✅ EXPENSE (PERIOD)
-  else if(t.category === "Personal"){
-    if(t.date >= fromDate){
-      ledger[t.category] += Number(t.amount);
-    }
-  }
+// Debit Category
+if(!ledger[t.category]) ledger[t.category] = 0;
+ledger[t.category] += Number(t.amount);
 
 }
 
@@ -4193,7 +4187,7 @@ if(t.type === "payment"){
 // PREPARE TB
 //////////////////////////////////////////////////
 
-let html = `
+let rows = `
 <h3>Trial Balance (${fromDate} to ${toDate})</h3>
 <table class="report-table">
 <tr>
@@ -4212,13 +4206,8 @@ let value = ledger[name];
 
 if(value === 0) return;
 
-//////////////////////////////////////////////////
-// 🔥 SPECIAL LOGIC FOR HOME
-//////////////////////////////////////////////////
-
-if(name === "Home"){
-  value = -Math.abs(value);
-}
+// ✅ ONLY CHANGE: DISPLAY NAME
+let displayName = (name === "Home") ? "Drawings" : name;
 
 let dr = "";
 let cr = "";
@@ -4231,9 +4220,9 @@ if(value > 0){
   totalCr += Math.abs(value);
 }
 
-html += `
+rows += `
 <tr>
-<td>${name}</td>
+<td>${displayName}</td>
 <td>${dr}</td>
 <td>${cr}</td>
 </tr>
@@ -4245,7 +4234,7 @@ html += `
 // TOTAL
 //////////////////////////////////////////////////
 
-html += `
+rows += `
 <tr>
 <td><b>Total</b></td>
 <td><b>${totalDr}</b></td>
@@ -4253,13 +4242,13 @@ html += `
 </tr>
 `;
 
-html += `</table>`;
+rows += `</table>`;
 
-document.getElementById("reportOutput").innerHTML = html;
+document.getElementById("reportOutput").innerHTML = rows;
 
 formatAllAmounts();
 
-}
+	}
 
 	
 	
