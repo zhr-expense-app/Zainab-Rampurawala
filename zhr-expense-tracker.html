@@ -4064,6 +4064,26 @@ function validateDateRange(fromDate, toDate){
   return true;
 }
 
+//////////////////////////////////////////////////
+// SHOW TRIALBALANCE
+//////////////////////////////////////////////////
+
+function showTrialBalance(){
+
+openPopup(`
+<h3>Trial Balance</h3>
+
+<label>From Date</label>
+<input type="date" id="tbFrom">
+
+<label>To Date</label>
+<input type="date" id="tbTo">
+
+<button onclick="runTrialBalance()">Run</button>
+`);
+
+}
+
 	
 //////////////////////////////////////////////////
 // SHOW TRAILBALANCE
