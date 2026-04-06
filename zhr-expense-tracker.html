@@ -2440,8 +2440,7 @@ if(!validateDateRange(fromDate,toDate)) return;
   sessionStorage.setItem("currentReport","receipts");
 sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
-	sessionStorage.setItem("currentCategory", category); // ✅ ADD HERE
-
+	sessionStorage.setItem("receiptCategory", category);
   
 
   closePopup();
@@ -3095,7 +3094,7 @@ async function updateTransaction(id) {
 
 function refreshReceiptsReport(){
 
-let category = sessionStorage.getItem("currentCategory");
+let category = sessionStorage.getItem("receiptCategory");
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
@@ -3332,7 +3331,7 @@ let receipts = transactionsCache
 
 let isReceipt = (t.type === "receipt" || t.type === "inflow");
 
-let category = sessionStorage.getItem("currentCategory");
+let category = sessionStorage.getItem("receiptCategory");
 
 return isReceipt &&
        (!category || (t.category || "") === category) &&
