@@ -2430,6 +2430,7 @@ function showReceiptsReport() {
 
 function runReceiptsReport() {
 
+let category = document.getElementById("receiptCategory").value;	
 let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
@@ -2439,6 +2440,7 @@ if(!validateDateRange(fromDate,toDate)) return;
   sessionStorage.setItem("currentReport","receipts");
 sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
+	sessionStorage.setItem("currentCategory", category); // ✅ ADD HERE
 
   
 
@@ -2457,7 +2459,13 @@ sessionStorage.setItem("currentFromDate",fromDate);
   if (toDate)
     isInRange = isInRange && t.date <= toDate;
 
-  return isReceipt && isInRange;
+  let isCategory = true;
+
+if(category){
+  isCategory = t.category === category;
+}
+
+return isReceipt && isCategory && isInRange;
 
 })
 .sort((a,b)=>{
@@ -2471,13 +2479,13 @@ sessionStorage.setItem("currentFromDate",fromDate);
 });
 
   let html = `
-    <h3>Receipts Report</h3>
+  <h3>${category ? category + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
         <th>Mode</th>
-		<th>Category</th>   // ✅ NEW
+		<th>Category</th> 
         <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
@@ -2491,7 +2499,7 @@ sessionStorage.setItem("currentFromDate",fromDate);
         <td>${index+1}</td>
         <td>${r.date}</td>
         <td>${r.account}</td>
-		<td>${r.category || "-"}</td>   // ✅ NEW
+		<td>${r.category || "-"}</td>  
         <td>${r.narration}</td>
         <td> ${r.amount}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
@@ -3015,9 +3023,9 @@ function editTransaction(id) {
 
 <label>Category</label>
 <select id="category">
-  <option ${t.category==="Capital"?"selected":""}>Capital</option>
-  <option ${t.category==="Income"?"selected":""}>Income</option>
-  <option ${t.category==="Qardan Taken"?"selected":""}>Qardan Taken</option>
+  <option ${(t.category || "Income")==="Capital"?"selected":""}>Capital</option>
+<option ${(t.category || "Income")==="Income"?"selected":""}>Income</option>
+<option ${(t.category || "Income")==="Qardan Taken"?"selected":""}>Qardan Taken</option>
 </select>
 
     <label>Date</label>
@@ -3042,7 +3050,7 @@ async function updateTransaction(id) {
   if(!checkPermission("write")) return;
 
   let account = document.getElementById("account").value;
-  let category = document.getElementById("category").value; // ✅ NEW
+  let category = document.getElementById("category").value;
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
@@ -3063,7 +3071,7 @@ async function updateTransaction(id) {
 
   await db.collection("transactions").doc(id).update({
     account: account,
-    category: category, // ✅ NEW
+    category: category, 
     date: date,
     narration: narration,
     amount: amount
@@ -3087,6 +3095,7 @@ async function updateTransaction(id) {
 
 function refreshReceiptsReport(){
 
+let category = sessionStorage.getItem("currentCategory");
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
@@ -3103,7 +3112,13 @@ function refreshReceiptsReport(){
   if(toDate)
     isInRange = isInRange && t.date <= toDate;
 
-  return isReceipt && isInRange;
+  let isCategory = true;
+
+if(category){
+  isCategory = t.category === category;
+}
+
+return isReceipt && isCategory && isInRange;
 
 })
 .sort((a,b)=>{
@@ -3117,7 +3132,7 @@ function refreshReceiptsReport(){
 });
 
   let html = `
-    <h3>Receipts Report</h3>
+    <h3>${category ? category + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
@@ -3317,7 +3332,12 @@ let receipts = transactionsCache
 
 let isReceipt = (t.type === "receipt" || t.type === "inflow");
 
-return isReceipt && t.date >= fromDate && t.date <= toDate;
+let category = sessionStorage.getItem("currentCategory");
+
+return isReceipt &&
+       (!category || t.category === category) &&
+       t.date >= fromDate &&
+       t.date <= toDate;
 
 })
 .sort((a,b)=>{
@@ -3338,7 +3358,7 @@ rows.push([
   i+1,
   r.date,
   r.account,
-  r.category || "-",   // ✅
+  r.category || "-",   
   r.narration,
   Number(r.amount)
 ]);
