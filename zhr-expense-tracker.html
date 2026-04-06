@@ -767,6 +767,11 @@ text-align:right;
   <i data-lucide="shuffle"></i> Contra Report
 </button>
 
+
+	<button onclick="showTrialBalance()">
+  <i data-lucide="scale"></i> Trial Balance
+	</button>
+
 <button onclick="showMiniStatement()">
   <i data-lucide="book-open"></i> Mini Statement
 </button>
@@ -4058,6 +4063,169 @@ function validateDateRange(fromDate, toDate){
 
   return true;
 }
+
+	
+//////////////////////////////////////////////////
+// SHOW TRAILBALANCE
+//////////////////////////////////////////////////
+
+function showTrialBalance(){
+
+openPopup(`
+<h3>Trial Balance</h3>
+
+<label>As on Date</label>
+<input type="date" id="tbDate">
+
+<button onclick="runTrialBalance()">Run</button>
+`);
+
+}
+
+//////////////////////////////////////////////////
+// RUN TRIALBALANCE
+//////////////////////////////////////////////////
+
+function runTrialBalance(){
+
+let toDate = document.getElementById("tbDate").value;
+
+if(!toDate){
+  showToast("Please select date","error");
+  return;
+}
+
+closePopup();
+
+//////////////////////////////////////////////////
+// LEDGER STRUCTURE
+//////////////////////////////////////////////////
+
+let ledger = {
+  Cash:0,
+  Bank:0,
+
+  Personal:0,
+  Home:0,
+  "Office Reimbursement":0,
+  "Qardan Given":0,
+
+  Capital:0,
+  Income:0,
+  "Qardan Taken":0
+};
+
+//////////////////////////////////////////////////
+// OPENING BALANCE (CASH/BANK)
+//////////////////////////////////////////////////
+
+accountsList.forEach(acc=>{
+  ledger[acc] = Number(openingBalances[acc] || 0);
+});
+
+//////////////////////////////////////////////////
+// PROCESS TRANSACTIONS
+//////////////////////////////////////////////////
+
+transactionsCache.forEach(t=>{
+
+if(t.date > toDate) return;
+
+//////////////////////////////////////////////////
+// RECEIPT
+//////////////////////////////////////////////////
+
+if(t.type === "receipt"){
+
+// Debit Cash/Bank
+ledger[t.account] += Number(t.amount);
+
+// Credit Category
+if(!ledger[t.category]) ledger[t.category] = 0;
+ledger[t.category] -= Number(t.amount);
+
+}
+
+//////////////////////////////////////////////////
+// PAYMENT
+//////////////////////////////////////////////////
+
+if(t.type === "payment"){
+
+// Credit Cash/Bank
+ledger[t.account] -= Number(t.amount);
+
+// Debit Category
+if(!ledger[t.category]) ledger[t.category] = 0;
+ledger[t.category] += Number(t.amount);
+
+}
+
+});
+
+//////////////////////////////////////////////////
+// PREPARE TB
+//////////////////////////////////////////////////
+
+let rows = `
+<h3>Trial Balance as on ${toDate}</h3>
+<table class="report-table">
+<tr>
+<th>Ledger</th>
+<th>Debit</th>
+<th>Credit</th>
+</tr>
+`;
+
+let totalDr = 0;
+let totalCr = 0;
+
+Object.keys(ledger).forEach(name=>{
+
+let value = ledger[name];
+
+if(value === 0) return;
+
+let dr = "";
+let cr = "";
+
+if(value > 0){
+  dr = value;
+  totalDr += value;
+}else{
+  cr = Math.abs(value);
+  totalCr += Math.abs(value);
+}
+
+rows += `
+<tr>
+<td>${name}</td>
+<td>${dr}</td>
+<td>${cr}</td>
+</tr>
+`;
+
+});
+
+//////////////////////////////////////////////////
+// TOTAL
+//////////////////////////////////////////////////
+
+rows += `
+<tr>
+<td><b>Total</b></td>
+<td><b>${totalDr}</b></td>
+<td><b>${totalCr}</b></td>
+</tr>
+`;
+
+rows += `</table>`;
+
+document.getElementById("reportOutput").innerHTML = rows;
+
+formatAllAmounts();
+
+}	
 
 	
 	
