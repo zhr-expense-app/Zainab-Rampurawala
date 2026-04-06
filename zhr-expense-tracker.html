@@ -1340,14 +1340,33 @@ function showOpening() {
 <input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
 `;
 
-    accountsList.forEach(acc => {
+    // ✅ Accounts (Cash/Bank)
+accountsList.forEach(acc => {
 
-      html += `
-        <label>${acc}</label>
-        <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-      `;
+  html += `
+    <label>${acc}</label>
+    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+  `;
 
-    });
+});
+
+// ✅ Balance Sheet Ledgers
+let bsItems = [
+  "Capital",
+  "Home",
+  "Qardan Given",
+  "Qardan Taken",
+  "Office Reimbursement"
+];
+
+bsItems.forEach(item => {
+
+  html += `
+    <label>${item}</label>
+    <input type="number" id="${item}" value="${openingBalances[item] || 0}">
+  `;
+
+});
 
     html += `<button onclick="saveOpening()">Save</button>`;
 
@@ -1386,8 +1405,22 @@ let data = {
   openingDate: document.getElementById("openingDate").value
 };
 
+// Cash/Bank
 accountsList.forEach(acc=>{
   data[acc] = Number(document.getElementById(acc).value) || 0;
+});
+
+// Balance Sheet Items
+let bsItems = [
+  "Capital",
+  "Home",
+  "Qardan Given",
+  "Qardan Taken",
+  "Office Reimbursement"
+];
+
+bsItems.forEach(item=>{
+  data[item] = Number(document.getElementById(item).value) || 0;
 });
 
 await db.collection("settings").doc("openingBalance").set(data);
@@ -4120,8 +4153,22 @@ let ledger = {
 // OPENING BALANCE
 //////////////////////////////////////////////////
 
+// Cash/Bank
 accountsList.forEach(acc=>{
   ledger[acc] = Number(openingBalances[acc] || 0);
+});
+
+// Balance Sheet Items
+let bsItems = [
+  "Capital",
+  "Home",
+  "Qardan Given",
+  "Qardan Taken",
+  "Office Reimbursement"
+];
+
+bsItems.forEach(item=>{
+  ledger[item] = Number(openingBalances[item] || 0);
 });
 
 //////////////////////////////////////////////////
