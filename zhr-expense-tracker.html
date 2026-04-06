@@ -2145,25 +2145,33 @@ function renderPersonalMonthlySummary(){
 function showForm(type) {
 
   if (type === "receipt") {
-    openPopup(`
-      <h3>Record Receipt</h3>
-      <label>Mode</label>
-      <select id="account">
-        ${getAccountOptions()}
-      </select>
+  openPopup(`
+    <h3>Record Receipt</h3>
 
-      <label>Date</label>
-      <input type="date" id="date">
+    <label>Mode</label>
+    <select id="account">
+      ${getAccountOptions()}
+    </select>
 
-      <label>Particular</label>
-      <input type="text" id="narration">
+    <label>Category</label>
+    <select id="category">
+      <option>Capital</option>
+      <option>Income</option>
+      <option>Qardan Taken</option>
+    </select>
 
-      <label>Amount</label>
-      <input type="number" id="amount">
+    <label>Date</label>
+    <input type="date" id="date">
 
-      <button onclick="saveReceipt()">Save</button>
-    `);
-  }
+    <label>Particular</label>
+    <input type="text" id="narration">
+
+    <label>Amount</label>
+    <input type="number" id="amount">
+
+    <button onclick="saveReceipt()">Save</button>
+  `);
+}
 
   if (type === "payment") {
     openPopup(`
@@ -2231,24 +2239,22 @@ function showForm(type) {
 
 async function saveReceipt() {
 
-	if(!checkPermission("write")) return;
+  if(!checkPermission("write")) return;
 
   let account = document.getElementById("account").value;
+  let category = document.getElementById("category").value; // ✅ NEW
   let date = document.getElementById("date").value;
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-// ✅ ADD HERE
-if(!date){
-  showToast("Please select Date ❌","error");
-  return;
-}
+  if(!date){
+    showToast("Please select Date ❌","error");
+    return;
+  }
 
-	
-  if (!account || !date || !narration || isNaN(amount)) {
+  if (!account || !category || !date || !narration || isNaN(amount)) {
     showToast("All fields are mandatory","error");
-document.getElementById("amount").focus();
-return;
+    return;
   }
 
   if (amount <= 0) {
@@ -2256,16 +2262,18 @@ return;
     return;
   }
 
-showLoader();
-	
+  showLoader();
+
   await db.collection("transactions").add({
     type: "receipt",
     account: account,
+    category: category, // ✅ NEW
     amount: amount,
     date: date,
     narration: narration
   });
-hideLoader();
+
+  hideLoader();
   showToast("Receipt Saved ✅");
   closePopup();
 }
@@ -2397,6 +2405,14 @@ function showReceiptsReport() {
   openPopup(`
     <h3>Receipts Report</h3>
 
+    <label>Category</label>
+    <select id="receiptCategory">
+      <option value="">All</option>
+      <option>Capital</option>
+      <option>Income</option>
+      <option>Qardan Taken</option>
+    </select>
+
     <label>From Date</label>
     <input type="date" id="fromDate">
 
@@ -2461,6 +2477,7 @@ sessionStorage.setItem("currentFromDate",fromDate);
         <th>Serial No</th>
         <th>Date</th>
         <th>Mode</th>
+		<th>Category</th>   // ✅ NEW
         <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
@@ -2474,6 +2491,7 @@ sessionStorage.setItem("currentFromDate",fromDate);
         <td>${index+1}</td>
         <td>${r.date}</td>
         <td>${r.account}</td>
+		<td>${r.category || "-"}</td>   // ✅ NEW
         <td>${r.narration}</td>
         <td> ${r.amount}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
@@ -2995,6 +3013,13 @@ function editTransaction(id) {
   ${getAccountOptions(t.account)}
 </select>
 
+<label>Category</label>
+<select id="category">
+  <option ${t.category==="Capital"?"selected":""}>Capital</option>
+  <option ${t.category==="Income"?"selected":""}>Income</option>
+  <option ${t.category==="Qardan Taken"?"selected":""}>Qardan Taken</option>
+</select>
+
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
@@ -3014,35 +3039,40 @@ function editTransaction(id) {
 
 async function updateTransaction(id) {
 
-	if(!checkPermission("write")) return;
+  if(!checkPermission("write")) return;
 
   let account = document.getElementById("account").value;
-let date = document.getElementById("date").value;
-let narration = document.getElementById("narration").value.trim();
-let amount = Number(document.getElementById("amount").value);
+  let category = document.getElementById("category").value; // ✅ NEW
+  let date = document.getElementById("date").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
 
-if (!account || !date || !narration || isNaN(amount)) {
-  showToast("All fields are mandatory","error");
-  document.getElementById("amount").focus();
-  return;
-}
+  // VALIDATION
+  if (!account || !category || !date || !narration || isNaN(amount)) {
+    showToast("All fields are mandatory","error");
+    document.getElementById("amount").focus();
+    return;
+  }
 
-if (amount <= 0) {
-  showToast("Amount must be greater than 0","error");
-  return;
-}
-showLoader();
+  if (amount <= 0) {
+    showToast("Amount must be greater than 0","error");
+    return;
+  }
+
+  showLoader();
+
   await db.collection("transactions").doc(id).update({
-    account: document.getElementById("account").value,
-    date: document.getElementById("date").value,
-    narration: document.getElementById("narration").value,
+    account: account,
+    category: category, // ✅ NEW
+    date: date,
+    narration: narration,
     amount: amount
   });
 
   hideLoader();
-showToast("Receipt Updated ✏️");
+  showToast("Receipt Updated ✏️");
 
-closePopup();
+  closePopup();
 
   // refresh receipts report automatically
   if(sessionStorage.getItem("currentReport") === "receipts"){
@@ -3093,6 +3123,7 @@ function refreshReceiptsReport(){
         <th>Serial No</th>
         <th>Date</th>
         <th>Mode</th>
+		<th>Category</th>
         <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
@@ -3106,6 +3137,7 @@ function refreshReceiptsReport(){
         <td>${index+1}</td>
         <td>${r.date}</td>
         <td>${r.account}</td>
+		<td>${r.category || "-"}</td>
         <td>${r.narration}</td>
         <td> ${r.amount}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
@@ -3278,7 +3310,7 @@ if(reportType === "receipts"){
 
 title = "Receipts_Report";
 
-rows.push(["Serial No","Date","Mode","Particular","Amount"]);
+rows.push(["Serial No","Date","Mode","Category","Particular","Amount"]);
 
 let receipts = transactionsCache
 .filter(t=>{
@@ -3303,11 +3335,12 @@ receipts.forEach((r,i)=>{
 total += Number(r.amount);
 
 rows.push([
-i+1,
-r.date,
-r.account,
-r.narration,
-Number(r.amount)
+  i+1,
+  r.date,
+  r.account,
+  r.category || "-",   // ✅
+  r.narration,
+  Number(r.amount)
 ]);
 
 });
@@ -3670,6 +3703,7 @@ let amount=0;
 if(t.type==="receipt" && t.account===name){
 
 type="Inflow";
+category = t.category || "";
 amount=Number(t.amount);
 runningBalance+=amount;
 
