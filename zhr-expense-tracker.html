@@ -1437,7 +1437,6 @@ closePopup();
 
 function editOpening(){
 
-  // 🔐 Only admin allowed
   if(!checkPermission("admin")) return;
 
   let html = `<h3>Modify Opening Balance</h3>
@@ -1446,11 +1445,36 @@ function editOpening(){
 <input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
 `;
 
+  //////////////////////////////////////////////////
+  // Cash / Bank
+  //////////////////////////////////////////////////
+
   accountsList.forEach(acc => {
 
     html += `
       <label>${acc}</label>
       <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+    `;
+
+  });
+
+  //////////////////////////////////////////////////
+  // Balance Sheet Items
+  //////////////////////////////////////////////////
+
+  let bsItems = [
+    "Capital",
+    "Home",
+    "Qardan Given",
+    "Qardan Taken",
+    "Office Reimbursement"
+  ];
+
+  bsItems.forEach(item => {
+
+    html += `
+      <label>${item}</label>
+      <input type="number" id="${item}" value="${openingBalances[item] || 0}">
     `;
 
   });
