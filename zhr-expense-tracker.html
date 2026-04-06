@@ -2526,11 +2526,12 @@ function showPaymentsReport() {
 
     <label>Category</label>
     <select id="paymentCategory">
-      <option>Personal</option>
-      <option>Home</option>
-      <option>Office Reimbursement</option>
-	  <option>Qardan Given</option>
-    </select>
+  <option value="">All</option> 
+  <option>Personal</option>
+  <option>Home</option>
+  <option>Office Reimbursement</option>
+  <option>Qardan Given</option>
+</select>
 
     <label>From Date</label>
     <input type="date" id="fromDate">
@@ -2553,10 +2554,6 @@ function runPaymentReport() {
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if(!category){
-  showToast("Please select Category ❌","error");
-  return;
-}
 
 if(!validateDateRange(fromDate,toDate)) return;
 
@@ -2577,7 +2574,11 @@ sessionStorage.setItem("currentToDate",toDate);
 .filter(t => {
 
   let isPayment = (t.type === "payment" || t.type === "outflow");
-  let isCategory = t.category === category;
+  let isCategory = true;
+
+if(category){
+  isCategory = t.category === category;
+}
 
   let isInRange = true;
 
@@ -2601,12 +2602,13 @@ sessionStorage.setItem("currentToDate",toDate);
 });
 
   let html = `
-    <h3>${category} Payments Report</h3>
+    <h3>${category ? category + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
         <th>Mode</th>
+		<th>Category</th>
         <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
@@ -2620,6 +2622,7 @@ sessionStorage.setItem("currentToDate",toDate);
         <td>${index + 1}</td>
         <td>${p.date}</td>
         <td>${p.account}</td>
+		<td>${p.category || "-"}</td>
         <td>${p.narration}</td>
         <td> ${p.amount}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
@@ -2736,7 +2739,11 @@ function refreshPaymentReport() {
 .filter(t => {
 
   let isPayment = (t.type === "payment" || t.type === "outflow");
-  let isCategory = t.category === category;
+  let isCategory = true;
+
+if(category){
+  isCategory = t.category === category;
+}
 
   let isInRange = true;
 
@@ -2760,12 +2767,13 @@ function refreshPaymentReport() {
 });
 
   let html = `
-    <h3>${category} Payments Report</h3>
+    <h3>${category ? category + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
         <th>Mode</th>
+		<th>Category</th>
         <th>Particular</th>
         <th>Amount</th>
         <th>Edit</th>
@@ -2779,6 +2787,7 @@ function refreshPaymentReport() {
         <td>${index + 1}</td>
         <td>${p.date}</td>
         <td>${p.account}</td>
+		<td>${p.category || "-"}</td>
         <td>${p.narration}</td>
         <td> ${p.amount}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
@@ -3376,13 +3385,17 @@ let category = sessionStorage.getItem("currentCategory");
 
 title = category+"_Payments_Report";
 
-rows.push(["Serial No","Date","Mode","Particular","Amount"]);
+rows.push(["Serial No","Date","Mode","Category","Particular","Amount"]);
 
 let payments = transactionsCache
 .filter(t=>{
 
 let isPayment = (t.type === "payment" || t.type === "outflow");
-let isCategory = t.category === category;
+let isCategory = true;
+
+if(category){
+  isCategory = t.category === category;
+}
 
 return isPayment && isCategory && t.date >= fromDate && t.date <= toDate;
 
@@ -3402,11 +3415,12 @@ payments.forEach((p,i)=>{
 total += Number(p.amount);
 
 rows.push([
-i+1,
-p.date,
-p.account,
-p.narration,
-Number(p.amount)
+  i+1,
+  p.date,
+  p.account,
+  p.category || "-", 
+  p.narration,
+  Number(p.amount)
 ]);
 
 });
