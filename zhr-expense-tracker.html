@@ -4207,22 +4207,6 @@ let ledger = {
   "Qardan Taken":0
 };
 
-let ledgerType = {
-  "Cash": "asset",
-  "Bank": "asset",
-
-  "Qardan Given": "asset",
-  "Office Reimbursement": "asset",
-
-  "Capital": "liability",
-  "Qardan Taken": "liability",
-
-  "Home": "drawing",
-  "Personal": "expense",
-  "Income": "income",
-
-  "Retained Earnings": "liability"
-};
 
 	
 //////////////////////////////////////////////////
@@ -4374,18 +4358,12 @@ let displayName = (name === "Home") ? "Drawings" : name;
 let dr = "";
 let cr = "";
 
-let type = ledgerType[name] || "asset";
-
-if(type === "asset" || type === "expense" || type === "drawing"){
-  if(value !== 0){
-    dr = Math.abs(value);
-    totalDr += Math.abs(value);
-  }
+if(value > 0){
+  dr = value;
+  totalDr += value;
 }else{
-  if(value !== 0){
-    cr = Math.abs(value);
-    totalCr += Math.abs(value);
-  }
+  cr = Math.abs(value);
+  totalCr += Math.abs(value);
 }
 
 rows += `
