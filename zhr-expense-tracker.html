@@ -4217,7 +4217,7 @@ if(value === 0) return;
 //////////////////////////////////////////////////
 
 if(name === "Home"){
-  value = -value; // ✅ invert
+  value = -Math.abs(value);
 }
 
 let dr = "";
