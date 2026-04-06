@@ -4086,7 +4086,7 @@ openPopup(`
 
 	
 //////////////////////////////////////////////////
-// SHOW TRAILBALANCE
+// RUN TRIALBALANCE
 //////////////////////////////////////////////////
 
 function runTrialBalance(){
@@ -4118,63 +4118,71 @@ let ledger = {
 };
 
 //////////////////////////////////////////////////
-// OPENING BALANCE (CASH/BANK)
-// (CALCULATE BALANCE BEFORE FROM DATE)
+// OPENING BALANCE (ACCOUNTS ONLY)
 //////////////////////////////////////////////////
 
 accountsList.forEach(acc=>{
   ledger[acc] = Number(openingBalances[acc] || 0);
 });
 
+//////////////////////////////////////////////////
+// PROCESS TRANSACTIONS
+//////////////////////////////////////////////////
+
 transactionsCache.forEach(t=>{
 
-if(t.date >= fromDate) return;
+// ❗ Ignore after TO date
+if(t.date > toDate) return;
+
+//////////////////////////////////////////////////
+// RECEIPTS
+//////////////////////////////////////////////////
 
 if(t.type === "receipt"){
+
+  // ✅ ALWAYS update account (Balance Sheet)
   ledger[t.account] += Number(t.amount);
+
+  // ensure category exists
+  if(!ledger[t.category]) ledger[t.category] = 0;
+
+  // ✅ CAPITAL / LOAN → FULL (till To Date)
+  if(t.category === "Capital" || t.category === "Qardan Taken"){
+    ledger[t.category] -= Number(t.amount);
+  }
+
+  // ✅ INCOME → ONLY PERIOD
+  else if(t.category === "Income"){
+    if(t.date >= fromDate){
+      ledger[t.category] -= Number(t.amount);
+    }
+  }
+
 }
 
+//////////////////////////////////////////////////
+// PAYMENTS
+//////////////////////////////////////////////////
+
 if(t.type === "payment"){
+
+  // ✅ ALWAYS update account
   ledger[t.account] -= Number(t.amount);
-}
 
-});
+  // ensure category exists
+  if(!ledger[t.category]) ledger[t.category] = 0;
 
-//////////////////////////////////////////////////
-// PROCESS TRANSACTIONS (WITHIN RANGE)
-//////////////////////////////////////////////////
-
-transactionsCache.forEach(t=>{
-
-if(t.date < fromDate || t.date > toDate) return;
-
-//////////////////////////////////////////////////
-// RECEIPT
-//////////////////////////////////////////////////
-
-if(t.type === "receipt"){
-
-// Debit Cash/Bank
-ledger[t.account] += Number(t.amount);
-
-// Credit Category
-if(!ledger[t.category]) ledger[t.category] = 0;
-ledger[t.category] -= Number(t.amount);
-
-}
-
-//////////////////////////////////////////////////
-// PAYMENT
-//////////////////////////////////////////////////
-
-if(t.type === "payment"){
-
-// Credit Cash/Bank
-ledger[t.account] -= Number(t.amount);
-
-// Debit Category
-if(!ledger[t.category]) ledger[t.category] = 0;
-ledger[t.category] += Number(t.amount);
+  // ✅ EXPENSES → ONLY PERIOD
+  if(
+    t.category === "Personal" ||
+    t.category === "Home" ||
+    t.category === "Office Reimbursement" ||
+    t.category === "Qardan Given"
+  ){
+    if(t.date >= fromDate){
+      ledger[t.category] += Number(t.amount);
+    }
+  }
 
 }
 
@@ -4184,7 +4192,7 @@ ledger[t.category] += Number(t.amount);
 // PREPARE TB
 //////////////////////////////////////////////////
 
-let rows = `
+let html = `
 <h3>Trial Balance (${fromDate} to ${toDate})</h3>
 <table class="report-table">
 <tr>
@@ -4214,7 +4222,7 @@ if(value > 0){
   totalCr += Math.abs(value);
 }
 
-rows += `
+html += `
 <tr>
 <td>${name}</td>
 <td>${dr}</td>
@@ -4228,7 +4236,7 @@ rows += `
 // TOTAL
 //////////////////////////////////////////////////
 
-rows += `
+html += `
 <tr>
 <td><b>Total</b></td>
 <td><b>${totalDr}</b></td>
@@ -4236,14 +4244,13 @@ rows += `
 </tr>
 `;
 
-rows += `</table>`;
+html += `</table>`;
 
-document.getElementById("reportOutput").innerHTML = rows;
+document.getElementById("reportOutput").innerHTML = html;
 
 formatAllAmounts();
 
-}
-
+}	
 	
 	
 </script>
