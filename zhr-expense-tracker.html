@@ -4094,7 +4094,6 @@ function runTrialBalance(){
 let fromDate = document.getElementById("tbFrom").value;
 let toDate = document.getElementById("tbTo").value;
 
-// ✅ validation
 if(!validateDateRange(fromDate,toDate)) return;
 
 closePopup();
@@ -4118,7 +4117,7 @@ let ledger = {
 };
 
 //////////////////////////////////////////////////
-// OPENING BALANCE (ACCOUNTS ONLY)
+// OPENING BALANCE
 //////////////////////////////////////////////////
 
 accountsList.forEach(acc=>{
@@ -4131,7 +4130,6 @@ accountsList.forEach(acc=>{
 
 transactionsCache.forEach(t=>{
 
-// ❗ Ignore after TO date
 if(t.date > toDate) return;
 
 //////////////////////////////////////////////////
@@ -4140,18 +4138,19 @@ if(t.date > toDate) return;
 
 if(t.type === "receipt"){
 
-  // ✅ ALWAYS update account (Balance Sheet)
   ledger[t.account] += Number(t.amount);
 
-  // ensure category exists
   if(!ledger[t.category]) ledger[t.category] = 0;
 
-  // ✅ CAPITAL / LOAN → FULL (till To Date)
-  if(t.category === "Capital" || t.category === "Qardan Taken"){
+  // ✅ Balance Sheet (FULL)
+  if(
+    t.category === "Capital" ||
+    t.category === "Qardan Taken"
+  ){
     ledger[t.category] -= Number(t.amount);
   }
 
-  // ✅ INCOME → ONLY PERIOD
+  // ✅ Income (PERIOD)
   else if(t.category === "Income"){
     if(t.date >= fromDate){
       ledger[t.category] -= Number(t.amount);
@@ -4166,19 +4165,21 @@ if(t.type === "receipt"){
 
 if(t.type === "payment"){
 
-  // ✅ ALWAYS update account
   ledger[t.account] -= Number(t.amount);
 
-  // ensure category exists
   if(!ledger[t.category]) ledger[t.category] = 0;
 
-  // ✅ EXPENSES → ONLY PERIOD
+  // ✅ BALANCE SHEET (FULL)
   if(
-    t.category === "Personal" ||
-    t.category === "Home" ||
+    t.category === "Qardan Given" ||
     t.category === "Office Reimbursement" ||
-    t.category === "Qardan Given"
+    t.category === "Home"
   ){
+    ledger[t.category] += Number(t.amount);
+  }
+
+  // ✅ EXPENSE (PERIOD)
+  else if(t.category === "Personal"){
     if(t.date >= fromDate){
       ledger[t.category] += Number(t.amount);
     }
@@ -4210,6 +4211,14 @@ Object.keys(ledger).forEach(name=>{
 let value = ledger[name];
 
 if(value === 0) return;
+
+//////////////////////////////////////////////////
+// 🔥 SPECIAL LOGIC FOR HOME
+//////////////////////////////////////////////////
+
+if(name === "Home"){
+  value = -value; // ✅ invert
+}
 
 let dr = "";
 let cr = "";
@@ -4250,7 +4259,8 @@ document.getElementById("reportOutput").innerHTML = html;
 
 formatAllAmounts();
 
-}	
+}
+
 	
 	
 </script>
