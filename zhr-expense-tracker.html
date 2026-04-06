@@ -2462,7 +2462,7 @@ sessionStorage.setItem("currentFromDate",fromDate);
   let isCategory = true;
 
 if(category){
-  isCategory = t.category === category;
+  isCategory = (t.category || "") === category;
 }
 
 return isReceipt && isCategory && isInRange;
@@ -3115,7 +3115,7 @@ let category = sessionStorage.getItem("currentCategory");
   let isCategory = true;
 
 if(category){
-  isCategory = t.category === category;
+  isCategory = (t.category || "") === category;
 }
 
 return isReceipt && isCategory && isInRange;
@@ -3335,7 +3335,7 @@ let isReceipt = (t.type === "receipt" || t.type === "inflow");
 let category = sessionStorage.getItem("currentCategory");
 
 return isReceipt &&
-       (!category || t.category === category) &&
+       (!category || (t.category || "") === category) &&
        t.date >= fromDate &&
        t.date <= toDate;
 
