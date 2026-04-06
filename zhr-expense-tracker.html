@@ -4195,6 +4195,34 @@ else if(t.category === "Personal"){
 });
 
 //////////////////////////////////////////////////
+// RETAINED EARNINGS (BEFORE FROM DATE)
+//////////////////////////////////////////////////
+
+let retained = 0;
+
+transactionsCache.forEach(t=>{
+
+if(t.date >= fromDate) return;
+
+// Income increases profit
+if(t.type === "receipt" && t.category === "Income"){
+  retained += Number(t.amount);
+}
+
+// Personal expense reduces profit
+if(t.type === "payment" && t.category === "Personal"){
+  retained -= Number(t.amount);
+}
+
+});
+
+// ✅ Add to ledger only if exists
+if(retained !== 0){
+  ledger["Retained Earnings"] = retained;
+}
+
+	
+//////////////////////////////////////////////////
 // PREPARE TB
 //////////////////////////////////////////////////
 
