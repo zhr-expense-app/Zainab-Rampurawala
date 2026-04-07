@@ -4462,14 +4462,27 @@ if(ledgerList.length === 0){
 ledgerList.forEach(l=>{
 
 html += `
-<div style="display:flex;justify-content:space-between;margin-bottom:10px;padding:8px;border:1px solid #eee;border-radius:6px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px;border:1px solid #eee;border-radius:6px;">
+
   <div>
     <b>${l.name}</b><br>
     <small>${l.group} | ${l.nature}</small>
   </div>
+
+  <div style="display:flex;gap:8px;">
+
+    <button onclick="editLedger('${l.id}')">
+      <i data-lucide="edit"></i>
+    </button>
+
+    <button onclick="confirmDeleteLedger('${l.id}')">
+      <i data-lucide="trash"></i>
+    </button>
+
+  </div>
+
 </div>
 `;
-
 });
 
 }
@@ -4603,6 +4616,164 @@ async function addLedger(){
 
   }
 }
+
+//////////////////////////////////////////////////
+// EDIT LEDGER
+//////////////////////////////////////////////////
+	
+function editLedger(id){
+
+let l = ledgerList.find(x => x.id === id);
+
+let html = `
+<h3>Edit Ledger</h3>
+
+<label>Name</label>
+<input type="text" id="ledgerName" value="${l.name}">
+
+<label>Group</label>
+<select id="ledgerGroup" onchange="autoSetNature()">
+  <option ${l.group==="Cash & Bank"?"selected":""}>Cash & Bank</option>
+  <option ${l.group==="Capital"?"selected":""}>Capital</option>
+  <option ${l.group==="Income"?"selected":""}>Income</option>
+  <option ${l.group==="Expense"?"selected":""}>Expense</option>
+  <option ${l.group==="Asset"?"selected":""}>Asset</option>
+  <option ${l.group==="Liability"?"selected":""}>Liability</option>
+</select>
+
+<label>Nature</label>
+<input type="text" id="ledgerNature" value="${l.nature}" readonly>
+
+<label>Opening Balance</label>
+<input type="number" id="openingBalance" value="${l.openingBalance || 0}">
+
+<label>Opening Type</label>
+<select id="openingType">
+  <option ${l.openingType==="debit"?"selected":""}>debit</option>
+  <option ${l.openingType==="credit"?"selected":""}>credit</option>
+</select>
+
+<label>Opening Date</label>
+<input type="date" id="openingDate" value="${l.openingDate || ""}">
+
+<button onclick="updateLedger('${id}')">Update Ledger</button>
+`;
+
+openPopup(html);
+
+setTimeout(autoSetNature,100);
+}
+
+
+//////////////////////////////////////////////////
+// UPDATE LEDGER
+//////////////////////////////////////////////////
+	
+async function updateLedger(id){
+
+  if(!checkPermission("admin")) return;
+
+  let name = document.getElementById("ledgerName").value.trim();
+  let group = document.getElementById("ledgerGroup").value;
+  let nature = document.getElementById("ledgerNature").value;
+  let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
+  let openingType = document.getElementById("openingType").value;
+  let openingDate = document.getElementById("openingDate").value;
+
+  if(!name){
+    showToast("Enter ledger name","error");
+    return;
+  }
+
+  try{
+
+    showLoader();
+
+    await db.collection("ledgers").doc(id).update({
+      name,
+      group,
+      nature,
+      openingBalance,
+      openingType,
+      openingDate
+    });
+
+    hideLoader();
+    showToast("Ledger Updated ✏️");
+
+    loadLedgers(()=>{
+      showLedgerManager(); // ✅ auto refresh popup
+    });
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Update failed ❌","error");
+
+  }
+}
+	
+//////////////////////////////////////////////////
+// CONFIRM DELETE LEDGER
+//////////////////////////////////////////////////
+	
+function confirmDeleteLedger(id){
+
+openPopup(`
+<h3>Confirm Delete</h3>
+
+<p>Enter Admin Password to Delete</p>
+
+<input type="password" id="adminPassword" placeholder="Admin Password">
+
+<button onclick="deleteLedger('${id}')">Delete</button>
+`);
+}
+
+//////////////////////////////////////////////////
+// DELETE LEDGER
+//////////////////////////////////////////////////
+	
+async function deleteLedger(id){
+
+  if(!checkPermission("admin")) return;
+
+  let password = document.getElementById("adminPassword").value;
+
+  let user = auth.currentUser;
+
+  try{
+
+    showLoader();
+
+    // 🔐 Re-authenticate (VERY IMPORTANT)
+    let credential = firebase.auth.EmailAuthProvider.credential(
+      user.email,
+      password
+    );
+
+    await user.reauthenticateWithCredential(credential);
+
+    // ✅ Now delete
+    await db.collection("ledgers").doc(id).delete();
+
+    hideLoader();
+    showToast("Ledger Deleted 🗑️");
+
+    loadLedgers(()=>{
+      showLedgerManager(); // auto refresh
+    });
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Wrong password or delete failed ❌","error");
+
+  }
+}
+
 	
 	
 </script>
