@@ -604,7 +604,36 @@ text-align:left;
 text-align:right;
 }
 
+@media screen and (max-width:768px){
 
+/* HORIZONTAL SCROLL BUTTONS */
+.action-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  
+  -webkit-overflow-scrolling:touch;
+
+  justify-content:flex-start;
+  padding:0 10px;
+  gap:10px;
+
+  scroll-behavior:smooth;
+  scroll-snap-type:x mandatory;
+}
+
+.action-buttons::-webkit-scrollbar{
+  display:none;
+}
+
+.action-buttons button{
+  flex:0 0 auto;
+  white-space:nowrap;
+  scroll-snap-align:start;
+}
+}
+
+
+	  
 	  
 
 </style>
