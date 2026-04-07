@@ -481,9 +481,9 @@ font-size:14px;
 .action-buttons{
   display:flex;
   flex-wrap:wrap;
+  overflow-x:visible;   /* ✅ FIX */
   justify-content:center;
   gap:10px;
-  margin-bottom:20px;
 }
 
 /* MODERN BUTTON */
@@ -759,6 +759,10 @@ text-align:right;
   <i data-lucide="wallet"></i> Opening Balance
 </button>
 
+<button onclick="manageLedgers()">
+  <i data-lucide="book"></i> Ledgers
+</button>
+	
 </div>
 
 
