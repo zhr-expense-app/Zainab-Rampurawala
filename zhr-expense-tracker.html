@@ -602,7 +602,7 @@ text-align:right;
 /* HORIZONTAL SCROLL BUTTONS */
 .action-buttons{
   display:flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
 
@@ -4404,15 +4404,16 @@ function manageLedgers(){
 
   if(!checkPermission("admin")) return;
 
-  showLedgerManager();
+  loadLedgers(showLedgerManager); // ✅ perfect solution
 }
 
+	
 //////////////////////////////////////////////////
 // LOAD LEDGERS
 //////////////////////////////////////////////////
 
 	
-function loadLedgers(){
+function loadLedgers(callback){
 
   db.collection("ledgers").onSnapshot(snapshot=>{
 
@@ -4421,6 +4422,8 @@ function loadLedgers(){
     snapshot.forEach(doc=>{
       ledgerList.push({id:doc.id, ...doc.data()});
     });
+
+    if(callback) callback();   // ✅ trigger after load
 
   });
 
@@ -4433,7 +4436,24 @@ function loadLedgers(){
 	
 function showLedgerManager(){
 
-let html = `<h3>Manage Ledgers</h3>`;
+let html = `<h3>Manage Ledgers</h3>
+
+<button onclick="showAddLedgerForm()">➕ Add Ledger</button>
+
+<hr>
+
+<h4>Existing Ledgers</h4>
+`;
+
+//////////////////////////////////////////////////
+// EMPTY STATE
+//////////////////////////////////////////////////
+
+if(ledgerList.length === 0){
+
+  html += `<p>No ledgers created yet</p>`;
+
+}else{
 
 //////////////////////////////////////////////////
 // EXISTING LEDGERS LIST
@@ -4442,7 +4462,7 @@ let html = `<h3>Manage Ledgers</h3>`;
 ledgerList.forEach(l=>{
 
 html += `
-<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;padding:8px;border:1px solid #eee;border-radius:6px;">
   <div>
     <b>${l.name}</b><br>
     <small>${l.group} | ${l.nature}</small>
@@ -4452,14 +4472,19 @@ html += `
 
 });
 
+}
+
+openPopup(html);
+}
+
 //////////////////////////////////////////////////
 // ADD NEW LEDGER
 //////////////////////////////////////////////////
 
-html += `
-<hr>
+function showAddLedgerForm(){
 
-<h4>Add New Ledger</h4>
+let html = `
+<h3>Add Ledger</h3>
 
 <label>Name</label>
 <input type="text" id="ledgerName">
@@ -4489,7 +4514,7 @@ html += `
 <label>Opening Date</label>
 <input type="date" id="openingDate">
 
-<button onclick="addLedger()">Add Ledger</button>
+<button onclick="addLedger()">Save Ledger</button>
 `;
 
 openPopup(html);
@@ -4548,22 +4573,35 @@ async function addLedger(){
     return;
   }
 
-  showLoader();
+  try{
 
-  await db.collection("ledgers").add({
-    name,
-    group,
-    nature,
-    openingBalance,
-    openingType,
-    openingDate,
-    active:true
-  });
+    showLoader();
 
-  hideLoader();
-  showToast("Ledger Added ✅");
+    await db.collection("ledgers").add({
+      name,
+      group,
+      nature,
+      openingBalance,
+      openingType,
+      openingDate,
+      active:true
+    });
 
-  showLedgerManager(); // refresh
+    hideLoader();
+    showToast("Ledger Added ✅");
+
+    // ✅ reload list properly
+    loadLedgers(()=>{
+      showLedgerManager();
+    });
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Error saving ledger ❌","error");
+
+  }
 }
 	
 	
