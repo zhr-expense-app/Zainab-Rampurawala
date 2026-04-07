@@ -694,6 +694,10 @@ text-align:right;
   <i data-lucide="settings"></i> Accounts
 </button>
 
+<button onclick="manageLedgers()">
+  <i data-lucide="book"></i> Ledgers
+</button>		
+
 <button onclick="confirmLogout()" style="background:green;">
   <i data-lucide="log-out"></i> Logout
 </button>
@@ -811,6 +815,7 @@ let personalExpenseChart = null;
 let accountsList = [];
 let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
+let ledgerList = [];	
 
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -1143,6 +1148,7 @@ async function showDashboard() {
   loadOpeningBalance();
   loadTransactions();
 loadAccounts();
+	loadLedgers(); 
 
 
 
@@ -4394,6 +4400,177 @@ document.getElementById("reportOutput").innerHTML = rows;
 
 formatAllAmounts();
 
+}
+
+//////////////////////////////////////////////////
+// MANAGE LEDGERS
+//////////////////////////////////////////////////
+	
+
+function manageLedgers(){
+
+  if(!checkPermission("admin")) return;
+
+  showLedgerManager();
+}
+
+//////////////////////////////////////////////////
+// LOAD LEDGERS
+//////////////////////////////////////////////////
+
+	
+function loadLedgers(){
+
+  db.collection("ledgers").onSnapshot(snapshot=>{
+
+    ledgerList = [];
+
+    snapshot.forEach(doc=>{
+      ledgerList.push({id:doc.id, ...doc.data()});
+    });
+
+  });
+
+}	
+
+//////////////////////////////////////////////////
+// SHOW LEDGER MANAGER
+//////////////////////////////////////////////////
+
+	
+function showLedgerManager(){
+
+let html = `<h3>Manage Ledgers</h3>`;
+
+//////////////////////////////////////////////////
+// EXISTING LEDGERS LIST
+//////////////////////////////////////////////////
+
+ledgerList.forEach(l=>{
+
+html += `
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+  <div>
+    <b>${l.name}</b><br>
+    <small>${l.group} | ${l.nature}</small>
+  </div>
+</div>
+`;
+
+});
+
+//////////////////////////////////////////////////
+// ADD NEW LEDGER
+//////////////////////////////////////////////////
+
+html += `
+<hr>
+
+<h4>Add New Ledger</h4>
+
+<label>Name</label>
+<input type="text" id="ledgerName">
+
+<label>Group</label>
+<select id="ledgerGroup" onchange="autoSetNature()">
+  <option>Cash & Bank</option>
+  <option>Capital</option>
+  <option>Income</option>
+  <option>Expense</option>
+  <option>Asset</option>
+  <option>Liability</option>
+</select>
+
+<label>Nature</label>
+<input type="text" id="ledgerNature" readonly>
+
+<label>Opening Balance</label>
+<input type="number" id="openingBalance">
+
+<label>Opening Type</label>
+<select id="openingType">
+  <option>debit</option>
+  <option>credit</option>
+</select>
+
+<label>Opening Date</label>
+<input type="date" id="openingDate">
+
+<button onclick="addLedger()">Add Ledger</button>
+`;
+
+openPopup(html);
+
+setTimeout(autoSetNature,100);
+}
+	
+//////////////////////////////////////////////////
+// AUTO SET LEDGER NATURE
+//////////////////////////////////////////////////
+
+function autoSetNature(){
+
+  let group = document.getElementById("ledgerGroup").value;
+
+  let nature = "debit";
+
+  if(group === "Liability" || group === "Capital" || group === "Income"){
+    nature = "credit";
+  }
+
+  document.getElementById("ledgerNature").value = nature;
+
+  //////////////////////////////////////////////////
+  // ✅ DISABLE OPENING FOR INCOME / EXPENSE
+  //////////////////////////////////////////////////
+
+  if(group === "Income" || group === "Expense"){
+    document.getElementById("openingBalance").value = 0;
+    document.getElementById("openingBalance").disabled = true;
+    document.getElementById("openingType").disabled = true;
+  }else{
+    document.getElementById("openingBalance").disabled = false;
+    document.getElementById("openingType").disabled = false;
+  }
+
+}
+
+//////////////////////////////////////////////////
+// ADD LEDGER
+//////////////////////////////////////////////////
+
+async function addLedger(){
+
+  if(!checkPermission("admin")) return;
+
+  let name = document.getElementById("ledgerName").value.trim();
+  let group = document.getElementById("ledgerGroup").value;
+  let nature = document.getElementById("ledgerNature").value;
+  let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
+  let openingType = document.getElementById("openingType").value;
+  let openingDate = document.getElementById("openingDate").value;
+
+  if(!name){
+    showToast("Enter ledger name","error");
+    return;
+  }
+
+  showLoader();
+
+  await db.collection("ledgers").add({
+    name,
+    group,
+    nature,
+    openingBalance,
+    openingType,
+    openingDate,
+    active:true
+  });
+
+  hideLoader();
+  showToast("Ledger Added ✅");
+
+  showLedgerManager(); // refresh
 }
 	
 	
