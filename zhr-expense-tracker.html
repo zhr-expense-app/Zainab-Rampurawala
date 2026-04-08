@@ -2237,28 +2237,39 @@ function renderPersonalMonthlySummary(){
 //////////////////////////////////////////////////
 
 
-function showForm(type) {
+function showForm(type){
 
-  if (type === "receipt") {
+//////////////////////////////////////////////////
+// RECEIPT
+//////////////////////////////////////////////////
+
+if(type === "receipt"){
+
+  let ledgerOptions = ledgerList
+    .filter(l =>
+      ["Capital","Income","Liability"].includes(l.group)
+    )
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
+
+  let cashOptions = ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
+
   openPopup(`
     <h3>Record Receipt</h3>
-
-    <label>Mode</label>
-    <select id="account">
-      ${getAccountOptions()}
-    </select>
-
-    <label>Category</label>
-    <select id="category">
-      <option>Capital</option>
-      <option>Income</option>
-      <option>Qardan Taken</option>
-    </select>
 
     <label>Date</label>
     <input type="date" id="date">
 
-    <label>Particular</label>
+    <label>Ledger (Credit)</label>
+    <select id="creditLedger">${ledgerOptions}</select>
+
+    <label>Mode (Cash/Bank - Debit)</label>
+    <select id="debitLedger">${cashOptions}</select>
+
+    <label>Narration</label>
     <input type="text" id="narration">
 
     <label>Amount</label>
@@ -2268,87 +2279,161 @@ function showForm(type) {
   `);
 }
 
-  if (type === "payment") {
-    openPopup(`
-      <h3>Record Payment</h3>
-      <label>Mode</label>
-      <select id="account">
-        ${getAccountOptions()}
-      </select>
+//////////////////////////////////////////////////
+// PAYMENT
+//////////////////////////////////////////////////
 
-      <label>Category</label>
-      <select id="category">
-        <option>Personal</option>
-        <option>Home</option>
-        <option>Office Reimbursement</option>
-		<option>Qardan Given</option>
-      </select>
+if(type === "payment"){
 
-      <label>Date</label>
-      <input type="date" id="date">
+  let ledgerOptions = ledgerList
+    .filter(l =>
+      ["Expense","Asset","Capital"].includes(l.group)
+    )
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
 
-      <label>Particular</label>
-      <input type="text" id="narration">
+  let cashOptions = ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
 
-      <label>Amount</label>
-      <input type="number" id="amount">
+  openPopup(`
+    <h3>Record Payment</h3>
 
-      <button onclick="savePayment()">Save</button>
-    `);
-  }
+    <label>Date</label>
+    <input type="date" id="date">
 
-  if (type === "contra") {
-    openPopup(`
-      <h3>Record Contra</h3>
+    <label>Ledger (Debit)</label>
+    <select id="debitLedger">${ledgerOptions}</select>
 
-      <label>From Account</label>
-      <select id="from">
-        ${getAccountOptions()}
-      </select>
+    <label>Mode (Cash/Bank - Credit)</label>
+    <select id="creditLedger">${cashOptions}</select>
 
-      <label>To Account</label>
-      <select id="to">
-        ${getAccountOptions()}
-      </select>
+    <label>Narration</label>
+    <input type="text" id="narration">
 
-      <label>Date</label>
-      <input type="date" id="date">
+    <label>Amount</label>
+    <input type="number" id="amount">
 
-      <label>Particular</label>
-      <input type="text" id="narration">
+    <button onclick="savePayment()">Save</button>
+  `);
+}
 
-      <label>Amount</label>
-      <input type="number" id="amount">
+//////////////////////////////////////////////////
+// JOURNAL (REPLACES CONTRA)
+//////////////////////////////////////////////////
 
-      <button onclick="saveContra()">Save</button>
-    `);
-  }
+if(type === "journal"){
+
+  let allLedgers = ledgerList
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
+
+  openPopup(`
+    <h3>Journal Entry</h3>
+
+    <label>Date</label>
+    <input type="date" id="date">
+
+    <label>Debit Ledger</label>
+    <select id="debitLedger">${allLedgers}</select>
+
+    <label>Credit Ledger</label>
+    <select id="creditLedger">${allLedgers}</select>
+
+    <label>Narration</label>
+    <input type="text" id="narration">
+
+    <label>Amount</label>
+    <input type="number" id="amount">
+
+    <button onclick="saveJournal()">Save</button>
+  `);
+}
+
 }
 
 
+//////////////////////////////////////////////////
+// GET NEXT TRANSACTION NUMBER
+//////////////////////////////////////////////////
 
+async function getNextTransactionNumber(type){
 
+  let docRef = db.collection("counters").doc("transactions");
+
+  return db.runTransaction(async (transaction) => {
+
+    let doc = await transaction.get(docRef);
+
+    if(!doc.exists){
+      transaction.set(docRef,{
+        receipt:0,
+        payment:0,
+        journal:0
+      });
+    }
+
+    let data = doc.exists ? doc.data() : {
+      receipt:0,
+      payment:0,
+      journal:0
+    };
+
+    data[type] += 1;
+
+    transaction.update(docRef, data);
+
+    let prefix = {
+      receipt: "R",
+      payment: "P",
+      journal: "J"
+    };
+
+    let number = data[type].toString().padStart(4,"0");
+
+    return `${prefix[type]}-${number}`;
+
+  });
+
+}
+
+//////////////////////////////////////////////////
+// HELPER FUNCTION
+//////////////////////////////////////////////////
+	
+function isCashBankLedger(ledgerName){
+  let l = ledgerList.find(x => x.name === ledgerName);
+  return l && l.group === "Cash & Bank";
+}
+	
 //////////////////////////////////////////////////
 // SAVE RECEIPT
 //////////////////////////////////////////////////
 
-async function saveReceipt() {
+async function saveReceipt(){
 
   if(!checkPermission("write")) return;
 
-  let account = document.getElementById("account").value;
-  let category = document.getElementById("category").value; // ✅ NEW
   let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;   // Cash / Bank
+  let creditLedger = document.getElementById("creditLedger").value; // Capital / Income / Liability
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
+
 
   if(!date){
     showToast("Please select Date ❌","error");
     return;
   }
 
-  if (!account || !category || !date || !narration || isNaN(amount)) {
+  if (!debitLedger || !creditLedger || !narration || !amount) {
     showToast("All fields are mandatory","error");
+    return;
+  }
+
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
     return;
   }
 
@@ -2357,109 +2442,64 @@ async function saveReceipt() {
     return;
   }
 
-  showLoader();
+  try{
 
-  await db.collection("transactions").add({
-    type: "receipt",
-    account: account,
-    category: category, // ✅ NEW
-    amount: amount,
-    date: date,
-    narration: narration
-  });
+    showLoader();
 
-  hideLoader();
-  showToast("Receipt Saved ✅");
-  closePopup();
+    let txnNumber = await getNextTransactionNumber("receipt");
+
+    await db.collection("transactions").add({
+      transactionNumber: txnNumber,   // ✅ IMPORTANT
+      type: "receipt",
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
+
+    hideLoader();
+    showToast("Receipt Saved ✅");
+    closePopup();
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Error saving receipt ❌","error");
+
+  }
 }
+	
+
 
 //////////////////////////////////////////////////
 // SAVE PAYMENT
 //////////////////////////////////////////////////
 
-async function savePayment() {
+async function savePayment(){
 
-	if(!checkPermission("write")) return;
+  if(!checkPermission("write")) return;
 
-  let account = document.getElementById("account").value;
-  let category = document.getElementById("category").value;
   let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;   // Expense / Asset / Capital
+  let creditLedger = document.getElementById("creditLedger").value; // Cash / Bank
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-// ✅ ADD HERE
-if(!date){
-  showToast("Please select Date ❌","error");
-  return;
-}
 
-	
-  if (!account || !category || !date || !narration || isNaN(amount)) {
-    showToast("All fields are mandatory","error");
-    document.getElementById("amount").focus();
-	  return;
-  }
-
-  if (amount <= 0) {
-    showToast("Amount must be greater than 0","error");
+  if(!date){
+    showToast("Please select Date ❌","error");
     return;
   }
 
-  let balance = getCurrentBalance(account);
-
-  if (balance < amount) {
-    showToast("Insufficient balance in " + account,"error");
+  if (!debitLedger || !creditLedger || !narration || !amount) {
+    showToast("All fields are mandatory","error");
     return;
   }
 
-showLoader();
-	
-  await db.collection("transactions").add({
-    type: "payment",
-    account: account,
-    category: category,
-    date: date,
-    narration: narration,
-    amount: amount
-  });
-
-hideLoader();
-  showToast("Payment Saved ✅");
-	
-  closePopup();
-}
-
-
-
-//////////////////////////////////////////////////
-// Apply Validation for Contra
-//////////////////////////////////////////////////
-
-async function saveContra() {
-
-	if(!checkPermission("write")) return;
-
-  let from = document.getElementById("from").value;
-  let to = document.getElementById("to").value;
-  let date = document.getElementById("date").value;
-  let narration = document.getElementById("narration").value.trim();
-  let amount = Number(document.getElementById("amount").value);
-
-// ✅ ADD HERE
-if(!date){
-  showToast("Please select Date ❌","error");
-  return;
-}
-
-	
-  if (!from || !to || !date || !narration || !amount) {
-    showToast("All fields are mandatory","error");
-    document.getElementById("amount").focus();
-	  return;
-  }
-
-  if (from === to) {
-    showToast("From and To account cannot be the same ❌","error");
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
     return;
   }
 
@@ -2468,28 +2508,118 @@ if(!date){
     return;
   }
 
-  let balance = getCurrentBalance(from);
+
+  let balance = getCurrentBalance(creditLedger);
 
   if (balance < amount) {
-    showToast("Insufficient balance in " + from + " ❌","error");
+    showToast("Insufficient balance in " + creditLedger + " ❌","error");
     return;
   }
 
-showLoader();
-	
-  await db.collection("transactions").add({
-    type: "contra",
-    from: from,
-    to: to,
-    date: date,
-    narration: narration,
-    amount: amount
-  });
-hideLoader();
-  showToast("Contra Saved ✅");
-  closePopup();
-}
+  try{
 
+    showLoader();
+
+    let txnNumber = await getNextTransactionNumber("payment");
+
+    await db.collection("transactions").add({
+      transactionNumber: txnNumber,   // ✅ IMPORTANT
+      type: "payment",
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
+
+    hideLoader();
+    showToast("Payment Saved ✅");
+    closePopup();
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Error saving payment ❌","error");
+
+  }
+}
+	
+
+//////////////////////////////////////////////////
+// SAVE JOURNAL (REPLACES CONTRA)
+//////////////////////////////////////////////////
+
+async function saveJournal(){
+
+  if(!checkPermission("write")) return;
+
+  let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;
+  let creditLedger = document.getElementById("creditLedger").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
+
+
+  if(!date){
+    showToast("Please select Date ❌","error");
+    return;
+  }
+
+  if (!debitLedger || !creditLedger || !narration || !amount) {
+    showToast("All fields are mandatory","error");
+    return;
+  }
+
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
+    return;
+  }
+
+  if (amount <= 0) {
+    showToast("Amount must be greater than 0","error");
+    return;
+  }
+
+
+  if(isCashBankLedger(creditLedger)){
+
+    let balance = getCurrentBalance(creditLedger);
+
+    if(balance < amount){
+      showToast(creditLedger + " cannot go negative ❌","error");
+      return;
+    }
+  }
+
+  try{
+
+    showLoader();
+
+    let txnNumber = await getNextTransactionNumber("journal");
+
+    await db.collection("transactions").add({
+      transactionNumber: txnNumber,
+      type: "journal",
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
+
+    hideLoader();
+    showToast("Journal Saved ✅");
+    closePopup();
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Error saving journal ❌","error");
+
+  }
+}
 
 //////////////////////////////////////////////////
 // RECEIPTS REPORT (DISPLAY BELOW)
@@ -2733,33 +2863,39 @@ formatAllAmounts();
 }
 
 //////////////////////////////////////////////////
-// EDIT PAYMENT (FULL OPTIONS)
+// EDIT PAYMENT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-function editPayment(id) {
+function editPayment(id){
 
   let t = transactionsCache.find(x => x.id === id);
+
+
+  let debitOptions = ledgerList
+    .filter(l => ["Expense","Asset","Capital"].includes(l.group))
+    .map(l => `<option ${l.name===t.debitLedger?"selected":""}>${l.name}</option>`)
+    .join("");
+
+
+  let creditOptions = ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .map(l => `<option ${l.name===t.creditLedger?"selected":""}>${l.name}</option>`)
+    .join("");
+
 
   openPopup(`
     <h3>Edit Payment</h3>
 
-    <label>Mode</label>
-    <select id="account">
-  ${getAccountOptions(t.account)}
-</select>
-
-    <label>Category</label>
-    <select id="category">
-      <option ${t.category==="Personal"?"selected":""}>Personal</option>
-      <option ${t.category==="Home"?"selected":""}>Home</option>
-      <option ${t.category==="Office Reimbursement"?"selected":""}>Office Reimbursement</option>
-	  <option ${t.category==="Qardan Given"?"selected":""}>Qardan Given</option>
-    </select>
-
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Particular</label>
+    <label>Ledger (Debit)</label>
+    <select id="debitLedger">${debitOptions}</select>
+
+    <label>Mode (Credit - Cash/Bank)</label>
+    <select id="creditLedger">${creditOptions}</select>
+
+    <label>Narration</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
@@ -2768,58 +2904,76 @@ function editPayment(id) {
     <button onclick="updatePayment('${id}')">Update</button>
   `);
 }
-
 //////////////////////////////////////////////////
-// UPDATE PAYMENT
+// UPDATE PAYMENT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-async function updatePayment(id) {
+async function updatePayment(id){
 
-	if(!checkPermission("write")) return;
+  if(!checkPermission("write")) return;
 
-  let account = document.getElementById("account").value;
-let category = document.getElementById("category").value;
-let date = document.getElementById("date").value;
-let narration = document.getElementById("narration").value.trim();
-let amount = Number(document.getElementById("amount").value);
+  let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;   // Expense / Asset / Capital
+  let creditLedger = document.getElementById("creditLedger").value; // Cash / Bank
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
 
-if (!account || !category || !date || !narration || isNaN(amount)) {
-  showToast("All fields are mandatory","error");
-  document.getElementById("amount").focus();
-  return;
-}
 
-if (amount <= 0) {
-  showToast("Amount must be greater than 0","error");
-  return;
-}
-
-  let balance = getBalanceExcludingTransaction(account, id);
-
-  if (balance < amount) {
-    showToast("Insufficient balance in " + account,"error");
+  if(!date){
+    showToast("Please select Date ❌","error");
     return;
   }
 
-	  showLoader();
+  if (!debitLedger || !creditLedger || !narration || !amount) {
+    showToast("All fields are mandatory","error");
+    return;
+  }
 
-  await db.collection("transactions").doc(id).update({
-    account: account,
-    category: document.getElementById("category").value,
-    date: document.getElementById("date").value,
-    narration: document.getElementById("narration").value,
-    amount: amount
-  });
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
+    return;
+  }
 
-  hideLoader();
-showToast("Payment Updated ✏️");
+  if (amount <= 0) {
+    showToast("Amount must be greater than 0","error");
+    return;
+  }
 
-closePopup();
 
-  // reload report with same filter
-  setTimeout(refreshPaymentReport,300);
+  let balance = getCurrentBalance(creditLedger);
+
+  if (balance < amount) {
+    showToast("Insufficient balance in " + creditLedger,"error");
+    return;
+  }
+
+  try{
+
+    showLoader();
+
+    await db.collection("transactions").doc(id).update({
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
+
+    hideLoader();
+    showToast("Payment Updated ✏️");
+
+    closePopup();
+
+    setTimeout(refreshPaymentReport,300);
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Update failed ❌","error");
+
+  }
 }
-
 //////////////////////////////////////////////////
 // REFRESH PAYMENT REPORT WITH SAME FILTER
 //////////////////////////////////////////////////
@@ -2943,96 +3097,120 @@ if(!validateDateRange(fromDate,toDate)) return;
 
 
 //////////////////////////////////////////////////
-// EDIT CONTRA (FULL ENTRY OPTIONS)
+// EDIT JOURNAL (REPLACES CONTRA)
 //////////////////////////////////////////////////
 
-function editContra(id) {
+function editJournal(id){
 
   let t = transactionsCache.find(x => x.id === id);
 
+
+  let debitOptions = ledgerList
+    .map(l => `<option ${l.name===(t.debitLedger || "")?"selected":""}>${l.name}</option>`)
+    .join("");
+
+  let creditOptions = ledgerList
+    .map(l => `<option ${l.name===(t.creditLedger || "")?"selected":""}>${l.name}</option>`)
+    .join("");
+
+
   openPopup(`
-    <h3>Edit Contra</h3>
-
-    <label>From Account</label>
-    <select id="from">
-  ${getAccountOptions(t.from)}
-</select>
-
-    <label>To Account</label>
-    <select id="to">
-  ${getAccountOptions(t.to)}
-</select>
+    <h3>Edit Journal</h3>
 
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Particular</label>
+    <label>Debit Ledger</label>
+    <select id="debitLedger">${debitOptions}</select>
+
+    <label>Credit Ledger</label>
+    <select id="creditLedger">${creditOptions}</select>
+
+    <label>Narration</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
     <input type="number" id="amount" value="${t.amount}">
 
-    <button onclick="updateContra('${id}')">Update</button>
+    <button onclick="updateJournal('${id}')">Update</button>
   `);
 }
 
 //////////////////////////////////////////////////
-// UPDATE CONTRA
+// UPDATE JOURNAL
 //////////////////////////////////////////////////
 
-async function updateContra(id) {
+async function updateJournal(id){
 
-	if(!checkPermission("write")) return;										   
+  if(!checkPermission("write")) return;
 
-  let from = document.getElementById("from").value;
-let to = document.getElementById("to").value;
-let date = document.getElementById("date").value;
-let narration = document.getElementById("narration").value.trim();
-let amount = Number(document.getElementById("amount").value);
+  let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;
+  let creditLedger = document.getElementById("creditLedger").value;
+  let narration = document.getElementById("narration").value.trim();
+  let amount = Number(document.getElementById("amount").value);
 
-if (!from || !to || !date || !narration || !amount) {
-  showToast("All fields are mandatory","error");
-  document.getElementById("amount").focus();
-  return;
-}
 
-if (from === to) {
-  showToast("From and To account cannot be the same ❌","error");
-  return;
-}
-
-if (amount <= 0) {
-  showToast("Amount must be greater than 0","error");
-  return;
-}
-
-  let balance = getBalanceExcludingTransaction(from, id);
-
-  if (balance < amount) {
-    showToast("Insufficient balance in " + from + " ❌","error");
+  if(!date){
+    showToast("Please select Date ❌","error");
     return;
   }
-showLoader();
-  await db.collection("transactions").doc(id).update({
-    from: from,
-    to: to,
-    date: document.getElementById("date").value,
-    narration: document.getElementById("narration").value,
-    amount: amount
-  });
 
-  hideLoader();
-showToast("Contra Updated ✏️");
-
-closePopup();
-
-  // refresh contra report automatically
-  if(sessionStorage.getItem("currentReport") === "contra"){
-    setTimeout(refreshContraReport,300);
+  if (!debitLedger || !creditLedger || !narration || !amount) {
+    showToast("All fields are mandatory","error");
+    return;
   }
 
-}
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
+    return;
+  }
 
+  if (amount <= 0) {
+    showToast("Amount must be greater than 0","error");
+    return;
+  }
+
+  if(isCashBankLedger(creditLedger)){
+
+    let balance = getBalanceExcludingTransaction(creditLedger, id);
+
+    if(balance < amount){
+      showToast(creditLedger + " cannot go negative ❌","error");
+      return;
+    }
+  }
+
+
+  try{
+
+    showLoader();
+
+    await db.collection("transactions").doc(id).update({
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
+
+    hideLoader();
+    showToast("Journal Updated ✏️");
+
+    closePopup();
+
+    if(sessionStorage.getItem("currentReport") === "journal"){
+      setTimeout(refreshJournalReport,300);
+    }
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Update failed ❌","error");
+
+  }
+}
 
 //////////////////////////////////////////////////
 // REFRESH CONTRA REPORT WITH SAME FILTER
@@ -3094,7 +3272,7 @@ function refreshContraReport(){
         <td>${c.to}</td>
         <td>${c.narration}</td>
         <td> ${c.amount}</td>
-        <td><button onclick="editContra('${c.id}')">Edit</button></td>
+        <td><button onclick="editJournal('${c.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${c.id}')">Delete</button></td>
       </tr>
     `;
@@ -3109,32 +3287,39 @@ formatAllAmounts();
 
 
 //////////////////////////////////////////////////
-// EDIT TRANSACTION (FULL EDIT)
+// EDIT RECEIPT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-function editTransaction(id) {
+function editTransaction(id){
 
   let t = transactionsCache.find(x => x.id === id);
+
+
+  let creditOptions = ledgerList
+    .filter(l => ["Capital","Income","Liability"].includes(l.group))
+    .map(l => `<option ${l.name===t.creditLedger?"selected":""}>${l.name}</option>`)
+    .join("");
+
+
+  let debitOptions = ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .map(l => `<option ${l.name===t.debitLedger?"selected":""}>${l.name}</option>`)
+    .join("");
+
 
   openPopup(`
     <h3>Edit Receipt</h3>
 
-    <label>Mode</label>
-    <select id="account">
-  ${getAccountOptions(t.account)}
-</select>
-
-<label>Category</label>
-<select id="category">
-  <option ${(t.category || "Income")==="Capital"?"selected":""}>Capital</option>
-<option ${(t.category || "Income")==="Income"?"selected":""}>Income</option>
-<option ${(t.category || "Income")==="Qardan Taken"?"selected":""}>Qardan Taken</option>
-</select>
-
     <label>Date</label>
     <input type="date" id="date" value="${t.date}">
 
-    <label>Particular</label>
+    <label>Ledger (Credit)</label>
+    <select id="creditLedger">${creditOptions}</select>
+
+    <label>Mode (Debit - Cash/Bank)</label>
+    <select id="debitLedger">${debitOptions}</select>
+
+    <label>Narration</label>
     <input type="text" id="narration" value="${t.narration}">
 
     <label>Amount</label>
@@ -3143,25 +3328,33 @@ function editTransaction(id) {
     <button onclick="updateTransaction('${id}')">Update</button>
   `);
 }
-
 //////////////////////////////////////////////////
-// UPDATE RECEIPT
+// UPDATE RECEIPT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-async function updateTransaction(id) {
+async function updateTransaction(id){
 
   if(!checkPermission("write")) return;
 
-  let account = document.getElementById("account").value;
-  let category = document.getElementById("category").value;
   let date = document.getElementById("date").value;
+  let debitLedger = document.getElementById("debitLedger").value;   // Cash / Bank
+  let creditLedger = document.getElementById("creditLedger").value; // Capital / Income / Liability
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
-  // VALIDATION
-  if (!account || !category || !date || !narration || isNaN(amount)) {
+
+  if(!date){
+    showToast("Please select Date ❌","error");
+    return;
+  }
+
+  if (!debitLedger || !creditLedger || !narration || !amount) {
     showToast("All fields are mandatory","error");
-    document.getElementById("amount").focus();
+    return;
+  }
+
+  if (debitLedger === creditLedger) {
+    showToast("Debit and Credit cannot be same ❌","error");
     return;
   }
 
@@ -3170,28 +3363,37 @@ async function updateTransaction(id) {
     return;
   }
 
-  showLoader();
 
-  await db.collection("transactions").doc(id).update({
-    account: account,
-    category: category, 
-    date: date,
-    narration: narration,
-    amount: amount
-  });
+  try{
 
-  hideLoader();
-  showToast("Receipt Updated ✏️");
+    showLoader();
 
-  closePopup();
+    await db.collection("transactions").doc(id).update({
+      debitLedger: debitLedger,
+      creditLedger: creditLedger,
+      date: date,
+      narration: narration,
+      amount: amount
+    });
 
-  // refresh receipts report automatically
-  if(sessionStorage.getItem("currentReport") === "receipts"){
-    setTimeout(refreshReceiptsReport,300);
+    hideLoader();
+    showToast("Receipt Updated ✏️");
+
+    closePopup();
+
+    // refresh receipts report automatically
+    if(sessionStorage.getItem("currentReport") === "receipts"){
+      setTimeout(refreshReceiptsReport,300);
+    }
+
+  }catch(e){
+
+    hideLoader();
+    console.error(e);
+    showToast("Update failed ❌","error");
+
   }
-
 }
-
 //////////////////////////////////////////////////
 // REFRESH RECEIPTS REPORT WITH SAME FILTER
 //////////////////////////////////////////////////
