@@ -1662,126 +1662,151 @@ openPopup(`
 
 
 //////////////////////////////////////////////////
-// Summary Calculation Engine
+// Summary Calculation Engine (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
 
 function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
+  //////////////////////////////////////////////////
+  // STEP 1: PREPARE LEDGER BALANCES
+  //////////////////////////////////////////////////
+
   let balances = {};
 
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
+  // Opening Balance from ledger master
+  ledgerList.forEach(l=>{
 
-  let expenses = {
-    Personal:0,
-    Home:0,
-    "Office Reimbursement":0,
-  	"Qardan Given":0
-  };
+    let value = Number(l.openingBalance || 0);
 
+    if(l.openingType === "credit"){
+      value = -value;
+    }
 
+    balances[l.name] = value;
+
+  });
+
+  //////////////////////////////////////////////////
+  // STEP 2: APPLY TRANSACTIONS (TILL TO DATE)
+  //////////////////////////////////////////////////
 
   transactionsCache.forEach(t=>{
 
-    // Closing Balance calculation (till TO date)
-    if(t.date <= toDate){
+    if(t.date > toDate) return;
 
-      if (t.type === "receipt" || t.type === "inflow")
-        balances[t.account] += Number(t.amount);
+    let amount = Number(t.amount);
 
-      if (t.type === "payment" || t.type === "outflow")
-        balances[t.account] -= Number(t.amount);
-
-      if (t.type === "contra"){
-        balances[t.from] -= Number(t.amount);
-        balances[t.to] += Number(t.amount);
-      }
+    if(t.debitLedger){
+      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
     }
 
-    // Expense summary (within selected range)
-    if(t.date >= fromDate && t.date <= toDate){
-
-      if (t.type === "payment" || t.type === "outflow"){
-        if(!expenses[t.category]){
-  expenses[t.category] = 0;
-}
-
-expenses[t.category] += Number(t.amount);
-      }
-
+    if(t.creditLedger){
+      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
     }
 
   });
 
-let totalBalance = 0;
+  //////////////////////////////////////////////////
+  // STEP 3: TABLE 1 → CASH & BANK ONLY
+  //////////////////////////////////////////////////
 
-accountsList.forEach(acc=>{
-  totalBalance += balances[acc];
-});
+  let totalBalance = 0;
+  let rows = "";
 
-let totalExpense = 
-  expenses.Personal + 
-  expenses.Home + 
-  expenses["Office Reimbursement"] +
-  expenses["Qardan Given"];
+  ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .forEach(l => {
 
-let rows = "";
+      let val = balances[l.name] || 0;
 
-accountsList.forEach(acc => {
+      totalBalance += val;
 
-  let isActive = activeAccounts.includes(acc);
+      rows += `
+      <tr>
+        <td>${l.name}</td>
+        <td>${val}</td>
+      </tr>
+      `;
 
-let dot = isActive
-  ? '<span style="color:green;font-size:18px;">●</span>'
-  : '<span style="color:red;font-size:18px;">●</span>';
+    });
 
-rows += `
-<tr>
-  <td>${dot} ${acc}</td>
-  <td>${balances[acc] || 0}</td>
-</tr>
-`;
-
-});
-	
   document.getElementById("closingSummary").innerHTML = `
-
-<div class="summary-title">${balanceTitle}</div>
+    <div class="summary-title">${balanceTitle}</div>
     <table>
-      <tr><th>Account</th><th>Balance</th></tr>
+      <tr><th>Ledger</th><th>Balance</th></tr>
       ${rows}
-<tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
+      <tr><td><b>Total</b></td><td><b>${totalBalance}</b></td></tr>
     </table>
   `;
+
+  //////////////////////////////////////////////////
+  // STEP 4: TABLE 2 → EXPENSE + ASSET + LIABILITY
+  //////////////////////////////////////////////////
+
+  let movement = {};
+
+  ledgerList.forEach(l=>{
+    if(["Expense","Asset","Liability"].includes(l.group)){
+      movement[l.name] = 0;
+    }
+  });
+
+  // ONLY PERIOD MOVEMENT
+  transactionsCache.forEach(t=>{
+
+    if(t.date < fromDate || t.date > toDate) return;
+
+    let amount = Number(t.amount);
+
+    if(t.debitLedger && movement.hasOwnProperty(t.debitLedger)){
+      movement[t.debitLedger] += amount;
+    }
+
+    if(t.creditLedger && movement.hasOwnProperty(t.creditLedger)){
+      movement[t.creditLedger] -= amount;
+    }
+
+  });
+
+  let expRows = "";
+  let totalMovement = 0;
+
+  Object.keys(movement).forEach(name=>{
+
+    let val = movement[name];
+
+    if(val === 0) return;
+
+    totalMovement += val;
+
+    expRows += `
+    <tr>
+      <td>${name}</td>
+      <td>${val}</td>
+    </tr>
+    `;
+
+  });
 
   document.getElementById("expenseSummary").innerHTML = `
- <div class="summary-title">${expenseTitle}</div>
+    <div class="summary-title">${expenseTitle}</div>
     <table>
-      <tr><th>Category</th><th>Total</th></tr>
-      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
-      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
-      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
-	  <tr><td>Qardan Given</td><td> ${expenses["Qardan Given"]}</td></tr>
-<tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
+      <tr><th>Ledger</th><th>Amount</th></tr>
+      ${expRows}
+      <tr><td><b>Total</b></td><td><b>${totalMovement}</b></td></tr>
     </table>
   `;
 
-renderExpenseChart(
-  expenses.Personal,
-  expenses.Home,
-  expenses["Office Reimbursement"],
-  expenses["Qardan Given"]
-);
+  //////////////////////////////////////////////////
+  // STEP 5: KEEP EXISTING FEATURES
+  //////////////////////////////////////////////////
 
-renderPersonalMonthlySummary();
+  renderPersonalMonthlySummary();
+  renderPersonalExpenseChart();
 
-renderPersonalExpenseChart();
+  formatAllAmounts();
+  lucide.createIcons();
 
-formatAllAmounts();
-	
-lucide.createIcons();
-	
 }
 
 
@@ -1930,90 +1955,143 @@ showToast("Dashboard Exported 📊");
 
 }
 
-
 //////////////////////////////////////////////////
-// DASHBOARD CALCULATION
+// DASHBOARD CALCULATION (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
 
 function calculateDashboard() {
 
+  //////////////////////////////////////////////////
+  // STEP 1: PREPARE LEDGER BALANCES (OPENING)
+  //////////////////////////////////////////////////
+
   let balances = {};
 
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
+  ledgerList.forEach(l => {
 
-  let expenses = {
-    Personal: 0,
-    Home: 0,
-    "Office Reimbursement": 0
-  };
+    let value = Number(l.openingBalance || 0);
+
+    if(l.openingType === "credit"){
+      value = -value;
+    }
+
+    balances[l.name] = value;
+
+  });
+
+  //////////////////////////////////////////////////
+  // STEP 2: APPLY ALL TRANSACTIONS (FULL DATA)
+  //////////////////////////////////////////////////
 
   transactionsCache.forEach(t => {
 
-    // RECEIPTS
-    if (t.type === "receipt" || t.type === "inflow") {
-      balances[t.account] += Number(t.amount);
+    let amount = Number(t.amount);
+
+    if(t.debitLedger){
+      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
     }
 
-    // PAYMENTS
-    if (t.type === "payment" || t.type === "outflow") {
-      balances[t.account] -= Number(t.amount);
-      if(!expenses[t.category]){
-  expenses[t.category] = 0;
-}
-
-expenses[t.category] += Number(t.amount);
-    }
-
-    // CONTRA
-    if (t.type === "contra") {
-      balances[t.from] -= Number(t.amount);
-      balances[t.to] += Number(t.amount);
+    if(t.creditLedger){
+      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
     }
 
   });
 
-  //////////////////////////////////////////////
-  // DISPLAY CLOSING BALANCE
-  //////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // STEP 3: TABLE 1 → CASH & BANK
+  //////////////////////////////////////////////////
 
+  let rows = "";
+  let totalBalance = 0;
 
-let rows = "";
+  ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .forEach(l => {
 
-accountsList.forEach(acc => {
+      let val = balances[l.name] || 0;
 
-  rows += `
-    <tr>
-      <td>${acc}</td>
-      <td>${balances[acc] || 0}</td>
-    </tr>
-  `;
+      totalBalance += val;
 
-});
-	
+      rows += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${val}</td>
+        </tr>
+      `;
+
+    });
+
   document.getElementById("closingSummary").innerHTML = `
     <table>
-      <tr><th>Account</th><th>Balance</th></tr>
+      <tr><th>Ledger</th><th>Balance</th></tr>
       ${rows}
+      <tr><td><b>Total</b></td><td><b>${totalBalance}</b></td></tr>
     </table>
   `;
 
-  //////////////////////////////////////////////
-  // EXPENSE SUMMARY
-  //////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // STEP 4: TABLE 2 → EXPENSE + ASSET + LIABILITY (FULL MOVEMENT)
+  //////////////////////////////////////////////////
+
+  let movement = {};
+
+  ledgerList.forEach(l=>{
+    if(["Expense","Asset","Liability"].includes(l.group)){
+      movement[l.name] = 0;
+    }
+  });
+
+  transactionsCache.forEach(t=>{
+
+    let amount = Number(t.amount);
+
+    if(t.debitLedger && movement.hasOwnProperty(t.debitLedger)){
+      movement[t.debitLedger] += amount;
+    }
+
+    if(t.creditLedger && movement.hasOwnProperty(t.creditLedger)){
+      movement[t.creditLedger] -= amount;
+    }
+
+  });
+
+  let expRows = "";
+  let totalMovement = 0;
+
+  Object.keys(movement).forEach(name=>{
+
+    let val = movement[name];
+
+    if(val === 0) return;
+
+    totalMovement += val;
+
+    expRows += `
+      <tr>
+        <td>${name}</td>
+        <td>${val}</td>
+      </tr>
+    `;
+
+  });
 
   document.getElementById("expenseSummary").innerHTML = `
     <table>
-      <tr><th>Category</th><th>Total</th></tr>
-      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
-      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
-      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+      <tr><th>Ledger</th><th>Amount</th></tr>
+      ${expRows}
+      <tr><td><b>Total</b></td><td><b>${totalMovement}</b></td></tr>
     </table>
   `;
-lucide.createIcons(); // ✅ HERE
-	
+
+  //////////////////////////////////////////////////
+  // FINAL TOUCH
+  //////////////////////////////////////////////////
+
+  formatAllAmounts();
+  lucide.createIcons();
+
 }
+
 
 //////////////////////////////////////////////////
 // Balance Checker Function
@@ -2183,7 +2261,7 @@ beginAtZero:true
 
 
 //////////////////////////////////////////////////
-// Monthly Personal Expense Summary
+// Monthly Expense Summary (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
 
 function renderPersonalMonthlySummary(){
@@ -2197,21 +2275,38 @@ function renderPersonalMonthlySummary(){
 
   let monthly = new Array(12).fill(0);
 
+  //////////////////////////////////////////////////
+  // STEP 1: IDENTIFY EXPENSE LEDGERS
+  //////////////////////////////////////////////////
+
+  let expenseLedgers = ledgerList
+    .filter(l => l.group === "Expense")
+    .map(l => l.name);
+
+  //////////////////////////////////////////////////
+  // STEP 2: PROCESS TRANSACTIONS
+  //////////////////////////////////////////////////
+
   transactionsCache.forEach(t => {
 
-    if(t.type === "payment" && t.category === "Personal"){
+    let d = new Date(t.date);
 
-      let d = new Date(t.date);
+    if(d.getFullYear() !== currentYear) return;
 
-      if(d.getFullYear() === currentYear){
+    let amount = Number(t.amount);
 
-        monthly[d.getMonth()] += Number(t.amount);
+    // ONLY EXPENSE (DEBIT SIDE)
+    if(t.debitLedger && expenseLedgers.includes(t.debitLedger)){
 
-      }
+      monthly[d.getMonth()] += amount;
 
     }
 
   });
+
+  //////////////////////////////////////////////////
+  // STEP 3: RENDER TABLE
+  //////////////////////////////////////////////////
 
   let html = `
   <div style="height:200px; overflow-y:auto;">
@@ -2224,7 +2319,7 @@ function renderPersonalMonthlySummary(){
 
   months.forEach((m,i)=>{
 
-    let val = monthly[i] === 0 ? "-" : " "+monthly[i];
+    let val = monthly[i] === 0 ? "-" : " " + monthly[i];
 
     html += `
     <tr>
