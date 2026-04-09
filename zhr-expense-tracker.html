@@ -2656,20 +2656,23 @@ if(ledgerList.length === 0){
 }
 
 //////////////////////////////////////////////////
-// RECEIPTS REPORT (DISPLAY BELOW)
+// RECEIPTS REPORT (FILTER POPUP - NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function showReceiptsReport() {
 
+  let ledgerOptions = ledgerList
+    .filter(l => ["Capital","Income","Liability"].includes(l.group))
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
+
   openPopup(`
     <h3>Receipts Report</h3>
 
-    <label>Category</label>
-    <select id="receiptCategory">
+    <label>Ledger</label>
+    <select id="receiptLedger">
       <option value="">All</option>
-      <option>Capital</option>
-      <option>Income</option>
-      <option>Qardan Taken</option>
+      ${ledgerOptions}
     </select>
 
     <label>From Date</label>
@@ -2680,71 +2683,71 @@ function showReceiptsReport() {
 
     <button onclick="runReceiptsReport()">Run</button>
   `);
-
 }
 
 //////////////////////////////////////////////////
-// RUN RECEIPTS REPORT
+// RUN RECEIPTS REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function runReceiptsReport() {
 
-let category = document.getElementById("receiptCategory").value;	
-let fromDate = document.getElementById("fromDate").value;
+  let ledger = document.getElementById("receiptLedger").value;
+  let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if(!validateDateRange(fromDate,toDate)) return;
+  if(!validateDateRange(fromDate,toDate)) return;
 
   currentReport = "receipts";
   sessionStorage.setItem("currentReport","receipts");
-sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
-	sessionStorage.setItem("receiptCategory", category);
-  
+  sessionStorage.setItem("receiptLedger", ledger);
 
   closePopup();
 
   let receipts = transactionsCache
-.filter(t => {
+    .filter(t => {
 
-  let isReceipt = (t.type === "receipt" || t.type === "inflow");
+      let isReceipt = t.type === "receipt";
 
-  let isInRange = true;
+      let isInRange = true;
 
-  if (fromDate)
-    isInRange = t.date >= fromDate;
+      if(fromDate)
+        isInRange = t.date >= fromDate;
 
-  if (toDate)
-    isInRange = isInRange && t.date <= toDate;
+      if(toDate)
+        isInRange = isInRange && t.date <= toDate;
 
-  let isCategory = true;
+      let isLedger = true;
 
-if(category){
-  isCategory = (t.category || "") === category;
-}
+      if(ledger){
+        isLedger = t.creditLedger === ledger;
+      }
 
-return isReceipt && isCategory && isInRange;
+      return isReceipt && isLedger && isInRange;
 
-})
-.sort((a,b)=>{
+    })
+    .sort((a,b)=>{
 
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
-  }
+      if(a.date === b.date){
+        return a.id.localeCompare(b.id);
+      }
 
-  return new Date(a.date) - new Date(b.date);
+      return new Date(a.date) - new Date(b.date);
 
-});
+    });
 
   let html = `
-  <h3>${category ? category + " " : ""}Receipts Report</h3>
+    <h3>${ledger ? ledger + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
+        <th>Transaction No</th>
+        <th>Type</th>
         <th>Mode</th>
-		<th>Category</th> 
-        <th>Particular</th>
+        <th>Ledger</th>
+        <th>Narration</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -2752,14 +2755,17 @@ return isReceipt && isCategory && isInRange;
   `;
 
   receipts.forEach((r, index) => {
+
     html += `
       <tr>
         <td>${index+1}</td>
         <td>${r.date}</td>
-        <td>${r.account}</td>
-		<td>${r.category || "-"}</td>  
+        <td>${r.transactionNumber || "-"}</td>
+        <td>Receipt</td>
+        <td>${r.debitLedger}</td>
+        <td>${r.creditLedger}</td>
         <td>${r.narration}</td>
-        <td> ${r.amount}</td>
+        <td class="amount">${Number(r.amount).toFixed(2)}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
       </tr>
@@ -2769,8 +2775,6 @@ return isReceipt && isCategory && isInRange;
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-formatAllAmounts();
-
 }
 
 
@@ -3428,57 +3432,61 @@ async function updateTransaction(id){
 
   }
 }
+
+	
 //////////////////////////////////////////////////
-// REFRESH RECEIPTS REPORT WITH SAME FILTER
+// REFRESH RECEIPTS REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function refreshReceiptsReport(){
 
-let category = sessionStorage.getItem("receiptCategory");
+  let ledger = sessionStorage.getItem("receiptLedger");
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
   let receipts = transactionsCache
-.filter(t => {
+    .filter(t => {
 
-  let isReceipt = (t.type === "receipt" || t.type === "inflow");
+      let isReceipt = t.type === "receipt";
 
-  let isInRange = true;
+      let isInRange = true;
 
-  if(fromDate)
-    isInRange = t.date >= fromDate;
+      if(fromDate)
+        isInRange = t.date >= fromDate;
 
-  if(toDate)
-    isInRange = isInRange && t.date <= toDate;
+      if(toDate)
+        isInRange = isInRange && t.date <= toDate;
 
-  let isCategory = true;
+      let isLedger = true;
 
-if(category){
-  isCategory = (t.category || "") === category;
-}
+      if(ledger){
+        isLedger = t.creditLedger === ledger;
+      }
 
-return isReceipt && isCategory && isInRange;
+      return isReceipt && isLedger && isInRange;
 
-})
-.sort((a,b)=>{
+    })
+    .sort((a,b)=>{
 
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
-  }
+      if(a.date === b.date){
+        return a.id.localeCompare(b.id);
+      }
 
-  return new Date(a.date) - new Date(b.date);
+      return new Date(a.date) - new Date(b.date);
 
-});
+    });
 
   let html = `
-    <h3>${category ? category + " " : ""}Receipts Report</h3>
+    <h3>${ledger ? ledger + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
+        <th>Transaction No</th>
+        <th>Type</th>
         <th>Mode</th>
-		<th>Category</th>
-        <th>Particular</th>
+        <th>Ledger</th>
+        <th>Narration</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -3486,24 +3494,27 @@ return isReceipt && isCategory && isInRange;
   `;
 
   receipts.forEach((r,index)=>{
+
     html += `
       <tr>
         <td>${index+1}</td>
         <td>${r.date}</td>
-        <td>${r.account}</td>
-		<td>${r.category || "-"}</td>
+        <td>${r.transactionNumber || "-"}</td>
+        <td>Receipt</td>
+        <td>${r.debitLedger}</td>
+        <td>${r.creditLedger}</td>
         <td>${r.narration}</td>
-        <td> ${r.amount}</td>
+        <td class="amount">${Number(r.amount).toFixed(2)}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
       </tr>
     `;
+
   });
 
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-formatAllAmounts();
 }
 
 
