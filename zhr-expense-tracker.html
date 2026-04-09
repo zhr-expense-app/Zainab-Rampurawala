@@ -1105,10 +1105,7 @@ function loadTransactions() {
         firstLoad = false;
       }
 
-      // ✅ ALWAYS refresh dashboard
-      if(ledgerList.length > 0){
-  calculateDashboard();
-}
+      
 
       // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
