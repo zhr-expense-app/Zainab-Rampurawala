@@ -2373,23 +2373,28 @@ async function getNextTransactionNumber(type){
 
     let doc = await transaction.get(docRef);
 
+    let data;
+
     if(!doc.exists){
-      transaction.set(docRef,{
-        receipt:0,
-        payment:0,
-        journal:0
-      });
+
+      data = {
+        receipt: 0,
+        payment: 0,
+        journal: 0
+      };
+
+      data[type] = 1;
+
+      transaction.set(docRef, data); // ✅ SET for first time
+
+    }else{
+
+      data = doc.data();
+
+      data[type] = (data[type] || 0) + 1;
+
+      transaction.update(docRef, data); // ✅ UPDATE only if exists
     }
-
-    let data = doc.exists ? doc.data() : {
-      receipt:0,
-      payment:0,
-      journal:0
-    };
-
-    data[type] += 1;
-
-    transaction.update(docRef, data);
 
     let prefix = {
       receipt: "R",
