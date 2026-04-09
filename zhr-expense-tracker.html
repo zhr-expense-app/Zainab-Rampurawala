@@ -1797,298 +1797,212 @@ function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
     </table>
   `;
 
-  //////////////////////////////////////////////////
-  // STEP 5: KEEP EXISTING FEATURES
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// STEP 5: KEEP EXISTING FEATURES
+//////////////////////////////////////////////////
 
-  renderPersonalMonthlySummary();
-  renderPersonalExpenseChart();
+renderPersonalMonthlySummary(fromDate,toDate);
+renderPersonalExpenseChart(fromDate,toDate);
+renderExpenseChart(fromDate,toDate);
 
-  formatAllAmounts();
-  lucide.createIcons();
+formatAllAmounts();
+lucide.createIcons();
 
 }
 
 
 
 //////////////////////////////////////////////////
-// Final Export Function
+// FINAL EXPORT FUNCTION (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
-
 
 async function exportSummaryExcel(){
 
-showLoader(); // ADD at top	
+  showLoader();
 
-//////////////////////////////////////////////////
-// GET TITLES
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // GET TITLES
+  //////////////////////////////////////////////////
 
-let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
-let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
+  let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
+  let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
 
-//////////////////////////////////////////////////
-// CREATE WORKBOOK
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // CREATE WORKBOOK
+  //////////////////////////////////////////////////
 
-const workbook = new ExcelJS.Workbook();
-const sheet = workbook.addWorksheet("Dashboard");
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Dashboard");
 
-//////////////////////////////////////////////////
-// BALANCE TABLE
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // TABLE 1 → CASH & BANK
+  //////////////////////////////////////////////////
 
-sheet.addRow([balanceTitle]);
-sheet.addRow([]);
+  sheet.addRow([balanceTitle]);
+  sheet.addRow([]);
 
-sheet.addRow(["Account","Balance"]);
+  sheet.addRow(["Ledger","Balance"]);
 
-document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
-  if(i===0) return;
-  let cells = row.querySelectorAll("td");
-  sheet.addRow([cells[0].innerText,cells[1].innerText]);
-});
+  document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
+    if(i===0) return;
 
-sheet.addRow([]);
-sheet.addRow([]);
+    let cells = row.querySelectorAll("td");
 
-//////////////////////////////////////////////////
-// EXPENSE TABLE
-//////////////////////////////////////////////////
+    sheet.addRow([
+      cells[0].innerText,
+      Number(cells[1].innerText) || cells[1].innerText
+    ]);
+  });
 
-sheet.addRow([expenseTitle]);
-sheet.addRow([]);
+  sheet.addRow([]);
+  sheet.addRow([]);
 
-sheet.addRow(["Category","Total"]);
+  //////////////////////////////////////////////////
+  // TABLE 2 → EXPENSE + ASSET + LIABILITY
+  //////////////////////////////////////////////////
 
-document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
-  if(i===0) return;
-  let cells = row.querySelectorAll("td");
-  sheet.addRow([cells[0].innerText,cells[1].innerText]);
-});
+  sheet.addRow([expenseTitle]);
+  sheet.addRow([]);
 
-sheet.addRow([]);
-sheet.addRow([]);
+  sheet.addRow(["Ledger","Amount"]);
 
-//////////////////////////////////////////////////
-// MONTHLY PERSONAL EXPENSE TABLE
-//////////////////////////////////////////////////
+  document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
+    if(i===0) return;
 
-sheet.addRow(["Monthly Personal Expense"]);
-sheet.addRow([]);
+    let cells = row.querySelectorAll("td");
 
-document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
-  let cells = row.querySelectorAll("th,td");
-  let data = [];
-  cells.forEach(c=>data.push(c.innerText));
-  sheet.addRow(data);
-});
+    sheet.addRow([
+      cells[0].innerText,
+      Number(cells[1].innerText) || cells[1].innerText
+    ]);
+  });
 
-//////////////////////////////////////////////////
-// CAPTURE CHART IMAGES
-//////////////////////////////////////////////////
+  sheet.addRow([]);
+  sheet.addRow([]);
 
-let pieCanvas = document.getElementById("expensePieChart");
-let barCanvas = document.getElementById("personalExpenseChart");
+  //////////////////////////////////////////////////
+  // TABLE 3 → MONTHLY SUMMARY
+  //////////////////////////////////////////////////
 
-let pieImage = pieCanvas.toDataURL("image/png");
-let barImage = barCanvas.toDataURL("image/png");
+  sheet.addRow(["Monthly Expense Summary"]);
+  sheet.addRow([]);
 
-//////////////////////////////////////////////////
-// ADD PIE CHART
-//////////////////////////////////////////////////
+  document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
+    let cells = row.querySelectorAll("th,td");
 
-const pieId = workbook.addImage({
-  base64: pieImage,
-  extension: 'png',
-});
+    let data = [];
+    cells.forEach(c=>data.push(c.innerText));
 
-sheet.addImage(pieId,{
-  tl: { col: 5, row: 1 },
-  ext: { width: 400, height: 300 }
-});
+    sheet.addRow(data);
+  });
 
-//////////////////////////////////////////////////
-// ADD BAR CHART
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // CAPTURE CHART IMAGES
+  //////////////////////////////////////////////////
 
-const barId = workbook.addImage({
-  base64: barImage,
-  extension: 'png',
-});
+  let pieCanvas = document.getElementById("expensePieChart");
+  let barCanvas = document.getElementById("personalExpenseChart");
 
-sheet.addImage(barId,{
-  tl: { col: 5, row: 20 },
-  ext: { width: 400, height: 300 }
-});
+  let pieImage = pieCanvas.toDataURL("image/png");
+  let barImage = barCanvas.toDataURL("image/png");
 
-//////////////////////////////////////////////////
-// FILE NAME BASED ON PERIOD
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // ADD PIE CHART
+  //////////////////////////////////////////////////
 
-let title = expenseTitle
-.replaceAll(" ","_")
-.replaceAll("/","-")
-.replaceAll(":","");
+  const pieId = workbook.addImage({
+    base64: pieImage,
+    extension: 'png',
+  });
 
-let fileName = `Expense_Dashboard_${title}.xlsx`;
+  sheet.addImage(pieId,{
+    tl: { col: 5, row: 1 },
+    ext: { width: 400, height: 300 }
+  });
 
-//////////////////////////////////////////////////
-// ALIGN ALL CELLS RIGHT
-//////////////////////////////////////////////////
+  //////////////////////////////////////////////////
+  // ADD BAR CHART
+  //////////////////////////////////////////////////
 
-sheet.eachRow(row=>{
-row.eachCell(cell=>{
-cell.alignment = { horizontal: "right" };
-});
-});
+  const barId = workbook.addImage({
+    base64: barImage,
+    extension: 'png',
+  });
 
-//////////////////////////////////////////////////
-// DOWNLOAD FILE
-//////////////////////////////////////////////////
+  sheet.addImage(barId,{
+    tl: { col: 5, row: 20 },
+    ext: { width: 400, height: 300 }
+  });
 
-const buffer = await workbook.xlsx.writeBuffer();
-saveAs(new Blob([buffer]), fileName);
+  //////////////////////////////////////////////////
+  // FILE NAME BASED ON PERIOD
+  //////////////////////////////////////////////////
 
-hideLoader();
-showToast("Dashboard Exported 📊");
+  let title = expenseTitle
+    .replaceAll(" ","_")
+    .replaceAll("/","-")
+    .replaceAll(":","");
+
+  let fileName = `Dashboard_${title}.xlsx`;
+
+  //////////////////////////////////////////////////
+  // ALIGNMENT (CENTER TEXT, RIGHT NUMBERS)
+  //////////////////////////////////////////////////
+
+  sheet.eachRow(row=>{
+    row.eachCell(cell=>{
+
+      if(typeof cell.value === "number"){
+        cell.alignment = { horizontal: "right" };
+      }else{
+        cell.alignment = { horizontal: "center" };
+      }
+
+    });
+  });
+
+  //////////////////////////////////////////////////
+  // DOWNLOAD FILE
+  //////////////////////////////////////////////////
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), fileName);
+
+  hideLoader();
+  showToast("Dashboard Exported 📊");
 
 }
 
 //////////////////////////////////////////////////
-// DASHBOARD CALCULATION (NEW LEDGER SYSTEM)
+// DASHBOARD CALCULATION (DEFAULT = CURRENT MONTH)
 //////////////////////////////////////////////////
 
 function calculateDashboard() {
 
   //////////////////////////////////////////////////
-  // STEP 1: PREPARE LEDGER BALANCES (OPENING)
+  // STEP 1: GET CURRENT MONTH DATE RANGE
   //////////////////////////////////////////////////
 
-  let balances = {};
+  let today = new Date();
 
-  ledgerList.forEach(l => {
+  let fromDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  ).toISOString().split("T")[0];
 
-    let value = Number(l.openingBalance || 0);
-
-    if(l.openingType === "credit"){
-      value = -value;
-    }
-
-    balances[l.name] = value;
-
-  });
+  let toDate = today.toISOString().split("T")[0];
 
   //////////////////////////////////////////////////
-  // STEP 2: APPLY ALL TRANSACTIONS (FULL DATA)
+  // STEP 2: CALL MAIN ENGINE (SINGLE SOURCE OF TRUTH)
   //////////////////////////////////////////////////
 
-  transactionsCache.forEach(t => {
-
-    let amount = Number(t.amount);
-
-    if(t.debitLedger){
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
-    }
-
-    if(t.creditLedger){
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // STEP 3: TABLE 1 → CASH & BANK
-  //////////////////////////////////////////////////
-
-  let rows = "";
-  let totalBalance = 0;
-
-  ledgerList
-    .filter(l => l.group === "Cash & Bank")
-    .forEach(l => {
-
-      let val = balances[l.name] || 0;
-
-      totalBalance += val;
-
-      rows += `
-        <tr>
-          <td>${l.name}</td>
-          <td>${val}</td>
-        </tr>
-      `;
-
-    });
-
-  document.getElementById("closingSummary").innerHTML = `
-    <table>
-      <tr><th>Ledger</th><th>Balance</th></tr>
-      ${rows}
-      <tr><td><b>Total</b></td><td><b>${totalBalance}</b></td></tr>
-    </table>
-  `;
-
-  //////////////////////////////////////////////////
-  // STEP 4: TABLE 2 → EXPENSE + ASSET + LIABILITY (FULL MOVEMENT)
-  //////////////////////////////////////////////////
-
-  let movement = {};
-
-  ledgerList.forEach(l=>{
-    if(["Expense","Asset","Liability"].includes(l.group)){
-      movement[l.name] = 0;
-    }
-  });
-
-  transactionsCache.forEach(t=>{
-
-    let amount = Number(t.amount);
-
-    if(t.debitLedger && movement.hasOwnProperty(t.debitLedger)){
-      movement[t.debitLedger] += amount;
-    }
-
-    if(t.creditLedger && movement.hasOwnProperty(t.creditLedger)){
-      movement[t.creditLedger] -= amount;
-    }
-
-  });
-
-  let expRows = "";
-  let totalMovement = 0;
-
-  Object.keys(movement).forEach(name=>{
-
-    let val = movement[name];
-
-    if(val === 0) return;
-
-    totalMovement += val;
-
-    expRows += `
-      <tr>
-        <td>${name}</td>
-        <td>${val}</td>
-      </tr>
-    `;
-
-  });
-
-  document.getElementById("expenseSummary").innerHTML = `
-    <table>
-      <tr><th>Ledger</th><th>Amount</th></tr>
-      ${expRows}
-      <tr><td><b>Total</b></td><td><b>${totalMovement}</b></td></tr>
-    </table>
-  `;
-
-  //////////////////////////////////////////////////
-  // FINAL TOUCH
-  //////////////////////////////////////////////////
-
-  formatAllAmounts();
-  lucide.createIcons();
+  calculateSummary(
+    fromDate,
+    toDate,
+    "Current Month Summary",
+    "Closing Cash & Bank (Current Month)"
+  );
 
 }
 
@@ -2133,10 +2047,10 @@ function getCurrentBalance(ledgerName){
 
 
 //////////////////////////////////////////////////
-// Pie Chart Function
+// Expense + Asset Ledger-wise Pie Chart
 //////////////////////////////////////////////////
 
-function renderExpenseChart(personal, home, office, qardan){
+function renderExpenseChart(fromDate,toDate){
 
   const ctx = document.getElementById("expensePieChart");
 
@@ -2144,34 +2058,123 @@ function renderExpenseChart(personal, home, office, qardan){
     expenseChart.destroy();
   }
 
+  //////////////////////////////////////////////////
+  // STEP 1: PREPARE LEDGER MAP
+  //////////////////////////////////////////////////
+
+  let ledgerTotals = {};
+
+  ledgerList.forEach(l => {
+    if(["Expense","Asset"].includes(l.group)){
+      ledgerTotals[l.name] = 0;
+    }
+  });
+
+  //////////////////////////////////////////////////
+  // STEP 2: PROCESS TRANSACTIONS (FILTERED)
+  //////////////////////////////////////////////////
+
+  transactionsCache.forEach(t => {
+
+    if(t.date < fromDate || t.date > toDate) return;
+
+    let amount = Number(t.amount);
+
+    // Debit side (increase)
+    if(t.debitLedger && ledgerTotals.hasOwnProperty(t.debitLedger)){
+      ledgerTotals[t.debitLedger] += amount;
+    }
+
+    // Credit side (decrease)
+    if(t.creditLedger && ledgerTotals.hasOwnProperty(t.creditLedger)){
+      ledgerTotals[t.creditLedger] -= amount;
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // STEP 3: PREPARE CHART DATA
+  //////////////////////////////////////////////////
+
+  let labels = [];
+  let data = [];
+
+  Object.keys(ledgerTotals).forEach(name => {
+
+    let val = ledgerTotals[name];
+
+    if(val === 0) return; // skip zero
+
+    labels.push(name);
+    data.push(Math.abs(val)); // chart shows magnitude
+
+  });
+
+  //////////////////////////////////////////////////
+  // STEP 4: CREATE CHART
+  //////////////////////////////////////////////////
+
   expenseChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
+      labels: labels,
       datasets: [{
-        data: [personal, home, office, qardan], // ✅ FIXED
-        backgroundColor: [
-          "#4CAF50",
-          "#2196F3",
-          "#FF9800",
-          "#9C27B0"
-        ]
+        data: data,
+        backgroundColor: generateColors(labels.length)
       }]
     },
     options: {
-      responsive:true,
-      plugins:{
-        legend:{
-          position:"bottom"
+  responsive: true,
+  plugins: {
+
+    legend: {
+      position: "bottom"
+    },
+
+    tooltip: {
+      callbacks: {
+        label: function(context){
+
+          let label = context.label || "";
+          let value = context.raw || 0;
+
+          let total = context.dataset.data.reduce((a,b)=>a+b,0);
+          let percent = ((value / total) * 100).toFixed(1);
+
+          return `${label}: ${value} (${percent}%)`;
         }
       }
     }
+
+  }
+}
   });
 
 }
 
 //////////////////////////////////////////////////
-// Personal Expense Chart Function
+// PIE CHART COLOR
+//////////////////////////////////////////////////
+	
+function generateColors(count){
+
+  let colors = [];
+
+  for(let i=0;i<count;i++){
+
+    let hue = Math.floor((360 / count) * i); // spread evenly
+    let saturation = 70; // %
+    let lightness = 55; // %
+
+    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+  }
+
+  return colors;
+}
+	
+
+//////////////////////////////////////////////////
+// Expense Trend Chart (MONTHLY TOTAL - FULL YEAR)
 //////////////////////////////////////////////////
 
 function renderPersonalExpenseChart(){
@@ -2183,23 +2186,40 @@ function renderPersonalExpenseChart(){
     "Jul","Aug","Sep","Oct","Nov","Dec"
   ];
 
-  let personal = new Array(12).fill(0);
+  // ONE VALUE PER MONTH ✅
+  let monthly = new Array(12).fill(0);
+
+  //////////////////////////////////////////////////
+  // STEP 1: GET EXPENSE LEDGERS
+  //////////////////////////////////////////////////
+
+  let expenseLedgers = ledgerList
+    .filter(l => l.group === "Expense")
+    .map(l => l.name);
+
+  //////////////////////////////////////////////////
+  // STEP 2: SUM ALL EXPENSES PER MONTH
+  //////////////////////////////////////////////////
 
   transactionsCache.forEach(t => {
 
-    if(t.type === "payment" && t.category === "Personal"){
+    let d = new Date(t.date);
 
-      let d = new Date(t.date);
+    // FULL CURRENT YEAR ONLY
+    if(d.getFullYear() !== currentYear) return;
 
-      if(d.getFullYear() === currentYear){
+    let amount = Number(t.amount);
 
-        personal[d.getMonth()] += Number(t.amount);
-
-      }
-
+    // ADD ALL EXPENSE LEDGERS TO SAME MONTH
+    if(t.debitLedger && expenseLedgers.includes(t.debitLedger)){
+      monthly[d.getMonth()] += amount;
     }
 
   });
+
+  //////////////////////////////////////////////////
+  // STEP 3: CREATE CHART
+  //////////////////////////////////////////////////
 
   const ctx = document.getElementById("personalExpenseChart");
 
@@ -2209,56 +2229,49 @@ function renderPersonalExpenseChart(){
 
   personalExpenseChart = new Chart(ctx, {
 
-type: "bar",
+    type: "bar",
 
-data: {
+    data: {
+      labels: months,
+      datasets: [
 
-labels: months,
+        {
+          label: "Total Expense",
+          data: monthly,
+          backgroundColor: "#001d4c"
+        },
 
-datasets: [
+        {
+          type: "line",
+          label: "Budget Limit (2000)",
+          data: new Array(12).fill(2000),
+          borderColor: "red",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false
+        }
 
-{
-label: "Personal Expense",
-data: personal,
-backgroundColor: "#001d4c"
-},
+      ]
+    },
 
-{
-type: "line",
-label: "Budget Limit (2000)",
-data: new Array(12).fill(2000),
-borderColor: "red",
-borderWidth: 2,
-pointRadius: 0,
-fill: false
-}
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom"
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
 
-]
-
-},
-
-options:{
-
-responsive:true,
-
-plugins:{
-legend:{
-position:"bottom"
-}
-},
-
-scales:{
-y:{
-beginAtZero:true
-}
-}
+  });
 
 }
-
-});
-
-}
-
+	
 
 //////////////////////////////////////////////////
 // Monthly Expense Summary (NEW LEDGER SYSTEM)
