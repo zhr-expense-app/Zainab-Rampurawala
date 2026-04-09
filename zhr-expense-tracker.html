@@ -2705,7 +2705,7 @@ async function updatePayment(id){
   }
 
 
-  let balance = getCurrentBalance(creditLedger);
+  let balance = getBalanceExcludingTransaction(creditLedger, id);
 
   if (balance < amount) {
     showToast("Insufficient balance in " + creditLedger,"error");
@@ -3257,7 +3257,7 @@ function refreshReceiptsReport(){
 
 
 //////////////////////////////////////////////////
-// DELETE TRANSACTION
+// DELETE TRANSACTION (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
 
 function deleteTransaction(id){
@@ -3278,6 +3278,7 @@ async function confirmDelete(id){
   try{
 
     showLoader();
+
     await db.collection("transactions").doc(id).delete();
 
     hideLoader();
@@ -3292,57 +3293,49 @@ async function confirmDelete(id){
 
   closePopup();
 
-let currentReport = sessionStorage.getItem("currentReport");
+// refresh dashboard also
+calculateDashboard();	
 
-if(currentReport === "receipts") setTimeout(refreshReceiptsReport,300);
-if(currentReport === "payments") setTimeout(refreshPaymentReport,300);
-if(currentReport === "contra") setTimeout(refreshContraReport,300);
-}
+  //////////////////////////////////////////////////
+  // REFRESH ACTIVE REPORT (NEW SYSTEM)
+  //////////////////////////////////////////////////
+
+  let currentReport = sessionStorage.getItem("currentReport");
+
+  if(currentReport === "receipts"){
+    setTimeout(refreshReceiptsReport,300);
+  }
+
+  if(currentReport === "payments"){
+    setTimeout(refreshPaymentReport,300);
+  }
+
+  if(currentReport === "journal"){
+    setTimeout(refreshJournalReport,300);
+  }
+
+	}
 
 //////////////////////////////////////////////////
-// Function That Reopens Last Report
+// Function That Reopens Last Report (NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function refreshCurrentReport(){
 
+  calculateDashboard(); // 🔥 keeps UI fully synced
+
+  let currentReport = sessionStorage.getItem("currentReport");
+
   if(currentReport === "receipts"){
-    showReceiptsReport();
+    refreshReceiptsReport();
   }
 
-  if(currentReport === "payments"){
-
-    let payments = transactionsCache
-.filter(t => {
-
-  let isPayment = (t.type === "payment" || t.type === "outflow");
-  let isCategory = t.category === category;
-
-  let isInRange = true;
-
-  if (fromDate)
-    isInRange = t.date >= fromDate;
-
-  if (toDate)
-    isInRange = isInRange && t.date <= toDate;
-
-  return isPayment && isCategory && isInRange;
-
-})
-.sort((a,b)=>{
-
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
+  else if(currentReport === "payments"){
+    refreshPaymentReport();
   }
 
-  return new Date(a.date) - new Date(b.date);
-
-});
-
-    renderPaymentReport(payments, currentReportCategory);
-  }
-
-  if(currentReport === "contra"){
-    showContraReport();
+  else if(currentReport === "journal"){
+    refreshJournalReport();
   }
 
 }
