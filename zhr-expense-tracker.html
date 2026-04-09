@@ -803,6 +803,8 @@ let personalExpenseChart = null;
  		 	
 let currentUserRole = "viewer";
 let ledgerList = [];	
+let isLedgerLoaded = false;
+let isTransactionLoaded = false;	
 
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -967,14 +969,9 @@ async function showDashboard() {
 	await loadUserRole(); // ✅ VERY IMPORTANT
 
   loadOpeningBalance();
-  loadTransactions();
-loadAccounts();
-	loadLedgers(() => {
+	loadLedgers();
+	loadTransactions();
 
-  console.log("Ledgers Loaded ✅");
-
-  // ✅ FORCE dashboard calculation AFTER ledger load
-  calculateDashboard();
 
 });
 
@@ -1079,6 +1076,43 @@ function closePopup() {
 }
 
 //////////////////////////////////////////////////
+// INITIALIZE DASHBOARD
+//////////////////////////////////////////////////
+
+function tryInitializeDashboard(){
+
+  if(isLedgerLoaded && isTransactionLoaded){
+
+    console.log("System Ready ✅");
+
+    calculateDashboard();
+
+    // also restore summary properly
+    let activeSummary = sessionStorage.getItem("activeSummary");
+
+    if(activeSummary === "currentMonth") showCurrentMonth();
+    else if(activeSummary === "lastMonth") showLastMonth();
+    else if(activeSummary === "fullYear") showFullYear();
+    else if(activeSummary === "customSummary"){
+
+      let fromDate = sessionStorage.getItem("summaryFromDate");
+      let toDate = sessionStorage.getItem("summaryToDate");
+
+      let balanceTitle = `Balance as on ${toDate}`;
+      let expenseTitle = `From ${fromDate} till ${toDate}`;
+
+      calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+    }
+    else{
+      showCurrentMonth();
+    }
+
+  }
+
+}
+
+	
+//////////////////////////////////////////////////
 // LOAD DATA
 //////////////////////////////////////////////////
 
@@ -1099,13 +1133,18 @@ function loadTransactions() {
       snapshot.forEach(doc => {
         transactionsCache.push({ id: doc.id, ...doc.data() });
       });
+		isTransactionLoaded = true;
+tryInitializeDashboard();
 
       if(firstLoad){
         hideLoader(); // ✅ only first time
         firstLoad = false;
       }
 
-      
+      // ✅ ALWAYS refresh dashboard
+      if(ledgerList.length > 0){
+  calculateDashboard();
+}
 
       // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
@@ -4411,7 +4450,10 @@ function loadLedgers(callback){
 
     console.log("Ledger Loaded:", ledgerList);
 
-    // ✅ only run callback AFTER data is ready
+    isLedgerLoaded = true;
+
+    tryInitializeDashboard();
+
     if(callback && ledgerList.length > 0){
       callback();
     }
