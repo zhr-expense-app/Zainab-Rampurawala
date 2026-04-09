@@ -3100,13 +3100,13 @@ function refreshPaymentReport(){
 
 
 //////////////////////////////////////////////////
-// CONTRA REPORT FILTER POPUP
+// JOURNAL REPORT FILTER POPUP (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-function showContraReport() {
+function showJournalReport(){
 
   openPopup(`
-    <h3>Contra Report</h3>
+    <h3>Journal Report</h3>
 
     <label>From Date</label>
     <input type="date" id="fromDate">
@@ -3114,34 +3114,32 @@ function showContraReport() {
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runContraReport()">Run</button>
+    <button onclick="runJournalReport()">Run</button>
   `);
-
 }
 
 
 //////////////////////////////////////////////////
-// RUN CONTRA REPORT
+// RUN JOURNAL REPORT (REPLACES CONTRA)
 //////////////////////////////////////////////////
 
-function runContraReport(){
+function runJournalReport(){
 
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
-if(!validateDateRange(fromDate,toDate)) return;
+  if(!validateDateRange(fromDate,toDate)) return;
 
-  sessionStorage.setItem("currentReport","contra");
+  currentReport = "journal";
+
+  sessionStorage.setItem("currentReport","journal");
   sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
 
   closePopup();
 
-  refreshContraReport();
-
+  refreshJournalReport();
 }
-
-
 
 //////////////////////////////////////////////////
 // EDIT JOURNAL (REPLACES CONTRA)
@@ -3259,68 +3257,73 @@ async function updateJournal(id){
   }
 }
 
+
 //////////////////////////////////////////////////
-// REFRESH CONTRA REPORT WITH SAME FILTER
+// REFRESH JOURNAL REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-function refreshContraReport(){
+function refreshJournalReport(){
 
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
-  let contra = transactionsCache
-.filter(t => {
+  let journals = transactionsCache
+    .filter(t => {
 
-  let isContra = t.type === "contra";
+      let isJournal = t.type === "journal";
 
-  let isInRange = true;
+      let isInRange = true;
 
-  if(fromDate)
-    isInRange = t.date >= fromDate;
+      if(fromDate)
+        isInRange = t.date >= fromDate;
 
-  if(toDate)
-    isInRange = isInRange && t.date <= toDate;
+      if(toDate)
+        isInRange = isInRange && t.date <= toDate;
 
-  return isContra && isInRange;
+      return isJournal && isInRange;
 
-})
-.sort((a,b)=>{
+    })
+    .sort((a,b)=>{
 
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
-  }
+      if(a.date === b.date){
+        return a.id.localeCompare(b.id);
+      }
 
-  return new Date(a.date) - new Date(b.date);
+      return new Date(a.date) - new Date(b.date);
 
-});
+    });
 
   let html = `
-    <h3>Contra Report</h3>
+    <h3>Journal Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
-        <th>From Account</th>
-        <th>To Account</th>
-        <th>Particular</th>
+        <th>Transaction No</th>
+        <th>Type</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Narration</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
       </tr>
   `;
 
-  contra.forEach((c,index)=>{
+  journals.forEach((j,index)=>{
 
     html += `
       <tr>
         <td>${index+1}</td>
-        <td>${c.date}</td>
-        <td>${c.from}</td>
-        <td>${c.to}</td>
-        <td>${c.narration}</td>
-        <td> ${c.amount}</td>
-        <td><button onclick="editJournal('${c.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${c.id}')">Delete</button></td>
+        <td>${j.date}</td>
+        <td>${j.transactionNumber || "-"}</td>
+        <td>Journal</td>
+        <td>${j.debitLedger}</td>
+        <td>${j.creditLedger}</td>
+        <td>${j.narration}</td>
+        <td class="amount">${Number(j.amount).toFixed(2)}</td>
+        <td><button onclick="editJournal('${j.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${j.id}')">Delete</button></td>
       </tr>
     `;
 
@@ -3329,8 +3332,9 @@ function refreshContraReport(){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-formatAllAmounts();
 }
+
+	
 
 
 //////////////////////////////////////////////////
