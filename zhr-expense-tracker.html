@@ -966,15 +966,14 @@ async function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
-	await loadUserRole(); // ✅ VERY IMPORTANT
+
+  await loadUserRole();
 
   loadOpeningBalance();
-	loadLedgers();
-	loadTransactions();
-
+  loadLedgers();
+  loadTransactions();
 
 }
-
 
 
 //////////////////////////////////////////////////
