@@ -1141,7 +1141,9 @@ async function showDashboard() {
   loadOpeningBalance();
   loadTransactions();
 loadAccounts();
-	loadLedgers(); 
+	loadLedgers(() => {
+  console.log("Ledgers Loaded ✅");
+});
 
 
 
@@ -2246,6 +2248,11 @@ function renderPersonalMonthlySummary(){
 
 function showForm(type){
 
+if(ledgerList.length === 0){
+  showToast("Please wait, loading ledgers ⏳","error");
+  return;
+}	
+
 //////////////////////////////////////////////////
 // RECEIPT
 //////////////////////////////////////////////////
@@ -2434,6 +2441,11 @@ async function saveReceipt(){
   let amount = Number(document.getElementById("amount").value);
 
 
+if(ledgerList.length === 0){
+  showToast("System loading... please wait ⏳","error");
+  return;
+}	
+
   if(!date){
     showToast("Please select Date ❌","error");
     return;
@@ -2499,6 +2511,11 @@ async function savePayment(){
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
+if(ledgerList.length === 0){
+  showToast("System loading... please wait ⏳","error");
+  return;
+}
+	
 
   if(!date){
     showToast("Please select Date ❌","error");
@@ -2572,7 +2589,12 @@ async function saveJournal(){
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
+if(ledgerList.length === 0){
+  showToast("System loading... please wait ⏳","error");
+  return;
+}
 
+	
   if(!date){
     showToast("Please select Date ❌","error");
     return;
