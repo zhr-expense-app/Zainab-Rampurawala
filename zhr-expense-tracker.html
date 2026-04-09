@@ -681,9 +681,6 @@ text-align:right;
   <i data-lucide="download"></i> Export Dashboard
 </button>
 
-<button onclick="manageAccounts()">
-  <i data-lucide="settings"></i> Accounts
-</button>
 		
 <button onclick="manageLedgers()">
   <i data-lucide="book"></i> Ledgers
@@ -745,9 +742,7 @@ text-align:right;
   <i data-lucide="repeat"></i> Journal
 </button>
 
-<button onclick="showOpening()">
-  <i data-lucide="wallet"></i> Opening Balance
-</button>
+
 
 
 	
@@ -805,8 +800,7 @@ let currentFromDate = null;
 let currentToDate = null;
 let expenseChart = null;
 let personalExpenseChart = null;
-let accountsList = [];
-let activeAccounts = []; 		 	
+ 		 	
 let currentUserRole = "viewer";
 let ledgerList = [];	
 
@@ -857,163 +851,7 @@ async function loadUserRole(){
   console.log("User Role:", currentUserRole); // for testing
 
 }
-	
-
-//////////////////////////////////////////////////
-// LOAD ACCOUNTS FROM FIREBASE 	
-//////////////////////////////////////////////////
-
-function loadAccounts() {
-
-  db.collection("accounts").onSnapshot(snapshot => {
-
-    accountsList = [];
-    activeAccounts = [];
-
-    if (snapshot.empty) {
-      console.log("❌ No accounts found in Firebase");
-      return;
-    }
-
-    snapshot.forEach(doc => {
-
-      let data = doc.data();
-
-      console.log("Account Doc:", data);
-
-      if (data.name) {
-        accountsList.push(data.name);
-      }
-
-      if (data.active !== false && data.name) {
-        activeAccounts.push(data.name);
-      }
-
-    });
-
-    console.log("✅ Accounts Loaded:", accountsList);
-
-    // ✅ ONLY PLACE where dashboard should run
-    setTimeout(() => {
-      calculateDashboard();
-    }, 100);
-
-  });
-
-}	
-
-//////////////////////////////////////////////////
-// MANAGE ACCOUNTS
-//////////////////////////////////////////////////
-
-function manageAccounts(){
-
-  if(!checkPermission("admin")) return;
-
-  showAccountManager();
-}
-	
-
-
-//////////////////////////////////////////////////
-// ACCOUNT MANAGER UI
-//////////////////////////////////////////////////	
-
-function showAccountManager(){
-
-let html = `<h3>Manage Accounts</h3>`;
-
-accountsList.forEach(acc=>{
-
-let isActive = activeAccounts.includes(acc);
-
-html += `
-<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-  <span>${acc}</span>
-
-  <button onclick="toggleAccount('${acc}', ${isActive})">
-    ${isActive ? "Deactivate" : "Activate"}
-  </button>
-</div>
-`;
-
-});
-
-html += `
-<hr>
-
-<label>Add New Account</label>
-<input type="text" id="newAccount" placeholder="Enter account name">
-
-<button onclick="addAccount()">Add Account</button>
-`;
-
-openPopup(html);
-
-}
-	
-
-//////////////////////////////////////////////////
-// ADD ACCOUNT FUNCTION
-//////////////////////////////////////////////////
-
-async function addAccount(){
-
-	if(!checkPermission("admin")) return;
-
-let name = document.getElementById("newAccount").value.trim();
-
-if(!name){
-  showToast("Enter account name","error");
-  return;
-}
-
-showLoader();
-
-await db.collection("accounts").add({
-  name: name,
-  active: true
-});
-
-hideLoader();
-showToast("Account Added ✅");
-
-closePopup();
-}	
-
-
-//////////////////////////////////////////////////////////
-// ACTIVATE / DEACTIVATE
-//////////////////////////////////////////////////////////
-
-	
-async function toggleAccount(name, isActive){
-
-	if(!checkPermission("admin")) return;
-
-showLoader();
-
-let snapshot = await db.collection("accounts")
-.where("name","==",name).get();
-
-let updates = [];
-
-snapshot.forEach(doc=>{
-  updates.push(
-    db.collection("accounts").doc(doc.id).update({
-      active: !isActive
-    })
-  );
-});
-
-await Promise.all(updates);
-
-hideLoader();
-showToast("Account Updated ✅");
-
-showAccountManager();
-}
-	
+		
 	
 	
 //////////////////////////////////////////////////////////
@@ -1071,17 +909,7 @@ function getMonthName(monthIndex){
 }
 
 	
-//////////////////////////////////////////////////
-// DYNAMIC DROPDOWNS (SAFE REPLACEMENT)
-//////////////////////////////////////////////////
 
-function getAccountOptions(selected=""){
-
-  return activeAccounts.map(acc =>
-    `<option ${acc===selected?"selected":""}>${acc}</option>`
-  ).join("");
-
-}
 
 	
 
@@ -1090,7 +918,7 @@ function getAccountOptions(selected=""){
 //////////////////////////////////////////////////
 
 
-let openingBalances = {};
+
 let transactionsCache = [];
 
 //////////////////////////////////////////////////
@@ -1165,9 +993,6 @@ resetInactivityTimer();
 
 });
 
-
-
-	
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
@@ -1310,214 +1135,6 @@ function loadTransactions() {
       }
 
     });
-}
-
-
-//////////////////////////////////////////////////
-// LOAD OPENING BALANCE (REAL TIME)
-//////////////////////////////////////////////////
-
-function loadOpeningBalance() {
-  db.collection("settings").doc("openingBalance")
-    .onSnapshot(doc => {
-
-      if (doc.exists) {
-        openingBalances = doc.data();
-      } else {
-        openingBalances = {};
-      }
-
-      
-
-    });
-}
-
-//////////////////////////////////////////////////
-// SHOW OPENING BALANCE
-//////////////////////////////////////////////////
-
-function showOpening() {
-
-  // First Time Entry
-  if (!openingBalances.openingDate) {
-
-    let html = `<h3>Opening Balance</h3>
-
-<label>Date</label>
-<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
-`;
-
-    // ✅ Accounts (Cash/Bank)
-accountsList.forEach(acc => {
-
-  html += `
-    <label>${acc}</label>
-    <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-  `;
-
-});
-
-// ✅ Balance Sheet Ledgers
-let bsItems = [
-  "Capital",
-  "Home",
-  "Qardan Given",
-  "Qardan Taken",
-  "Office Reimbursement"
-];
-
-bsItems.forEach(item => {
-
-  html += `
-    <label>${item}</label>
-    <input type="number" id="${item}" value="${openingBalances[item] || 0}">
-  `;
-
-});
-
-    html += `<button onclick="saveOpening()">Save</button>`;
-
-    openPopup(html);
-
-  } else {
-
-    let html = `<h3>Opening Balance</h3>
-
-<p><b>Date:</b> ${openingBalances.openingDate}</p>
-`;
-
-    accountsList.forEach(acc => {
-      html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
-    });
-
-    html += `<button onclick="editOpening()">Modify</button>`;
-
-    openPopup(html);
-
-  }
-}
-
-	
-//////////////////////////////////////////////////
-// SAVE OPENING BALANCE
-//////////////////////////////////////////////////
-
-async function saveOpening(){
-
-  if(!checkPermission("admin")) return;						
-
-  showLoader();
-
-  let data = {
-    openingDate: document.getElementById("openingDate").value
-  };
-
-  //////////////////////////////////////////////////
-  // CASH / BANK (AS IS)
-  //////////////////////////////////////////////////
-
-  accountsList.forEach(acc=>{
-    data[acc] = Number(document.getElementById(acc).value) || 0;
-  });
-
-  //////////////////////////////////////////////////
-  // BALANCE SHEET ITEMS WITH CORRECT SIGN
-  //////////////////////////////////////////////////
-
-  let bsItems = [
-    "Capital",
-    "Home",
-    "Qardan Given",
-    "Qardan Taken",
-    "Office Reimbursement"
-  ];
-
-  bsItems.forEach(item=>{
-
-    let value = Number(document.getElementById(item).value) || 0;
-
-    //////////////////////////////////////////////////
-    // LIABILITY → STORE AS NEGATIVE
-    //////////////////////////////////////////////////
-
-    if(item === "Capital" || item === "Qardan Taken"){
-      data[item] = -Math.abs(value);   // ✅ Credit nature
-    }
-
-    //////////////////////////////////////////////////
-    // ASSET / DRAWINGS → STORE AS POSITIVE
-    //////////////////////////////////////////////////
-
-    else{
-      data[item] = Math.abs(value);    // ✅ Debit nature
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // SAVE
-  //////////////////////////////////////////////////
-
-  await db.collection("settings").doc("openingBalance").set(data);
-
-  hideLoader();
-  showToast("Opening Balance Saved ✅");
-
-  closePopup();
-}
-
-//////////////////////////////////////////////////
-// EDIT OPENING (ADMIN LOGIN)
-//////////////////////////////////////////////////
-
-function editOpening(){
-
-  if(!checkPermission("admin")) return;
-
-  let html = `<h3>Modify Opening Balance</h3>
-
-<label>Date</label>
-<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
-`;
-
-  //////////////////////////////////////////////////
-  // Cash / Bank
-  //////////////////////////////////////////////////
-
-  accountsList.forEach(acc => {
-
-    html += `
-      <label>${acc}</label>
-      <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-    `;
-
-  });
-
-  //////////////////////////////////////////////////
-  // Balance Sheet Items
-  //////////////////////////////////////////////////
-
-  let bsItems = [
-    "Capital",
-    "Home",
-    "Qardan Given",
-    "Qardan Taken",
-    "Office Reimbursement"
-  ];
-
-  bsItems.forEach(item => {
-
-    html += `
-      <label>${item}</label>
-      <input type="number" id="${item}" value="${openingBalances[item] || 0}">
-    `;
-
-  });
-
-  html += `<button onclick="saveOpening()">Update</button>`;
-
-  openPopup(html);
-
 }
 
 
