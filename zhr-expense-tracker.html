@@ -970,7 +970,12 @@ async function showDashboard() {
   loadTransactions();
 loadAccounts();
 	loadLedgers(() => {
+
   console.log("Ledgers Loaded ✅");
+
+  // ✅ FORCE dashboard calculation AFTER ledger load
+  calculateDashboard();
+
 });
 
 
@@ -1101,7 +1106,9 @@ function loadTransactions() {
       }
 
       // ✅ ALWAYS refresh dashboard
-      calculateDashboard();
+      if(ledgerList.length > 0){
+  calculateDashboard();
+}
 
       // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
@@ -4405,8 +4412,16 @@ function loadLedgers(callback){
       ledgerList.push({id:doc.id, ...doc.data()});
     });
 
-    if(callback) callback();   // ✅ trigger after load
+    console.log("Ledger Loaded:", ledgerList);
 
+    // ✅ only run callback AFTER data is ready
+    if(callback && ledgerList.length > 0){
+      callback();
+    }
+
+  }, error => {
+    console.error("Ledger Load Error:", error);
+    showToast("Error loading ledgers ❌","error");
   });
 
 }	
