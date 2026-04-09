@@ -967,11 +967,24 @@ async function showDashboard() {
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
 
+  showLoader(); // ✅ show loading until system ready
+
   await loadUserRole();
 
-  loadOpeningBalance();
-  loadLedgers();
-  loadTransactions();
+  //////////////////////////////////////////////////
+  // LOAD CORE DATA (NEW SYSTEM)
+  //////////////////////////////////////////////////
+
+  loadLedgers();        // ✅ ledger master
+  loadTransactions();   // ✅ transactions
+
+  //////////////////////////////////////////////////
+  // INITIAL UI SETUP
+  //////////////////////////////////////////////////
+
+  setTimeout(() => {
+    lucide.createIcons(); // ensure icons render
+  }, 100);
 
 }
 
