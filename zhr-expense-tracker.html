@@ -2779,22 +2779,24 @@ function runReceiptsReport() {
 
 
 //////////////////////////////////////////////////
-// PAYMENT REPORT FILTER POPUP
+// PAYMENT REPORT FILTER POPUP (NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function showPaymentsReport() {
 
-  openPopup(`
-    <h3>Select Expense Category</h3>
+  let ledgerOptions = ledgerList
+    .filter(l => ["Expense","Asset","Capital"].includes(l.group))
+    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .join("");
 
-    <label>Category</label>
-    <select id="paymentCategory">
-  <option value="">All</option> 
-  <option>Personal</option>
-  <option>Home</option>
-  <option>Office Reimbursement</option>
-  <option>Qardan Given</option>
-</select>
+  openPopup(`
+    <h3>Payments Report</h3>
+
+    <label>Ledger</label>
+    <select id="paymentLedger">
+      <option value="">All</option>
+      ${ledgerOptions}
+    </select>
 
     <label>From Date</label>
     <input type="date" id="fromDate">
@@ -2804,75 +2806,73 @@ function showPaymentsReport() {
 
     <button onclick="runPaymentReport()">Run</button>
   `);
-}
+	  }
 
 
 //////////////////////////////////////////////////
-// RUN PAYMENT REPORT
+// RUN PAYMENT REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
 function runPaymentReport() {
 
-  let category = document.getElementById("paymentCategory").value;
+  let ledger = document.getElementById("paymentLedger").value;
   let fromDate = document.getElementById("fromDate").value;
   let toDate = document.getElementById("toDate").value;
 
+  if(!validateDateRange(fromDate,toDate)) return;
 
-if(!validateDateRange(fromDate,toDate)) return;
-
-  // remember current report
-  sessionStorage.setItem("currentReport","payments");
-sessionStorage.setItem("currentCategory",category);
-sessionStorage.setItem("currentFromDate",fromDate);
-sessionStorage.setItem("currentToDate",toDate);
-
+  // Save filters
   currentReport = "payments";
-  currentReportCategory = category;
-  currentFromDate = fromDate;
-  currentToDate = toDate;
+  sessionStorage.setItem("currentReport","payments");
+  sessionStorage.setItem("paymentLedger",ledger);
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
 
   closePopup();
 
   let payments = transactionsCache
-.filter(t => {
+    .filter(t => {
 
-  let isPayment = (t.type === "payment" || t.type === "outflow");
-  let isCategory = true;
+      let isPayment = t.type === "payment";
 
-if(category){
-  isCategory = t.category === category;
-}
+      let isInRange = true;
 
-  let isInRange = true;
+      if(fromDate)
+        isInRange = t.date >= fromDate;
 
-  if (fromDate)
-    isInRange = t.date >= fromDate;
+      if(toDate)
+        isInRange = isInRange && t.date <= toDate;
 
-  if (toDate)
-    isInRange = isInRange && t.date <= toDate;
+      let isLedger = true;
 
-  return isPayment && isCategory && isInRange;
+      if(ledger){
+        isLedger = t.debitLedger === ledger;
+      }
 
-})
-.sort((a,b)=>{
+      return isPayment && isLedger && isInRange;
 
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
-  }
+    })
+    .sort((a,b)=>{
 
-  return new Date(a.date) - new Date(b.date);
+      if(a.date === b.date){
+        return a.id.localeCompare(b.id);
+      }
 
-});
+      return new Date(a.date) - new Date(b.date);
+
+    });
 
   let html = `
-    <h3>${category ? category + " " : ""}Payments Report</h3>
+    <h3>${ledger ? ledger + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
+        <th>Transaction No</th>
+        <th>Type</th>
         <th>Mode</th>
-		<th>Category</th>
-        <th>Particular</th>
+        <th>Ledger</th>
+        <th>Narration</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -2880,14 +2880,17 @@ if(category){
   `;
 
   payments.forEach((p, index) => {
+
     html += `
       <tr>
         <td>${index + 1}</td>
         <td>${p.date}</td>
-        <td>${p.account}</td>
-		<td>${p.category || "-"}</td>
+        <td>${p.transactionNumber || "-"}</td>
+        <td>Payment</td>
+        <td>${p.creditLedger}</td>   <!-- Mode (Cash/Bank) -->
+        <td>${p.debitLedger}</td>    <!-- Ledger -->
         <td>${p.narration}</td>
-        <td> ${p.amount}</td>
+        <td class="amount">${Number(p.amount).toFixed(2)}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
       </tr>
@@ -2897,7 +2900,6 @@ if(category){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-formatAllAmounts();
 }
 
 //////////////////////////////////////////////////
@@ -3012,56 +3014,61 @@ async function updatePayment(id){
 
   }
 }
+
+	
 //////////////////////////////////////////////////
-// REFRESH PAYMENT REPORT WITH SAME FILTER
+// REFRESH PAYMENT REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
 
-function refreshPaymentReport() {
+function refreshPaymentReport(){
 
-  let category = sessionStorage.getItem("currentCategory");
+  let ledger = sessionStorage.getItem("paymentLedger");
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
   let payments = transactionsCache
-.filter(t => {
+    .filter(t => {
 
-  let isPayment = (t.type === "payment" || t.type === "outflow");
-  let isCategory = true;
+      let isPayment = t.type === "payment";
 
-if(category){
-  isCategory = t.category === category;
-}
+      let isInRange = true;
 
-  let isInRange = true;
+      if(fromDate)
+        isInRange = t.date >= fromDate;
 
-  if (fromDate)
-    isInRange = t.date >= fromDate;
+      if(toDate)
+        isInRange = isInRange && t.date <= toDate;
 
-  if (toDate)
-    isInRange = isInRange && t.date <= toDate;
+      let isLedger = true;
 
-  return isPayment && isCategory && isInRange;
+      if(ledger){
+        isLedger = t.debitLedger === ledger;
+      }
 
-})
-.sort((a,b)=>{
+      return isPayment && isLedger && isInRange;
 
-  if(a.date === b.date){
-    return a.id.localeCompare(b.id);
-  }
+    })
+    .sort((a,b)=>{
 
-  return new Date(a.date) - new Date(b.date);
+      if(a.date === b.date){
+        return a.id.localeCompare(b.id);
+      }
 
-});
+      return new Date(a.date) - new Date(b.date);
+
+    });
 
   let html = `
-    <h3>${category ? category + " " : ""}Payments Report</h3>
+    <h3>${ledger ? ledger + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
         <th>Date</th>
+        <th>Transaction No</th>
+        <th>Type</th>
         <th>Mode</th>
-		<th>Category</th>
-        <th>Particular</th>
+        <th>Ledger</th>
+        <th>Narration</th>
         <th>Amount</th>
         <th>Edit</th>
         <th>Delete</th>
@@ -3069,14 +3076,17 @@ if(category){
   `;
 
   payments.forEach((p, index) => {
+
     html += `
       <tr>
         <td>${index + 1}</td>
         <td>${p.date}</td>
-        <td>${p.account}</td>
-		<td>${p.category || "-"}</td>
+        <td>${p.transactionNumber || "-"}</td>
+        <td>Payment</td>
+        <td>${p.creditLedger}</td>
+        <td>${p.debitLedger}</td>
         <td>${p.narration}</td>
-        <td> ${p.amount}</td>
+        <td class="amount">${Number(p.amount).toFixed(2)}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${p.id}')">Delete</button></td>
       </tr>
@@ -3086,7 +3096,6 @@ if(category){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-formatAllAmounts();
 }
 
 
