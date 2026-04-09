@@ -741,8 +741,8 @@ text-align:right;
   <i data-lucide="arrow-up-circle"></i> Payments
 </button>
 
-<button onclick="showForm('contra')">
-  <i data-lucide="repeat"></i> Contra
+<button onclick="showForm('journal')">
+  <i data-lucide="repeat"></i> Journal
 </button>
 
 <button onclick="showOpening()">
@@ -2018,30 +2018,37 @@ lucide.createIcons(); // ✅ HERE
 //////////////////////////////////////////////////
 
 
-function getCurrentBalance(account) {
+function getCurrentBalance(ledgerName){
 
   let balances = {};
 
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
+  // Opening from ledgers
+  ledgerList.forEach(l=>{
+    let value = Number(l.openingBalance || 0);
 
-  transactionsCache.forEach(t => {
+    if(l.openingType === "credit"){
+      value = -value;
+    }
 
-    if (t.type === "receipt" || t.type === "inflow")
-      balances[t.account] += Number(t.amount);
+    balances[l.name] = value;
+  });
 
-    if (t.type === "payment" || t.type === "outflow")
-      balances[t.account] -= Number(t.amount);
+  // Transactions
+  transactionsCache.forEach(t=>{
 
-    if (t.type === "contra") {
-      balances[t.from] -= Number(t.amount);
-      balances[t.to] += Number(t.amount);
+    let amount = Number(t.amount);
+
+    if(t.debitLedger){
+      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+    }
+
+    if(t.creditLedger){
+      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
     }
 
   });
 
-  return balances[account];
+  return balances[ledgerName] || 0;
 }
 
 
@@ -3570,34 +3577,38 @@ function refreshCurrentReport(){
 // GET BALANCE EXCLUDING CURRENT TRANSACTION
 //////////////////////////////////////////////////
 
-function getBalanceExcludingTransaction(account, transactionId) {
+function getBalanceExcludingTransaction(ledgerName, transactionId){
 
   let balances = {};
 
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
+  ledgerList.forEach(l=>{
+    let value = Number(l.openingBalance || 0);
 
-  transactionsCache.forEach(t => {
+    if(l.openingType === "credit"){
+      value = -value;
+    }
 
-    if (t.id === transactionId) return;
+    balances[l.name] = value;
+  });
 
-    if (t.type === "receipt" || t.type === "inflow")
-      balances[t.account] += Number(t.amount);
+  transactionsCache.forEach(t=>{
 
-    if (t.type === "payment" || t.type === "outflow")
-      balances[t.account] -= Number(t.amount);
+    if(t.id === transactionId) return;
 
-    if (t.type === "contra") {
-      balances[t.from] -= Number(t.amount);
-      balances[t.to] += Number(t.amount);
+    let amount = Number(t.amount);
+
+    if(t.debitLedger){
+      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+    }
+
+    if(t.creditLedger){
+      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
     }
 
   });
 
-  return balances[account];
+  return balances[ledgerName] || 0;
 }
-
 
 //////////////////////////////////////////////////
 // EXPORT REPORTS
