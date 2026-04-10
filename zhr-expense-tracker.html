@@ -4803,7 +4803,16 @@ function editLedger(id){
 let l = ledgerList.find(x => x.id === id);
 
 let html = `
-<h3>Edit Ledger</h3>
+<h3>
+  <button onclick="showLedgerManager()" style="
+    background:none;
+    border:none;
+    font-size:18px;
+    cursor:pointer;
+    margin-right:8px;
+  ">⬅</button>
+  Edit Ledger
+</h3>
 
 <label>Name</label>
 <input type="text" id="ledgerName" value="${l.name}">
