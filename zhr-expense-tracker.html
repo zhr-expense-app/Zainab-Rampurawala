@@ -662,8 +662,6 @@ text-align:right;
   <i data-lucide="calendar"></i> Current Month
 </button>
 
-		
-
 <button onclick="showLastMonth()">
   <i data-lucide="calendar-days"></i> Last Month
 </button>
@@ -675,16 +673,14 @@ text-align:right;
 <button onclick="showCustomSummary()">
   <i data-lucide="filter"></i> Custom Filter
 </button>
-	
 
 <button onclick="exportSummaryExcel()">
   <i data-lucide="download"></i> Export Dashboard
 </button>
 
-		
-<button onclick="manageLedgers()">
-  <i data-lucide="book"></i> Ledgers
-</button>		
+<button onclick="manageAccounts()">
+  <i data-lucide="settings"></i> Accounts
+</button>
 
 <button onclick="confirmLogout()" style="background:green;">
   <i data-lucide="log-out"></i> Logout
@@ -738,14 +734,14 @@ text-align:right;
   <i data-lucide="arrow-up-circle"></i> Payments
 </button>
 
-<button onclick="showForm('journal')">
-  <i data-lucide="repeat"></i> Journal
+<button onclick="showForm('contra')">
+  <i data-lucide="repeat"></i> Contra
 </button>
 
+<button onclick="showOpening()">
+  <i data-lucide="wallet"></i> Opening Balance
+</button>
 
-
-
-	
 </div>
 
 
@@ -764,11 +760,6 @@ text-align:right;
 <button onclick="showContraReport()">
   <i data-lucide="shuffle"></i> Contra Report
 </button>
-
-
-	<button onclick="showTrialBalance()">
-  <i data-lucide="scale"></i> Trial Balance
-	</button>
 
 <button onclick="showMiniStatement()">
   <i data-lucide="book-open"></i> Mini Statement
@@ -800,11 +791,9 @@ let currentFromDate = null;
 let currentToDate = null;
 let expenseChart = null;
 let personalExpenseChart = null;
- 		 	
+let accountsList = [];
+let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
-let ledgerList = [];	
-let isLedgerLoaded = false;
-let isTransactionLoaded = false;	
 
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -853,7 +842,163 @@ async function loadUserRole(){
   console.log("User Role:", currentUserRole); // for testing
 
 }
-		
+	
+
+//////////////////////////////////////////////////
+// LOAD ACCOUNTS FROM FIREBASE 	
+//////////////////////////////////////////////////
+
+function loadAccounts() {
+
+  db.collection("accounts").onSnapshot(snapshot => {
+
+    accountsList = [];
+    activeAccounts = [];
+
+    if (snapshot.empty) {
+      console.log("❌ No accounts found in Firebase");
+      return;
+    }
+
+    snapshot.forEach(doc => {
+
+      let data = doc.data();
+
+      console.log("Account Doc:", data);
+
+      if (data.name) {
+        accountsList.push(data.name);
+      }
+
+      if (data.active !== false && data.name) {
+        activeAccounts.push(data.name);
+      }
+
+    });
+
+    console.log("✅ Accounts Loaded:", accountsList);
+
+    // ✅ ONLY PLACE where dashboard should run
+    setTimeout(() => {
+      calculateDashboard();
+    }, 100);
+
+  });
+
+}	
+
+//////////////////////////////////////////////////
+// MANAGE ACCOUNTS
+//////////////////////////////////////////////////
+
+function manageAccounts(){
+
+  if(!checkPermission("admin")) return;
+
+  showAccountManager();
+}
+	
+
+
+//////////////////////////////////////////////////
+// ACCOUNT MANAGER UI
+//////////////////////////////////////////////////	
+
+function showAccountManager(){
+
+let html = `<h3>Manage Accounts</h3>`;
+
+accountsList.forEach(acc=>{
+
+let isActive = activeAccounts.includes(acc);
+
+html += `
+<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+  <span>${acc}</span>
+
+  <button onclick="toggleAccount('${acc}', ${isActive})">
+    ${isActive ? "Deactivate" : "Activate"}
+  </button>
+</div>
+`;
+
+});
+
+html += `
+<hr>
+
+<label>Add New Account</label>
+<input type="text" id="newAccount" placeholder="Enter account name">
+
+<button onclick="addAccount()">Add Account</button>
+`;
+
+openPopup(html);
+
+}
+	
+
+//////////////////////////////////////////////////
+// ADD ACCOUNT FUNCTION
+//////////////////////////////////////////////////
+
+async function addAccount(){
+
+	if(!checkPermission("admin")) return;
+
+let name = document.getElementById("newAccount").value.trim();
+
+if(!name){
+  showToast("Enter account name","error");
+  return;
+}
+
+showLoader();
+
+await db.collection("accounts").add({
+  name: name,
+  active: true
+});
+
+hideLoader();
+showToast("Account Added ✅");
+
+closePopup();
+}	
+
+
+//////////////////////////////////////////////////////////
+// ACTIVATE / DEACTIVATE
+//////////////////////////////////////////////////////////
+
+	
+async function toggleAccount(name, isActive){
+
+	if(!checkPermission("admin")) return;
+
+showLoader();
+
+let snapshot = await db.collection("accounts")
+.where("name","==",name).get();
+
+let updates = [];
+
+snapshot.forEach(doc=>{
+  updates.push(
+    db.collection("accounts").doc(doc.id).update({
+      active: !isActive
+    })
+  );
+});
+
+await Promise.all(updates);
+
+hideLoader();
+showToast("Account Updated ✅");
+
+showAccountManager();
+}
+	
 	
 	
 //////////////////////////////////////////////////////////
@@ -911,7 +1056,17 @@ function getMonthName(monthIndex){
 }
 
 	
+//////////////////////////////////////////////////
+// DYNAMIC DROPDOWNS (SAFE REPLACEMENT)
+//////////////////////////////////////////////////
 
+function getAccountOptions(selected=""){
+
+  return activeAccounts.map(acc =>
+    `<option ${acc===selected?"selected":""}>${acc}</option>`
+  ).join("");
+
+}
 
 	
 
@@ -920,7 +1075,7 @@ function getMonthName(monthIndex){
 //////////////////////////////////////////////////
 
 
-
+let openingBalances = {};
 let transactionsCache = [];
 
 //////////////////////////////////////////////////
@@ -966,27 +1121,12 @@ async function showDashboard() {
 
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
+	await loadUserRole(); // ✅ VERY IMPORTANT
 
-  showLoader(); // ✅ show loading until system ready
+  loadOpeningBalance();
+  loadTransactions();
+loadAccounts();
 
-  await loadUserRole();
-
-  //////////////////////////////////////////////////
-  // LOAD CORE DATA (NEW SYSTEM)
-  //////////////////////////////////////////////////
-
-  loadLedgers();        // ✅ ledger master
-  loadTransactions();   // ✅ transactions
-
-  //////////////////////////////////////////////////
-  // INITIAL UI SETUP
-  //////////////////////////////////////////////////
-
-  setTimeout(() => {
-    lucide.createIcons(); // ensure icons render
-  }, 100);
-
-}
 
 
 //////////////////////////////////////////////////
@@ -1007,6 +1147,9 @@ resetInactivityTimer();
 
 });
 
+
+
+	
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
@@ -1088,43 +1231,6 @@ function closePopup() {
 }
 
 //////////////////////////////////////////////////
-// INITIALIZE DASHBOARD
-//////////////////////////////////////////////////
-
-function tryInitializeDashboard(){
-
-  if(isLedgerLoaded && isTransactionLoaded){
-
-    console.log("System Ready ✅");
-
-    calculateDashboard();
-
-    // also restore summary properly
-    let activeSummary = sessionStorage.getItem("activeSummary");
-
-    if(activeSummary === "currentMonth") showCurrentMonth();
-    else if(activeSummary === "lastMonth") showLastMonth();
-    else if(activeSummary === "fullYear") showFullYear();
-    else if(activeSummary === "customSummary"){
-
-      let fromDate = sessionStorage.getItem("summaryFromDate");
-      let toDate = sessionStorage.getItem("summaryToDate");
-
-      let balanceTitle = `Balance as on ${toDate}`;
-      let expenseTitle = `From ${fromDate} till ${toDate}`;
-
-      calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
-    }
-    else{
-      showCurrentMonth();
-    }
-
-  }
-
-}
-
-	
-//////////////////////////////////////////////////
 // LOAD DATA
 //////////////////////////////////////////////////
 
@@ -1145,8 +1251,6 @@ function loadTransactions() {
       snapshot.forEach(doc => {
         transactionsCache.push({ id: doc.id, ...doc.data() });
       });
-		isTransactionLoaded = true;
-tryInitializeDashboard();
 
       if(firstLoad){
         hideLoader(); // ✅ only first time
@@ -1154,9 +1258,7 @@ tryInitializeDashboard();
       }
 
       // ✅ ALWAYS refresh dashboard
-      if(ledgerList.length > 0){
-  calculateDashboard();
-}
+      calculateDashboard();
 
       // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
@@ -1190,6 +1292,129 @@ tryInitializeDashboard();
       }
 
     });
+}
+
+
+//////////////////////////////////////////////////
+// LOAD OPENING BALANCE (REAL TIME)
+//////////////////////////////////////////////////
+
+function loadOpeningBalance() {
+  db.collection("settings").doc("openingBalance")
+    .onSnapshot(doc => {
+
+      if (doc.exists) {
+        openingBalances = doc.data();
+      } else {
+        openingBalances = {};
+      }
+
+      
+
+    });
+}
+
+//////////////////////////////////////////////////
+// SHOW OPENING BALANCE
+//////////////////////////////////////////////////
+
+function showOpening() {
+
+  // First Time Entry
+  if (!openingBalances.openingDate) {
+
+    let html = `<h3>Opening Balance</h3>
+
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
+
+    accountsList.forEach(acc => {
+
+      html += `
+        <label>${acc}</label>
+        <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+      `;
+
+    });
+
+    html += `<button onclick="saveOpening()">Save</button>`;
+
+    openPopup(html);
+
+  } else {
+
+    let html = `<h3>Opening Balance</h3>
+
+<p><b>Date:</b> ${openingBalances.openingDate}</p>
+`;
+
+    accountsList.forEach(acc => {
+      html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
+    });
+
+    html += `<button onclick="editOpening()">Modify</button>`;
+
+    openPopup(html);
+
+  }
+}
+
+	
+//////////////////////////////////////////////////
+// SAVE OPENING BALANCE
+//////////////////////////////////////////////////
+
+async function saveOpening(){
+
+if(!checkPermission("admin")) return;						
+
+showLoader();
+
+let data = {
+  openingDate: document.getElementById("openingDate").value
+};
+
+accountsList.forEach(acc=>{
+  data[acc] = Number(document.getElementById(acc).value) || 0;
+});
+
+await db.collection("settings").doc("openingBalance").set(data);
+
+hideLoader();
+showToast("Opening Balance Saved ✅");
+
+closePopup();
+}
+
+//////////////////////////////////////////////////
+// EDIT OPENING (ADMIN LOGIN)
+//////////////////////////////////////////////////
+
+function editOpening(){
+
+  // 🔐 Only admin allowed
+  if(!checkPermission("admin")) return;
+
+  let html = `<h3>Modify Opening Balance</h3>
+
+<label>Date</label>
+<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
+`;
+
+  accountsList.forEach(acc => {
+
+    html += `
+      <label>${acc}</label>
+      <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
+    `;
+
+  });
+
+  html += `<button onclick="saveOpening()">Update</button>`;
+
+  openPopup(html);
+
 }
 
 
@@ -1334,395 +1559,396 @@ openPopup(`
 
 
 //////////////////////////////////////////////////
-// Summary Calculation Engine (NEW LEDGER SYSTEM)
+// Summary Calculation Engine
 //////////////////////////////////////////////////
 
 function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
-  //////////////////////////////////////////////////
-  // STEP 1: PREPARE LEDGER BALANCES
-  //////////////////////////////////////////////////
-
   let balances = {};
 
-  // Opening Balance from ledger master
-  ledgerList.forEach(l=>{
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
-    let value = Number(l.openingBalance || 0);
+  let expenses = {
+    Personal:0,
+    Home:0,
+    "Office Reimbursement":0,
+  	"Qardan Given":0
+  };
 
-    if(l.openingType === "credit"){
-      value = -value;
-    }
 
-    balances[l.name] = value;
-
-  });
-
-  //////////////////////////////////////////////////
-  // STEP 2: APPLY TRANSACTIONS (TILL TO DATE)
-  //////////////////////////////////////////////////
 
   transactionsCache.forEach(t=>{
 
-    if(t.date > toDate) return;
+    // Closing Balance calculation (till TO date)
+    if(t.date <= toDate){
 
-    let amount = Number(t.amount);
+      if (t.type === "receipt" || t.type === "inflow")
+        balances[t.account] += Number(t.amount);
 
-    if(t.debitLedger){
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+      if (t.type === "payment" || t.type === "outflow")
+        balances[t.account] -= Number(t.amount);
+
+      if (t.type === "contra"){
+        balances[t.from] -= Number(t.amount);
+        balances[t.to] += Number(t.amount);
+      }
     }
 
-    if(t.creditLedger){
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
+    // Expense summary (within selected range)
+    if(t.date >= fromDate && t.date <= toDate){
+
+      if (t.type === "payment" || t.type === "outflow"){
+        if(!expenses[t.category]){
+  expenses[t.category] = 0;
+}
+
+expenses[t.category] += Number(t.amount);
+      }
+
     }
 
   });
 
-  //////////////////////////////////////////////////
-  // STEP 3: TABLE 1 → CASH & BANK ONLY
-  //////////////////////////////////////////////////
+let totalBalance = 0;
 
-  let totalBalance = 0;
-  let rows = "";
+accountsList.forEach(acc=>{
+  totalBalance += balances[acc];
+});
 
-  ledgerList
-    .filter(l => l.group === "Cash & Bank")
-    .forEach(l => {
+let totalExpense = 
+  expenses.Personal + 
+  expenses.Home + 
+  expenses["Office Reimbursement"] +
+  expenses["Qardan Given"];
 
-      let val = balances[l.name] || 0;
+let rows = "";
 
-      totalBalance += val;
+accountsList.forEach(acc => {
 
-      rows += `
-      <tr>
-        <td>${l.name}</td>
-        <td>${val}</td>
-      </tr>
-      `;
+  let isActive = activeAccounts.includes(acc);
 
-    });
+let dot = isActive
+  ? '<span style="color:green;font-size:18px;">●</span>'
+  : '<span style="color:red;font-size:18px;">●</span>';
 
+rows += `
+<tr>
+  <td>${dot} ${acc}</td>
+  <td>${balances[acc] || 0}</td>
+</tr>
+`;
+
+});
+	
   document.getElementById("closingSummary").innerHTML = `
-    <div class="summary-title">${balanceTitle}</div>
+
+<div class="summary-title">${balanceTitle}</div>
     <table>
-      <tr><th>Ledger</th><th>Balance</th></tr>
+      <tr><th>Account</th><th>Balance</th></tr>
       ${rows}
-      <tr><td><b>Total</b></td><td><b>${totalBalance}</b></td></tr>
+<tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
     </table>
   `;
-
-  //////////////////////////////////////////////////
-  // STEP 4: TABLE 2 → EXPENSE + ASSET + LIABILITY
-  //////////////////////////////////////////////////
-
-  let movement = {};
-
-  ledgerList.forEach(l=>{
-    if(["Expense","Asset","Liability"].includes(l.group)){
-      movement[l.name] = 0;
-    }
-  });
-
-  // ONLY PERIOD MOVEMENT
-  transactionsCache.forEach(t=>{
-
-    if(t.date < fromDate || t.date > toDate) return;
-
-    let amount = Number(t.amount);
-
-    if(t.debitLedger && movement.hasOwnProperty(t.debitLedger)){
-      movement[t.debitLedger] += amount;
-    }
-
-    if(t.creditLedger && movement.hasOwnProperty(t.creditLedger)){
-      movement[t.creditLedger] -= amount;
-    }
-
-  });
-
-  let expRows = "";
-  let totalMovement = 0;
-
-  Object.keys(movement).forEach(name=>{
-
-    let val = movement[name];
-
-    if(val === 0) return;
-
-    totalMovement += val;
-
-    expRows += `
-    <tr>
-      <td>${name}</td>
-      <td>${val}</td>
-    </tr>
-    `;
-
-  });
 
   document.getElementById("expenseSummary").innerHTML = `
-    <div class="summary-title">${expenseTitle}</div>
+ <div class="summary-title">${expenseTitle}</div>
     <table>
-      <tr><th>Ledger</th><th>Amount</th></tr>
-      ${expRows}
-      <tr><td><b>Total</b></td><td><b>${totalMovement}</b></td></tr>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+	  <tr><td>Qardan Given</td><td> ${expenses["Qardan Given"]}</td></tr>
+<tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
     </table>
   `;
 
-//////////////////////////////////////////////////
-// STEP 5: KEEP EXISTING FEATURES
-//////////////////////////////////////////////////
+renderExpenseChart(
+  expenses.Personal,
+  expenses.Home,
+  expenses["Office Reimbursement"],
+  expenses["Qardan Given"]
+);
 
-renderPersonalMonthlySummary(fromDate,toDate);
-renderPersonalExpenseChart(fromDate,toDate);
-renderExpenseChart(fromDate,toDate);
+renderPersonalMonthlySummary();
+
+renderPersonalExpenseChart();
 
 formatAllAmounts();
+	
 lucide.createIcons();
-
+	
 }
 
 
 
 //////////////////////////////////////////////////
-// FINAL EXPORT FUNCTION (NEW LEDGER SYSTEM)
+// Final Export Function
 //////////////////////////////////////////////////
+
 
 async function exportSummaryExcel(){
 
-  showLoader();
+showLoader(); // ADD at top	
 
-  //////////////////////////////////////////////////
-  // GET TITLES
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// GET TITLES
+//////////////////////////////////////////////////
 
-  let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
-  let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
+let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
+let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
 
-  //////////////////////////////////////////////////
-  // CREATE WORKBOOK
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// CREATE WORKBOOK
+//////////////////////////////////////////////////
 
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Dashboard");
+const workbook = new ExcelJS.Workbook();
+const sheet = workbook.addWorksheet("Dashboard");
 
-  //////////////////////////////////////////////////
-  // TABLE 1 → CASH & BANK
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// BALANCE TABLE
+//////////////////////////////////////////////////
 
-  sheet.addRow([balanceTitle]);
-  sheet.addRow([]);
+sheet.addRow([balanceTitle]);
+sheet.addRow([]);
 
-  sheet.addRow(["Ledger","Balance"]);
+sheet.addRow(["Account","Balance"]);
 
-  document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
-    if(i===0) return;
+document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
+  if(i===0) return;
+  let cells = row.querySelectorAll("td");
+  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+});
 
-    let cells = row.querySelectorAll("td");
+sheet.addRow([]);
+sheet.addRow([]);
 
-    sheet.addRow([
-      cells[0].innerText,
-      Number(cells[1].innerText) || cells[1].innerText
-    ]);
-  });
+//////////////////////////////////////////////////
+// EXPENSE TABLE
+//////////////////////////////////////////////////
 
-  sheet.addRow([]);
-  sheet.addRow([]);
+sheet.addRow([expenseTitle]);
+sheet.addRow([]);
 
-  //////////////////////////////////////////////////
-  // TABLE 2 → EXPENSE + ASSET + LIABILITY
-  //////////////////////////////////////////////////
+sheet.addRow(["Category","Total"]);
 
-  sheet.addRow([expenseTitle]);
-  sheet.addRow([]);
+document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
+  if(i===0) return;
+  let cells = row.querySelectorAll("td");
+  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+});
 
-  sheet.addRow(["Ledger","Amount"]);
+sheet.addRow([]);
+sheet.addRow([]);
 
-  document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
-    if(i===0) return;
+//////////////////////////////////////////////////
+// MONTHLY PERSONAL EXPENSE TABLE
+//////////////////////////////////////////////////
 
-    let cells = row.querySelectorAll("td");
+sheet.addRow(["Monthly Personal Expense"]);
+sheet.addRow([]);
 
-    sheet.addRow([
-      cells[0].innerText,
-      Number(cells[1].innerText) || cells[1].innerText
-    ]);
-  });
+document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
+  let cells = row.querySelectorAll("th,td");
+  let data = [];
+  cells.forEach(c=>data.push(c.innerText));
+  sheet.addRow(data);
+});
 
-  sheet.addRow([]);
-  sheet.addRow([]);
+//////////////////////////////////////////////////
+// CAPTURE CHART IMAGES
+//////////////////////////////////////////////////
 
-  //////////////////////////////////////////////////
-  // TABLE 3 → MONTHLY SUMMARY
-  //////////////////////////////////////////////////
+let pieCanvas = document.getElementById("expensePieChart");
+let barCanvas = document.getElementById("personalExpenseChart");
 
-  sheet.addRow(["Monthly Expense Summary"]);
-  sheet.addRow([]);
+let pieImage = pieCanvas.toDataURL("image/png");
+let barImage = barCanvas.toDataURL("image/png");
 
-  document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
-    let cells = row.querySelectorAll("th,td");
+//////////////////////////////////////////////////
+// ADD PIE CHART
+//////////////////////////////////////////////////
 
-    let data = [];
-    cells.forEach(c=>data.push(c.innerText));
+const pieId = workbook.addImage({
+  base64: pieImage,
+  extension: 'png',
+});
 
-    sheet.addRow(data);
-  });
+sheet.addImage(pieId,{
+  tl: { col: 5, row: 1 },
+  ext: { width: 400, height: 300 }
+});
 
-  //////////////////////////////////////////////////
-  // CAPTURE CHART IMAGES
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// ADD BAR CHART
+//////////////////////////////////////////////////
 
-  let pieCanvas = document.getElementById("expensePieChart");
-  let barCanvas = document.getElementById("personalExpenseChart");
+const barId = workbook.addImage({
+  base64: barImage,
+  extension: 'png',
+});
 
-  let pieImage = pieCanvas.toDataURL("image/png");
-  let barImage = barCanvas.toDataURL("image/png");
+sheet.addImage(barId,{
+  tl: { col: 5, row: 20 },
+  ext: { width: 400, height: 300 }
+});
 
-  //////////////////////////////////////////////////
-  // ADD PIE CHART
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// FILE NAME BASED ON PERIOD
+//////////////////////////////////////////////////
 
-  const pieId = workbook.addImage({
-    base64: pieImage,
-    extension: 'png',
-  });
+let title = expenseTitle
+.replaceAll(" ","_")
+.replaceAll("/","-")
+.replaceAll(":","");
 
-  sheet.addImage(pieId,{
-    tl: { col: 5, row: 1 },
-    ext: { width: 400, height: 300 }
-  });
+let fileName = `Expense_Dashboard_${title}.xlsx`;
 
-  //////////////////////////////////////////////////
-  // ADD BAR CHART
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// ALIGN ALL CELLS RIGHT
+//////////////////////////////////////////////////
 
-  const barId = workbook.addImage({
-    base64: barImage,
-    extension: 'png',
-  });
+sheet.eachRow(row=>{
+row.eachCell(cell=>{
+cell.alignment = { horizontal: "right" };
+});
+});
 
-  sheet.addImage(barId,{
-    tl: { col: 5, row: 20 },
-    ext: { width: 400, height: 300 }
-  });
+//////////////////////////////////////////////////
+// DOWNLOAD FILE
+//////////////////////////////////////////////////
 
-  //////////////////////////////////////////////////
-  // FILE NAME BASED ON PERIOD
-  //////////////////////////////////////////////////
+const buffer = await workbook.xlsx.writeBuffer();
+saveAs(new Blob([buffer]), fileName);
 
-  let title = expenseTitle
-    .replaceAll(" ","_")
-    .replaceAll("/","-")
-    .replaceAll(":","");
-
-  let fileName = `Dashboard_${title}.xlsx`;
-
-  //////////////////////////////////////////////////
-  // ALIGNMENT (CENTER TEXT, RIGHT NUMBERS)
-  //////////////////////////////////////////////////
-
-  sheet.eachRow(row=>{
-    row.eachCell(cell=>{
-
-      if(typeof cell.value === "number"){
-        cell.alignment = { horizontal: "right" };
-      }else{
-        cell.alignment = { horizontal: "center" };
-      }
-
-    });
-  });
-
-  //////////////////////////////////////////////////
-  // DOWNLOAD FILE
-  //////////////////////////////////////////////////
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(new Blob([buffer]), fileName);
-
-  hideLoader();
-  showToast("Dashboard Exported 📊");
+hideLoader();
+showToast("Dashboard Exported 📊");
 
 }
 
+
 //////////////////////////////////////////////////
-// DASHBOARD CALCULATION (DEFAULT = CURRENT MONTH)
+// DASHBOARD CALCULATION
 //////////////////////////////////////////////////
 
 function calculateDashboard() {
 
-  //////////////////////////////////////////////////
-  // STEP 1: GET CURRENT MONTH DATE RANGE
-  //////////////////////////////////////////////////
+  let balances = {};
 
-  let today = new Date();
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
-  let fromDate = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    1
-  ).toISOString().split("T")[0];
+  let expenses = {
+    Personal: 0,
+    Home: 0,
+    "Office Reimbursement": 0
+  };
 
-  let toDate = today.toISOString().split("T")[0];
+  transactionsCache.forEach(t => {
 
-  //////////////////////////////////////////////////
-  // STEP 2: CALL MAIN ENGINE (SINGLE SOURCE OF TRUTH)
-  //////////////////////////////////////////////////
+    // RECEIPTS
+    if (t.type === "receipt" || t.type === "inflow") {
+      balances[t.account] += Number(t.amount);
+    }
 
-  calculateSummary(
-    fromDate,
-    toDate,
-    "Current Month Summary",
-    "Closing Cash & Bank (Current Month)"
-  );
-
+    // PAYMENTS
+    if (t.type === "payment" || t.type === "outflow") {
+      balances[t.account] -= Number(t.amount);
+      if(!expenses[t.category]){
+  expenses[t.category] = 0;
 }
 
+expenses[t.category] += Number(t.amount);
+    }
+
+    // CONTRA
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
+    }
+
+  });
+
+  //////////////////////////////////////////////
+  // DISPLAY CLOSING BALANCE
+  //////////////////////////////////////////////
+
+
+let rows = "";
+
+accountsList.forEach(acc => {
+
+  rows += `
+    <tr>
+      <td>${acc}</td>
+      <td>${balances[acc] || 0}</td>
+    </tr>
+  `;
+
+});
+	
+  document.getElementById("closingSummary").innerHTML = `
+    <table>
+      <tr><th>Account</th><th>Balance</th></tr>
+      ${rows}
+    </table>
+  `;
+
+  //////////////////////////////////////////////
+  // EXPENSE SUMMARY
+  //////////////////////////////////////////////
+
+  document.getElementById("expenseSummary").innerHTML = `
+    <table>
+      <tr><th>Category</th><th>Total</th></tr>
+      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
+      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
+      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
+    </table>
+  `;
+lucide.createIcons(); // ✅ HERE
+	
+}
 
 //////////////////////////////////////////////////
 // Balance Checker Function
 //////////////////////////////////////////////////
 
 
-function getCurrentBalance(ledgerName){
+function getCurrentBalance(account) {
 
   let balances = {};
 
-  // Opening from ledgers
-  ledgerList.forEach(l=>{
-    let value = Number(l.openingBalance || 0);
+accountsList.forEach(acc=>{
+  balances[acc] = Number(openingBalances[acc] || 0);
+});
 
-    if(l.openingType === "credit"){
-      value = -value;
-    }
+  transactionsCache.forEach(t => {
 
-    balances[l.name] = value;
-  });
+    if (t.type === "receipt" || t.type === "inflow")
+      balances[t.account] += Number(t.amount);
 
-  // Transactions
-  transactionsCache.forEach(t=>{
+    if (t.type === "payment" || t.type === "outflow")
+      balances[t.account] -= Number(t.amount);
 
-    let amount = Number(t.amount);
-
-    if(t.debitLedger){
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
-    }
-
-    if(t.creditLedger){
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
+    if (t.type === "contra") {
+      balances[t.from] -= Number(t.amount);
+      balances[t.to] += Number(t.amount);
     }
 
   });
 
-  return balances[ledgerName] || 0;
+  return balances[account];
 }
 
 
 //////////////////////////////////////////////////
-// Expense + Asset Ledger-wise Pie Chart
+// Pie Chart Function
 //////////////////////////////////////////////////
 
-function renderExpenseChart(fromDate,toDate){
+function renderExpenseChart(personal, home, office, qardan){
 
   const ctx = document.getElementById("expensePieChart");
 
@@ -1730,123 +1956,34 @@ function renderExpenseChart(fromDate,toDate){
     expenseChart.destroy();
   }
 
-  //////////////////////////////////////////////////
-  // STEP 1: PREPARE LEDGER MAP
-  //////////////////////////////////////////////////
-
-  let ledgerTotals = {};
-
-  ledgerList.forEach(l => {
-    if(["Expense","Asset"].includes(l.group)){
-      ledgerTotals[l.name] = 0;
-    }
-  });
-
-  //////////////////////////////////////////////////
-  // STEP 2: PROCESS TRANSACTIONS (FILTERED)
-  //////////////////////////////////////////////////
-
-  transactionsCache.forEach(t => {
-
-    if(t.date < fromDate || t.date > toDate) return;
-
-    let amount = Number(t.amount);
-
-    // Debit side (increase)
-    if(t.debitLedger && ledgerTotals.hasOwnProperty(t.debitLedger)){
-      ledgerTotals[t.debitLedger] += amount;
-    }
-
-    // Credit side (decrease)
-    if(t.creditLedger && ledgerTotals.hasOwnProperty(t.creditLedger)){
-      ledgerTotals[t.creditLedger] -= amount;
-    }
-
-  });
-
-  //////////////////////////////////////////////////
-  // STEP 3: PREPARE CHART DATA
-  //////////////////////////////////////////////////
-
-  let labels = [];
-  let data = [];
-
-  Object.keys(ledgerTotals).forEach(name => {
-
-    let val = ledgerTotals[name];
-
-    if(val === 0) return; // skip zero
-
-    labels.push(name);
-    data.push(Math.abs(val)); // chart shows magnitude
-
-  });
-
-  //////////////////////////////////////////////////
-  // STEP 4: CREATE CHART
-  //////////////////////////////////////////////////
-
   expenseChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: labels,
+      labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
       datasets: [{
-        data: data,
-        backgroundColor: generateColors(labels.length)
+        data: [personal, home, office, qardan], // ✅ FIXED
+        backgroundColor: [
+          "#4CAF50",
+          "#2196F3",
+          "#FF9800",
+          "#9C27B0"
+        ]
       }]
     },
     options: {
-  responsive: true,
-  plugins: {
-
-    legend: {
-      position: "bottom"
-    },
-
-    tooltip: {
-      callbacks: {
-        label: function(context){
-
-          let label = context.label || "";
-          let value = context.raw || 0;
-
-          let total = context.dataset.data.reduce((a,b)=>a+b,0);
-          let percent = ((value / total) * 100).toFixed(1);
-
-          return `${label}: ${value} (${percent}%)`;
+      responsive:true,
+      plugins:{
+        legend:{
+          position:"bottom"
         }
       }
     }
-
-  }
-}
   });
 
 }
 
 //////////////////////////////////////////////////
-// PIE CHART COLOR
-//////////////////////////////////////////////////
-	
-function generateColors(count){
-
-  let colors = [];
-
-  for(let i=0;i<count;i++){
-
-    let hue = Math.floor((360 / count) * i); // spread evenly
-    let saturation = 70; // %
-    let lightness = 55; // %
-
-    colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-  }
-
-  return colors;
-}
-	
-
-//////////////////////////////////////////////////
-// Expense Trend Chart (MONTHLY TOTAL - FULL YEAR)
+// Personal Expense Chart Function
 //////////////////////////////////////////////////
 
 function renderPersonalExpenseChart(){
@@ -1858,40 +1995,23 @@ function renderPersonalExpenseChart(){
     "Jul","Aug","Sep","Oct","Nov","Dec"
   ];
 
-  // ONE VALUE PER MONTH ✅
-  let monthly = new Array(12).fill(0);
-
-  //////////////////////////////////////////////////
-  // STEP 1: GET EXPENSE LEDGERS
-  //////////////////////////////////////////////////
-
-  let expenseLedgers = ledgerList
-    .filter(l => l.group === "Expense")
-    .map(l => l.name);
-
-  //////////////////////////////////////////////////
-  // STEP 2: SUM ALL EXPENSES PER MONTH
-  //////////////////////////////////////////////////
+  let personal = new Array(12).fill(0);
 
   transactionsCache.forEach(t => {
 
-    let d = new Date(t.date);
+    if(t.type === "payment" && t.category === "Personal"){
 
-    // FULL CURRENT YEAR ONLY
-    if(d.getFullYear() !== currentYear) return;
+      let d = new Date(t.date);
 
-    let amount = Number(t.amount);
+      if(d.getFullYear() === currentYear){
 
-    // ADD ALL EXPENSE LEDGERS TO SAME MONTH
-    if(t.debitLedger && expenseLedgers.includes(t.debitLedger)){
-      monthly[d.getMonth()] += amount;
+        personal[d.getMonth()] += Number(t.amount);
+
+      }
+
     }
 
   });
-
-  //////////////////////////////////////////////////
-  // STEP 3: CREATE CHART
-  //////////////////////////////////////////////////
 
   const ctx = document.getElementById("personalExpenseChart");
 
@@ -1901,52 +2021,59 @@ function renderPersonalExpenseChart(){
 
   personalExpenseChart = new Chart(ctx, {
 
-    type: "bar",
+type: "bar",
 
-    data: {
-      labels: months,
-      datasets: [
+data: {
 
-        {
-          label: "Total Expense",
-          data: monthly,
-          backgroundColor: "#001d4c"
-        },
+labels: months,
 
-        {
-          type: "line",
-          label: "Budget Limit (2000)",
-          data: new Array(12).fill(2000),
-          borderColor: "red",
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false
-        }
+datasets: [
 
-      ]
-    },
+{
+label: "Personal Expense",
+data: personal,
+backgroundColor: "#001d4c"
+},
 
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom"
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
+{
+type: "line",
+label: "Budget Limit (2000)",
+data: new Array(12).fill(2000),
+borderColor: "red",
+borderWidth: 2,
+pointRadius: 0,
+fill: false
+}
 
-  });
+]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+legend:{
+position:"bottom"
+}
+},
+
+scales:{
+y:{
+beginAtZero:true
+}
+}
 
 }
-	
+
+});
+
+}
+
 
 //////////////////////////////////////////////////
-// Monthly Expense Summary (NEW LEDGER SYSTEM)
+// Monthly Personal Expense Summary
 //////////////////////////////////////////////////
 
 function renderPersonalMonthlySummary(){
@@ -1960,38 +2087,21 @@ function renderPersonalMonthlySummary(){
 
   let monthly = new Array(12).fill(0);
 
-  //////////////////////////////////////////////////
-  // STEP 1: IDENTIFY EXPENSE LEDGERS
-  //////////////////////////////////////////////////
-
-  let expenseLedgers = ledgerList
-    .filter(l => l.group === "Expense")
-    .map(l => l.name);
-
-  //////////////////////////////////////////////////
-  // STEP 2: PROCESS TRANSACTIONS
-  //////////////////////////////////////////////////
-
   transactionsCache.forEach(t => {
 
-    let d = new Date(t.date);
+    if(t.type === "payment" && t.category === "Personal"){
 
-    if(d.getFullYear() !== currentYear) return;
+      let d = new Date(t.date);
 
-    let amount = Number(t.amount);
+      if(d.getFullYear() === currentYear){
 
-    // ONLY EXPENSE (DEBIT SIDE)
-    if(t.debitLedger && expenseLedgers.includes(t.debitLedger)){
+        monthly[d.getMonth()] += Number(t.amount);
 
-      monthly[d.getMonth()] += amount;
+      }
 
     }
 
   });
-
-  //////////////////////////////////////////////////
-  // STEP 3: RENDER TABLE
-  //////////////////////////////////////////////////
 
   let html = `
   <div style="height:200px; overflow-y:auto;">
@@ -2004,7 +2114,7 @@ function renderPersonalMonthlySummary(){
 
   months.forEach((m,i)=>{
 
-    let val = monthly[i] === 0 ? "-" : " " + monthly[i];
+    let val = monthly[i] === 0 ? "-" : " "+monthly[i];
 
     html += `
     <tr>
