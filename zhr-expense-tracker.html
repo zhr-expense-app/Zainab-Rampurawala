@@ -2196,7 +2196,7 @@ if(type === "payment"){
 
   let ledgerOptions = ledgerList
     .filter(l =>
-      ["Expense","Asset","Capital"].includes(l.group)
+      ["Expense","Asset","Drawings"].includes(l.group)
     )
     .map(l => `<option value="${l.name}">${l.name}</option>`)
     .join("");
@@ -2680,7 +2680,7 @@ function runReceiptsReport() {
 function showPaymentsReport() {
 
   let ledgerOptions = ledgerList
-    .filter(l => ["Expense","Asset","Capital"].includes(l.group))
+    .filter(l => ["Expense","Asset","Drawings"].includes(l.group))
     .map(l => `<option value="${l.name}">${l.name}</option>`)
     .join("");
 
@@ -2807,7 +2807,7 @@ function editPayment(id){
 
 
   let debitOptions = ledgerList
-    .filter(l => ["Expense","Asset","Capital"].includes(l.group))
+    .filter(l => ["Expense","Asset","Drawings"].includes(l.group))
     .map(l => `<option ${l.name===t.debitLedger?"selected":""}>${l.name}</option>`)
     .join("");
 
