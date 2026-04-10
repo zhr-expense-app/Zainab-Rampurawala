@@ -4675,6 +4675,7 @@ let html = `
   <option value="Asset">Asset</option>
   <option value="Liability">Liability</option>
   <option value="Drawings">Drawings</option>
+  <option value="Profit & Loss">Profit & Loss</option>
 </select>
 
 <label>Nature</label>
@@ -4710,9 +4711,14 @@ function autoSetNature(){
 
   let nature = "debit";
 
-  if(group === "Liability" || group === "Capital" || group === "Income"){
-    nature = "credit";
-  }
+  if(
+  group === "Liability" || 
+  group === "Capital" || 
+  group === "Income" ||
+  group === "Profit & Loss"   // ✅ ADD THIS
+){
+  nature = "credit";
+}
 
   // ✅ ADD THIS (Drawings always debit)
   if(group === "Drawings"){
@@ -4758,6 +4764,11 @@ async function addLedger(){
     openingType = "debit";
   }
 
+if(group === "Profit & Loss"){
+  nature = "credit";
+  openingType = "credit";
+}
+	
   if(!name){
     showToast("Enter ledger name","error");
     return;
@@ -4820,6 +4831,7 @@ let html = `
   <option ${l.group==="Asset"?"selected":""}>Asset</option>
   <option ${l.group==="Liability"?"selected":""}>Liability</option>
   <option ${l.group==="Drawings"?"selected":""}>Drawings</option> <!-- ✅ ADDED -->
+  <option ${l.group==="Profit & Loss"?"selected":""}>Profit & Loss</option>
 </select>
 
 <label>Nature</label>
@@ -4867,6 +4879,11 @@ async function updateLedger(id){
     openingType = "debit";
   }
 
+if(group === "Profit & Loss"){
+  nature = "credit";
+  openingType = "credit";
+}
+	
   if(!name){
     showToast("Enter ledger name","error");
     return;
