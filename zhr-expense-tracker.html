@@ -798,6 +798,7 @@ let personalExpenseChart = null;
 let accountsList = [];
 let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
+	let ledgerList = [];
 
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -1130,7 +1131,7 @@ async function showDashboard() {
   loadOpeningBalance();
   loadTransactions();
 loadAccounts();
-
+loadLedgers(); // ✅ ADD THIS
 
 
 //////////////////////////////////////////////////
