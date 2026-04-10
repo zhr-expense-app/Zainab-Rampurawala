@@ -4658,19 +4658,23 @@ openPopup(html);
 function showAddLedgerForm(){
 
 let html = `
-<h3>Add Ledger</h3>
+<h3>
+  <button onclick="showLedgerManager()" style="margin-right:10px;">⬅</button>
+  Add Ledger
+</h3>
 
 <label>Name</label>
 <input type="text" id="ledgerName">
 
 <label>Group</label>
 <select id="ledgerGroup" onchange="autoSetNature()">
-  <option>Cash & Bank</option>
-  <option>Capital</option>
-  <option>Income</option>
-  <option>Expense</option>
-  <option>Asset</option>
-  <option>Liability</option>
+  <option value="Cash & Bank">Cash & Bank</option>
+  <option value="Capital">Capital</option>
+  <option value="Income">Income</option>
+  <option value="Expense">Expense</option>
+  <option value="Asset">Asset</option>
+  <option value="Liability">Liability</option>
+  <option value="Drawings">Drawings</option>
 </select>
 
 <label>Nature</label>
@@ -4681,8 +4685,8 @@ let html = `
 
 <label>Opening Type</label>
 <select id="openingType">
-  <option>debit</option>
-  <option>credit</option>
+  <option value="debit">debit</option>
+  <option value="credit">credit</option>
 </select>
 
 <label>Opening Date</label>
@@ -4710,6 +4714,11 @@ function autoSetNature(){
     nature = "credit";
   }
 
+  // ✅ ADD THIS (Drawings always debit)
+  if(group === "Drawings"){
+    nature = "debit";
+  }
+
   document.getElementById("ledgerNature").value = nature;
 
   //////////////////////////////////////////////////
@@ -4727,6 +4736,7 @@ function autoSetNature(){
 
 }
 
+	
 //////////////////////////////////////////////////
 // ADD LEDGER
 //////////////////////////////////////////////////
@@ -4741,6 +4751,12 @@ async function addLedger(){
   let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
   let openingType = document.getElementById("openingType").value;
   let openingDate = document.getElementById("openingDate").value;
+
+  // ✅ ENSURE DRAWINGS ALWAYS DEBIT (safety)
+  if(group === "Drawings"){
+    nature = "debit";
+    openingType = "debit";
+  }
 
   if(!name){
     showToast("Enter ledger name","error");
@@ -4777,7 +4793,7 @@ async function addLedger(){
 
   }
 }
-
+	
 //////////////////////////////////////////////////
 // EDIT LEDGER
 //////////////////////////////////////////////////
@@ -4800,6 +4816,7 @@ let html = `
   <option ${l.group==="Expense"?"selected":""}>Expense</option>
   <option ${l.group==="Asset"?"selected":""}>Asset</option>
   <option ${l.group==="Liability"?"selected":""}>Liability</option>
+  <option ${l.group==="Drawings"?"selected":""}>Drawings</option> <!-- ✅ ADDED -->
 </select>
 
 <label>Nature</label>
@@ -4840,6 +4857,12 @@ async function updateLedger(id){
   let openingBalance = Number(document.getElementById("openingBalance").value) || 0;
   let openingType = document.getElementById("openingType").value;
   let openingDate = document.getElementById("openingDate").value;
+
+  // ✅ ENSURE DRAWINGS ALWAYS DEBIT
+  if(group === "Drawings"){
+    nature = "debit";
+    openingType = "debit";
+  }
 
   if(!name){
     showToast("Enter ledger name","error");
