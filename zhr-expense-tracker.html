@@ -1743,9 +1743,11 @@ renderPersonalMonthlySummary();
 renderPersonalExpenseChart();
 
 //////////////////////////////////////////////////
-// 📊 PIE CHARTS (KEEP SAFE FOR NOW)
+// 📊 CHARTS (KEEP SAFE FOR NOW)
 //////////////////////////////////////////////////
 renderLedgerPieChart(fromDate,toDate);
+
+renderCashFlowChart();
 	
 //////////////////////////////////////////////////
 // FINAL FORMATTING
@@ -2018,10 +2020,123 @@ accountsList.forEach(acc=>{
   return balances[account];
 }
 
+
+//////////////////////////////////////////////////
+// Cash Flow Chart (Line Chart)
+//////////////////////////////////////////////////
+
+function renderCashFlowChart(){
+
+  let currentYear = new Date().getFullYear();
+
+  let months = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  let inflow = new Array(12).fill(0);
+  let outflow = new Array(12).fill(0);
+
+  //////////////////////////////////////////////////
+  // LEDGER MAP
+  //////////////////////////////////////////////////
+
+  let ledgerMap = {};
+  ledgerList.forEach(l=>{
+    ledgerMap[l.name] = l.group;
+  });
+
+  //////////////////////////////////////////////////
+  // PROCESS TRANSACTIONS
+  //////////////////////////////////////////////////
+
+  transactionsCache.forEach(t => {
+
+    let d = new Date(t.date);
+
+    if(d.getFullYear() !== currentYear) return;
+
+    let amount = Number(t.amount);
+    let m = d.getMonth();
+
+    // ✅ CREDIT SIDE → INFLOW
+    if(t.creditLedger){
+      let group = ledgerMap[t.creditLedger];
+
+      if(["Income","Capital","Liability"].includes(group)){
+        inflow[m] += amount;
+      }
+    }
+
+    // ✅ DEBIT SIDE → OUTFLOW
+    if(t.debitLedger){
+      let group = ledgerMap[t.debitLedger];
+
+      if(["Expense","Asset","Drawings"].includes(group)){
+        outflow[m] += amount;
+      }
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // RENDER CHART
+  //////////////////////////////////////////////////
+
+  const ctx = document.getElementById("cashFlowChart");
+
+  if(window.cashFlowChart){
+    window.cashFlowChart.destroy();
+  }
+
+  window.cashFlowChart = new Chart(ctx, {
+
+    type: "line",
+
+    data: {
+      labels: months,
+      datasets: [
+
+        {
+          label: "Inflow",
+          data: inflow,
+          borderColor: "green",
+          backgroundColor: "transparent",
+          tension: 0.3
+        },
+
+        {
+          label: "Outflow",
+          data: outflow,
+          borderColor: "red",
+          backgroundColor: "transparent",
+          tension: 0.3
+        }
+
+      ]
+    },
+
+    options: {
+      responsive: true,
+      plugins:{
+        legend:{
+          position:"bottom"
+        }
+      },
+      scales:{
+        y:{
+          beginAtZero:true
+        }
+      }
+    }
+
+  });
+
+}
 	
 
 //////////////////////////////////////////////////
-// Ledger Pie Chart (Expense + Asset)
+// Ledger Pie Chart (Expense)
 //////////////////////////////////////////////////
 
 function renderLedgerPieChart(fromDate,toDate){
