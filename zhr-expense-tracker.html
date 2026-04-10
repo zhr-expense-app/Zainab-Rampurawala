@@ -1564,126 +1564,193 @@ openPopup(`
 
 
 //////////////////////////////////////////////////
-// Summary Calculation Engine
+// Summary Calculation Engine (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
 
 function calculateSummary(fromDate,toDate,expenseTitle,balanceTitle){
 
-  let balances = {};
+//////////////////////////////////////////////////
+// 🧾 TABLE 1 → CASH & BANK (CLOSING AS ON TO DATE)
+//////////////////////////////////////////////////
 
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
+let balances = {};
 
-  let expenses = {
-    Personal:0,
-    Home:0,
-    "Office Reimbursement":0,
-  	"Qardan Given":0
-  };
+// ✅ Initialize ONLY Cash & Bank ledgers
+ledgerList
+  .filter(l => l.group === "Cash & Bank")
+  .forEach(l => {
 
+    let value = Number(l.openingBalance || 0);
 
-
-  transactionsCache.forEach(t=>{
-
-    // Closing Balance calculation (till TO date)
-    if(t.date <= toDate){
-
-      if (t.type === "receipt" || t.type === "inflow")
-        balances[t.account] += Number(t.amount);
-
-      if (t.type === "payment" || t.type === "outflow")
-        balances[t.account] -= Number(t.amount);
-
-      if (t.type === "contra"){
-        balances[t.from] -= Number(t.amount);
-        balances[t.to] += Number(t.amount);
-      }
+    if(l.openingType === "credit"){
+      value = -value;
     }
 
-    // Expense summary (within selected range)
-    if(t.date >= fromDate && t.date <= toDate){
-
-      if (t.type === "payment" || t.type === "outflow"){
-        if(!expenses[t.category]){
-  expenses[t.category] = 0;
-}
-
-expenses[t.category] += Number(t.amount);
-      }
-
-    }
-
+    balances[l.name] = value;
   });
 
-let totalBalance = 0;
+// ✅ Apply ALL transactions till TO date
+transactionsCache.forEach(t => {
 
-accountsList.forEach(acc=>{
-  totalBalance += balances[acc];
+  if(t.date > toDate) return;
+
+  let amount = Number(t.amount);
+
+  if(t.debitLedger && balances.hasOwnProperty(t.debitLedger)){
+    balances[t.debitLedger] += amount;
+  }
+
+  if(t.creditLedger && balances.hasOwnProperty(t.creditLedger)){
+    balances[t.creditLedger] -= amount;
+  }
+
 });
 
-let totalExpense = 
-  expenses.Personal + 
-  expenses.Home + 
-  expenses["Office Reimbursement"] +
-  expenses["Qardan Given"];
+// ✅ Prepare Table 1
+let totalBalance = 0;
+let rows1 = "";
 
-let rows = "";
+Object.keys(balances).forEach(name => {
 
-accountsList.forEach(acc => {
+  let value = balances[name];
 
-  let isActive = activeAccounts.includes(acc);
+  totalBalance += value;
 
-let dot = isActive
-  ? '<span style="color:green;font-size:18px;">●</span>'
-  : '<span style="color:red;font-size:18px;">●</span>';
+  rows1 += `
+  <tr>
+    <td>${name}</td>
+    <td>${value}</td>
+  </tr>
+  `;
+});
 
-rows += `
-<tr>
-  <td>${dot} ${acc}</td>
-  <td>${balances[acc] || 0}</td>
-</tr>
+document.getElementById("closingSummary").innerHTML = `
+<div class="summary-title">${balanceTitle}</div>
+<table>
+  <tr><th>Ledger</th><th>Balance</th></tr>
+  ${rows1}
+  <tr>
+    <td><b>Total</b></td>
+    <td><b>${totalBalance}</b></td>
+  </tr>
+</table>
 `;
 
+//////////////////////////////////////////////////
+// 📊 TABLE 2 → PERIOD MOVEMENT (ALL GROUPS)
+//////////////////////////////////////////////////
+
+let movement = {};
+
+// ✅ Allowed groups
+let allowedGroups = [
+  "Expense",
+  "Asset",
+  "Liability",
+  "Capital",
+  "Drawings",
+  "Income"
+];
+
+// ✅ Map ledger name → group
+let ledgerMap = {};
+ledgerList.forEach(l=>{
+  ledgerMap[l.name] = l.group;
 });
-	
-  document.getElementById("closingSummary").innerHTML = `
 
-<div class="summary-title">${balanceTitle}</div>
-    <table>
-      <tr><th>Account</th><th>Balance</th></tr>
-      ${rows}
-<tr><td><b>Total</b></td><td><b> ${totalBalance}</b></td></tr>
-    </table>
+// ✅ Process ONLY transactions within period
+transactionsCache.forEach(t => {
+
+  if(t.date < fromDate || t.date > toDate) return;
+
+  let amount = Number(t.amount);
+
+  // 🔹 Debit side
+  if(t.debitLedger){
+
+    let group = ledgerMap[t.debitLedger];
+
+    if(allowedGroups.includes(group)){
+
+      if(!movement[t.debitLedger]){
+        movement[t.debitLedger] = 0;
+      }
+
+      movement[t.debitLedger] += amount;
+    }
+  }
+
+  // 🔹 Credit side
+  if(t.creditLedger){
+
+    let group = ledgerMap[t.creditLedger];
+
+    if(allowedGroups.includes(group)){
+
+      if(!movement[t.creditLedger]){
+        movement[t.creditLedger] = 0;
+      }
+
+      movement[t.creditLedger] -= amount;
+    }
+  }
+
+});
+
+// ✅ Remove zero / no activity
+let rows2 = "";
+let totalMovement = 0;
+
+Object.keys(movement).forEach(name => {
+
+  let value = movement[name];
+
+  if(value === 0) return; // ✅ skip no activity
+
+  totalMovement += value;
+
+  rows2 += `
+  <tr>
+    <td>${name}</td>
+    <td>${Math.abs(value)}</td>
+  </tr>
   `;
+});
 
-  document.getElementById("expenseSummary").innerHTML = `
- <div class="summary-title">${expenseTitle}</div>
-    <table>
-      <tr><th>Category</th><th>Total</th></tr>
-      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
-      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
-      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
-	  <tr><td>Qardan Given</td><td> ${expenses["Qardan Given"]}</td></tr>
-<tr><td><b>Total</b></td><td><b> ${totalExpense}</b></td></tr>
-    </table>
-  `;
+// ✅ Render Table 2
+document.getElementById("expenseSummary").innerHTML = `
+<div class="summary-title">${expenseTitle}</div>
+<table>
+  <tr><th>Ledger</th><th>Amount</th></tr>
+  ${rows2}
+  <tr>
+    <td><b>Total</b></td>
+    <td><b>${Math.abs(totalMovement)}</b></td>
+  </tr>
+</table>
+`;
 
-renderExpenseChart(
-  expenses.Personal,
-  expenses.Home,
-  expenses["Office Reimbursement"],
-  expenses["Qardan Given"]
-);
+//////////////////////////////////////////////////
+// 📅 TABLE 3 (UNCHANGED CALL)
+//////////////////////////////////////////////////
 
 renderPersonalMonthlySummary();
 
+//////////////////////////////////////////////////
+// 📊 CHARTS (KEEP SAFE FOR NOW)
+//////////////////////////////////////////////////
+
+// ⚠️ Optional: You can later upgrade this
+// For now keeping to avoid breaking
 renderPersonalExpenseChart();
 
+//////////////////////////////////////////////////
+// FINAL FORMATTING
+//////////////////////////////////////////////////
+
 formatAllAmounts();
-	
 lucide.createIcons();
-	
+
 }
 
 
