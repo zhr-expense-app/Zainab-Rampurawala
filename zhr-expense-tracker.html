@@ -2145,7 +2145,7 @@ beginAtZero:true
 
 
 //////////////////////////////////////////////////
-// Monthly Personal Expense Summary
+// Monthly Expense Summary (FINAL - CORRECT)
 //////////////////////////////////////////////////
 
 function renderPersonalMonthlySummary(){
@@ -2159,21 +2159,51 @@ function renderPersonalMonthlySummary(){
 
   let monthly = new Array(12).fill(0);
 
+  //////////////////////////////////////////////////
+  // LEDGER MAP
+  //////////////////////////////////////////////////
+
+  let ledgerMap = {};
+  ledgerList.forEach(l=>{
+    ledgerMap[l.name] = l.group;
+  });
+
+  //////////////////////////////////////////////////
+  // PROCESS TRANSACTIONS
+  //////////////////////////////////////////////////
+
   transactionsCache.forEach(t => {
 
-    if(t.type === "payment" && t.category === "Personal"){
+    let d = new Date(t.date);
 
-      let d = new Date(t.date);
+    if(d.getFullYear() !== currentYear) return;
 
-      if(d.getFullYear() === currentYear){
+    let amount = Number(t.amount);
+    let monthIndex = d.getMonth();
 
-        monthly[d.getMonth()] += Number(t.amount);
+    // ✅ Debit impact
+    if(t.debitLedger){
+      let group = ledgerMap[t.debitLedger];
 
+      if(group === "Expense"){
+        monthly[monthIndex] += amount;
       }
+    }
 
+    // ✅ Credit impact (REVERSAL)
+    if(t.creditLedger){
+      let group = ledgerMap[t.creditLedger];
+
+      if(group === "Expense"){
+        monthly[monthIndex] -= amount;
+      }
     }
 
   });
+
+  //////////////////////////////////////////////////
+  // BUILD TABLE
+  //////////////////////////////////////////////////
 
   let html = `
   <div style="height:200px; overflow-y:auto;">
@@ -2186,14 +2216,13 @@ function renderPersonalMonthlySummary(){
 
   months.forEach((m,i)=>{
 
-    let val = monthly[i] === 0 ? "-" : " "+monthly[i];
+    let val = monthly[i] === 0 ? "-" : " " + Math.abs(monthly[i]);
 
     html += `
     <tr>
       <td>${m} ${currentYear}</td>
       <td>${val}</td>
     </tr>`;
-
   });
 
   html += "</table></div>";
