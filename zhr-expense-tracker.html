@@ -2137,7 +2137,7 @@ function renderLedgerPieChart(fromDate,toDate){
 }
 
 //////////////////////////////////////////////////
-// Personal Expense Chart Function
+// Personal Expense Chart Function (UPDATED)
 //////////////////////////////////////////////////
 
 function renderPersonalExpenseChart(){
@@ -2151,21 +2151,51 @@ function renderPersonalExpenseChart(){
 
   let personal = new Array(12).fill(0);
 
+  //////////////////////////////////////////////////
+  // LEDGER MAP
+  //////////////////////////////////////////////////
+
+  let ledgerMap = {};
+  ledgerList.forEach(l=>{
+    ledgerMap[l.name] = l.group;
+  });
+
+  //////////////////////////////////////////////////
+  // PROCESS TRANSACTIONS (NEW LOGIC)
+  //////////////////////////////////////////////////
+
   transactionsCache.forEach(t => {
 
-    if(t.type === "payment" && t.category === "Personal"){
+    let d = new Date(t.date);
 
-      let d = new Date(t.date);
+    if(d.getFullYear() !== currentYear) return;
 
-      if(d.getFullYear() === currentYear){
+    let amount = Number(t.amount);
+    let monthIndex = d.getMonth();
 
-        personal[d.getMonth()] += Number(t.amount);
+    // ✅ Debit impact
+    if(t.debitLedger){
+      let group = ledgerMap[t.debitLedger];
 
+      if(group === "Expense"){
+        personal[monthIndex] += amount;
       }
+    }
 
+    // ✅ Credit impact (reversal)
+    if(t.creditLedger){
+      let group = ledgerMap[t.creditLedger];
+
+      if(group === "Expense"){
+        personal[monthIndex] -= amount;
+      }
     }
 
   });
+
+  //////////////////////////////////////////////////
+  // CHART RENDER (UNCHANGED STRUCTURE)
+  //////////////////////////////////////////////////
 
   const ctx = document.getElementById("personalExpenseChart");
 
@@ -2175,53 +2205,53 @@ function renderPersonalExpenseChart(){
 
   personalExpenseChart = new Chart(ctx, {
 
-type: "bar",
+    type: "bar",
 
-data: {
+    data: {
 
-labels: months,
+      labels: months,
 
-datasets: [
+      datasets: [
 
-{
-label: "Personal Expense",
-data: personal,
-backgroundColor: "#001d4c"
-},
+        {
+          label: "Expense",
+          data: personal.map(v => Math.abs(v)), // ✅ safe UI
+          backgroundColor: "#001d4c"
+        },
 
-{
-type: "line",
-label: "Budget Limit (2000)",
-data: new Array(12).fill(2000),
-borderColor: "red",
-borderWidth: 2,
-pointRadius: 0,
-fill: false
-}
+        {
+          type: "line",
+          label: "Budget Limit (2000)",
+          data: new Array(12).fill(2000),
+          borderColor: "red",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false
+        }
 
-]
+      ]
 
-},
+    },
 
-options:{
+    options:{
 
-responsive:true,
+      responsive:true,
 
-plugins:{
-legend:{
-position:"bottom"
-}
-},
+      plugins:{
+        legend:{
+          position:"bottom"
+        }
+      },
 
-scales:{
-y:{
-beginAtZero:true
-}
-}
+      scales:{
+        y:{
+          beginAtZero:true
+        }
+      }
 
-}
+    }
 
-});
+  });
 
 }
 
