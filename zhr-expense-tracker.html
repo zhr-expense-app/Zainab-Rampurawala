@@ -4577,9 +4577,7 @@ function loadLedgers(callback){
 
     console.log("Ledger Loaded:", ledgerList);
 
-    isLedgerLoaded = true;
-
-    tryInitializeDashboard();
+    
 
     if(callback && ledgerList.length > 0){
       callback();
