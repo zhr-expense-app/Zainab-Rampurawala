@@ -1743,6 +1743,11 @@ renderPersonalMonthlySummary();
 renderPersonalExpenseChart();
 
 //////////////////////////////////////////////////
+// 📊 PIE CHARTS (KEEP SAFE FOR NOW)
+//////////////////////////////////////////////////
+renderLedgerPieChart(fromDate,toDate);
+	
+//////////////////////////////////////////////////
 // FINAL FORMATTING
 //////////////////////////////////////////////////
 
@@ -2013,38 +2018,117 @@ accountsList.forEach(acc=>{
   return balances[account];
 }
 
+	
 
 //////////////////////////////////////////////////
-// Pie Chart Function
+// Ledger Pie Chart (Expense + Asset)
 //////////////////////////////////////////////////
 
-function renderExpenseChart(personal, home, office, qardan){
+function renderLedgerPieChart(fromDate,toDate){
+
+  let ledgerMap = {};
+  ledgerList.forEach(l=>{
+    ledgerMap[l.name] = l.group;
+  });
+
+  let allowedGroups = ["Expense","Asset"];
+
+  let totals = {};
+
+  //////////////////////////////////////////////////
+  // CALCULATE MOVEMENT
+  //////////////////////////////////////////////////
+
+  transactionsCache.forEach(t => {
+
+    if(t.date < fromDate || t.date > toDate) return;
+
+    let amount = Number(t.amount);
+
+    // Debit
+    if(t.debitLedger){
+      let group = ledgerMap[t.debitLedger];
+
+      if(allowedGroups.includes(group)){
+        if(!totals[t.debitLedger]) totals[t.debitLedger] = 0;
+        totals[t.debitLedger] += amount;
+      }
+    }
+
+    // Credit
+    if(t.creditLedger){
+      let group = ledgerMap[t.creditLedger];
+
+      if(allowedGroups.includes(group)){
+        if(!totals[t.creditLedger]) totals[t.creditLedger] = 0;
+        totals[t.creditLedger] -= amount;
+      }
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // PREPARE DATA
+  //////////////////////////////////////////////////
+
+  let labels = [];
+  let data = [];
+
+  Object.keys(totals).forEach(name => {
+
+    let value = totals[name];
+
+    if(value === 0) return;
+
+    labels.push(name);
+    data.push(Math.abs(value));
+  });
+
+  //////////////////////////////////////////////////
+  // AUTO COLORS
+  //////////////////////////////////////////////////
+
+  let colors = labels.map((_,i)=>{
+    let hue = (i * 360 / labels.length);
+    return `hsl(${hue},70%,60%)`;
+  });
+
+  //////////////////////////////////////////////////
+  // RENDER CHART
+  //////////////////////////////////////////////////
 
   const ctx = document.getElementById("expensePieChart");
 
-  if(expenseChart){
-    expenseChart.destroy();
+  if(window.expenseChart){
+    window.expenseChart.destroy();
   }
 
-  expenseChart = new Chart(ctx, {
+  window.expenseChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Personal","Home","Office Reimbursement","Qardan Given"],
+      labels: labels,
       datasets: [{
-        data: [personal, home, office, qardan], // ✅ FIXED
-        backgroundColor: [
-          "#4CAF50",
-          "#2196F3",
-          "#FF9800",
-          "#9C27B0"
-        ]
+        data: data,
+        backgroundColor: colors
       }]
     },
     options: {
-      responsive:true,
+      responsive: true,
       plugins:{
         legend:{
           position:"bottom"
+        },
+        tooltip:{
+          callbacks:{
+            label: function(context){
+
+              let total = context.dataset.data.reduce((a,b)=>a+b,0);
+              let value = context.raw;
+              let percent = ((value/total)*100).toFixed(1);
+
+              return `${context.label}: ${value} (${percent}%)`;
+            }
+          }
         }
       }
     }
