@@ -273,7 +273,12 @@ button:active{
     }
 
 	  .summary-box:nth-child(2) .summary-table-wrapper{
-  max-height: 350px;   /* 👈 control scroll area */
+  max-height: 260px;   /* 👈 control scroll area */
+  overflow-y: auto;
+}
+
+	  .summary-box:nth-child(3) .summary-table-wrapper{
+  max-height: 260px;   /* 👈 control scroll area */
   overflow-y: auto;
 }
 
@@ -2372,13 +2377,13 @@ function renderPersonalMonthlySummary(){
   //////////////////////////////////////////////////
 
   let html = `
-  <div style="height:200px; overflow-y:auto;">
-  <table style="margin-top:0;">
-  <tr>
-    <th>Month</th>
-    <th>FY ${currentYear}</th>
-  </tr>
-  `;
+<div class="summary-table-wrapper">
+<table>
+<tr>
+  <th>Month</th>
+  <th>FY ${currentYear}</th>
+</tr>
+`;
 
   months.forEach((m,i)=>{
 
