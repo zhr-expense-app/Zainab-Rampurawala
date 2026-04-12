@@ -2019,6 +2019,44 @@ accountsList.forEach(acc=>{
   return balances[account];
 }
 
+
+//////////////////////////////////////////////////
+// ✅ GET LEDGER BALANCE (CORRECT SYSTEM)
+//////////////////////////////////////////////////
+
+function getLedgerBalance(ledgerName){
+
+  let balances = {};
+
+  // Opening balances
+  ledgerList.forEach(l=>{
+    let value = Number(l.openingBalance || 0);
+
+    if(l.openingType === "credit"){
+      value = -value;
+    }
+
+    balances[l.name] = value;
+  });
+
+  // Apply all transactions
+  transactionsCache.forEach(t=>{
+
+    let amount = Number(t.amount);
+
+    if(t.debitLedger){
+      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+    }
+
+    if(t.creditLedger){
+      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
+    }
+
+  });
+
+  return balances[ledgerName] || 0;
+}
+
 	
 
 //////////////////////////////////////////////////
@@ -2642,12 +2680,18 @@ if(ledgerList.length === 0){
   }
 
 
-  let balance = getCurrentBalance(creditLedger);
+if(isCashBankLedger(creditLedger)){
 
-  if (balance < amount) {
-    showToast("Insufficient balance in " + creditLedger + " ❌","error");
+  let balance = getLedgerBalance(creditLedger);
+
+  let projected = balance - amount;
+
+  if(projected < 0){
+    showToast(creditLedger + " cannot go negative ❌","error");
     return;
   }
+}
+
 
   try{
 
@@ -2722,13 +2766,15 @@ if(ledgerList.length === 0){
 
   if(isCashBankLedger(creditLedger)){
 
-    let balance = getCurrentBalance(creditLedger);
+  let balance = getLedgerBalance(creditLedger);
 
-    if(balance < amount){
-      showToast(creditLedger + " cannot go negative ❌","error");
-      return;
-    }
+  let projected = balance - amount;
+
+  if(projected < 0){
+    showToast(creditLedger + " cannot go negative ❌","error");
+    return;
   }
+}
 
   try{
 
@@ -3084,12 +3130,17 @@ async function updatePayment(id){
   }
 
 
+  if(isCashBankLedger(creditLedger)){
+
   let balance = getBalanceExcludingTransaction(creditLedger, id);
 
-  if (balance < amount) {
-    showToast("Insufficient balance in " + creditLedger,"error");
+  let projected = balance - amount;
+
+  if(projected < 0){
+    showToast(creditLedger + " cannot go negative ❌","error");
     return;
   }
+}
 
   try{
 
@@ -3322,13 +3373,15 @@ async function updateJournal(id){
 
   if(isCashBankLedger(creditLedger)){
 
-    let balance = getBalanceExcludingTransaction(creditLedger, id);
+  let balance = getBalanceExcludingTransaction(creditLedger, id);
 
-    if(balance < amount){
-      showToast(creditLedger + " cannot go negative ❌","error");
-      return;
-    }
+  let projected = balance - amount;
+
+  if(projected < 0){
+    showToast(creditLedger + " cannot go negative ❌","error");
+    return;
   }
+}
 
 
   try{
