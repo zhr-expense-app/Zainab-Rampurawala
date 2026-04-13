@@ -2668,8 +2668,15 @@ async function savePayment(){
   if(!checkPermission("write")) return;
 
   let date = document.getElementById("date").value;
-  let debitLedger = document.getElementById("debitLedger").value;   // Expense / Asset / Capital
-  let creditLedger = document.getElementById("creditLedger").value; // Cash / Bank
+
+  // ✅ CHANGE: now value = ledgerId
+  let debitLedgerId = document.getElementById("debitLedger").value;
+  let creditLedgerId = document.getElementById("creditLedger").value;
+
+  // ✅ ADD: get names from ID (for backward compatibility)
+  let debitLedger = getLedgerNameById(debitLedgerId);
+  let creditLedger = getLedgerNameById(creditLedgerId);
+
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
@@ -2684,12 +2691,12 @@ if(ledgerList.length === 0){
     return;
   }
 
-  if (!debitLedger || !creditLedger || !narration || !amount) {
+  if (!debitLedgerId || !creditLedgerId || !narration || !amount) {
     showToast("All fields are mandatory","error");
     return;
   }
 
-  if (debitLedger === creditLedger) {
+  if (debitLedgerId === creditLedgerId) {
     showToast("Debit and Credit cannot be same ❌","error");
     return;
   }
@@ -2720,10 +2727,17 @@ if(isCashBankLedger(creditLedger)){
     let txnNumber = await getNextTransactionNumber("payment");
 
     await db.collection("transactions").add({
-      transactionNumber: txnNumber,   // ✅ IMPORTANT
+      transactionNumber: txnNumber,
       type: "payment",
+
+      // ✅ NEW SYSTEM (ID BASED)
+      debitLedgerId: debitLedgerId,
+      creditLedgerId: creditLedgerId,
+
+      // ✅ OLD SYSTEM (DO NOT REMOVE — compatibility)
       debitLedger: debitLedger,
       creditLedger: creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -2956,7 +2970,7 @@ function showPaymentsReport() {
 
   let ledgerOptions = ledgerList
     .filter(l => ["Expense","Asset","Drawings"].includes(l.group))
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   openPopup(`
@@ -2976,7 +2990,7 @@ function showPaymentsReport() {
 
     <button onclick="runPaymentReport()">Run</button>
   `);
-	  }
+}
 
 
 //////////////////////////////////////////////////
@@ -3016,7 +3030,7 @@ function runPaymentReport() {
       let isLedger = true;
 
       if(ledger){
-        isLedger = t.debitLedger === ledger;
+        isLedger = (t.debitLedgerId === ledger || t.debitLedger === ledger);
       }
 
       return isPayment && isLedger && isInRange;
@@ -3057,8 +3071,8 @@ function runPaymentReport() {
         <td>${p.date}</td>
         <td>${p.transactionNumber || "-"}</td>
         <td>Payment</td>
-        <td>${p.creditLedger}</td>   <!-- Mode (Cash/Bank) -->
-        <td>${p.debitLedger}</td>    <!-- Ledger -->
+        <td>${getLedgerDisplayName(p,"credit")}</td>   <!-- Mode -->
+        <td>${getLedgerDisplayName(p,"debit")}</td>    <!-- Ledger -->
         <td>${p.narration}</td>
         <td class="amount">${Number(p.amount).toFixed(2)}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
@@ -3073,23 +3087,26 @@ function runPaymentReport() {
 }
 
 //////////////////////////////////////////////////
-// EDIT PAYMENT (NEW SYSTEM)
+// EDIT PAYMENT (NEW SYSTEM - ID BASED)
 //////////////////////////////////////////////////
 
 function editPayment(id){
 
   let t = transactionsCache.find(x => x.id === id);
 
+  // ✅ resolve selected values (ID preferred, fallback to name for old data)
+  let selectedDebit = t.debitLedgerId || t.debitLedger;
+  let selectedCredit = t.creditLedgerId || t.creditLedger;
 
   let debitOptions = ledgerList
     .filter(l => ["Expense","Asset","Drawings"].includes(l.group))
-    .map(l => `<option ${l.name===t.debitLedger?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id===selectedDebit || l.name===selectedDebit)?"selected":""}>${l.name}</option>`)
     .join("");
 
 
   let creditOptions = ledgerList
     .filter(l => l.group === "Cash & Bank")
-    .map(l => `<option ${l.name===t.creditLedger?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id===selectedCredit || l.name===selectedCredit)?"selected":""}>${l.name}</option>`)
     .join("");
 
 
@@ -3114,8 +3131,10 @@ function editPayment(id){
     <button onclick="updatePayment('${id}')">Update</button>
   `);
 }
+
+	
 //////////////////////////////////////////////////
-// UPDATE PAYMENT (NEW SYSTEM)
+// UPDATE PAYMENT (NEW SYSTEM - ID BASED)
 //////////////////////////////////////////////////
 
 async function updatePayment(id){
@@ -3123,8 +3142,15 @@ async function updatePayment(id){
   if(!checkPermission("write")) return;
 
   let date = document.getElementById("date").value;
-  let debitLedger = document.getElementById("debitLedger").value;   // Expense / Asset / Capital
-  let creditLedger = document.getElementById("creditLedger").value; // Cash / Bank
+
+  // ✅ CHANGE: now value = ledgerId
+  let debitLedgerId = document.getElementById("debitLedger").value;
+  let creditLedgerId = document.getElementById("creditLedger").value;
+
+  // ✅ ADD: get names (for backward compatibility)
+  let debitLedger = getLedgerNameById(debitLedgerId);
+  let creditLedger = getLedgerNameById(creditLedgerId);
+
   let narration = document.getElementById("narration").value.trim();
   let amount = Number(document.getElementById("amount").value);
 
@@ -3134,12 +3160,12 @@ async function updatePayment(id){
     return;
   }
 
-  if (!debitLedger || !creditLedger || !narration || !amount) {
+  if (!debitLedgerId || !creditLedgerId || !narration || !amount) {
     showToast("All fields are mandatory","error");
     return;
   }
 
-  if (debitLedger === creditLedger) {
+  if (debitLedgerId === creditLedgerId) {
     showToast("Debit and Credit cannot be same ❌","error");
     return;
   }
@@ -3167,8 +3193,15 @@ async function updatePayment(id){
     showLoader();
 
     await db.collection("transactions").doc(id).update({
+
+      // ✅ NEW SYSTEM (ID BASED)
+      debitLedgerId: debitLedgerId,
+      creditLedgerId: creditLedgerId,
+
+      // ✅ OLD SYSTEM (DO NOT REMOVE)
       debitLedger: debitLedger,
       creditLedger: creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -3217,7 +3250,7 @@ function refreshPaymentReport(){
       let isLedger = true;
 
       if(ledger){
-        isLedger = t.debitLedger === ledger;
+        isLedger = (t.debitLedgerId === ledger || t.debitLedger === ledger);
       }
 
       return isPayment && isLedger && isInRange;
@@ -3258,8 +3291,8 @@ function refreshPaymentReport(){
         <td>${p.date}</td>
         <td>${p.transactionNumber || "-"}</td>
         <td>Payment</td>
-        <td>${p.creditLedger}</td>
-        <td>${p.debitLedger}</td>
+        <td>${getLedgerDisplayName(p,"credit")}</td>
+        <td>${getLedgerDisplayName(p,"debit")}</td>
         <td>${p.narration}</td>
         <td class="amount">${Number(p.amount).toFixed(2)}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
