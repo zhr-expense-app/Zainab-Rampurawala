@@ -2113,35 +2113,35 @@ function renderPersonalExpenseChart(){
 
   let ledgerMap = {};
   ledgerList.forEach(l=>{
-    ledgerMap[l.id] = l.group; // ✅ CHANGED (name → id)
+    ledgerMap[l.id] = l.group;
   });
 
   //////////////////////////////////////////////////
-  // PROCESS TRANSACTIONS (NEW LOGIC)
+  // PROCESS TRANSACTIONS
   //////////////////////////////////////////////////
 
   transactionsCache.forEach(t => {
 
     let d = new Date(t.date);
-
     if(d.getFullYear() !== currentYear) return;
 
     let amount = Number(t.amount);
     let monthIndex = d.getMonth();
 
-    // ✅ Debit impact
-    if(t.debitLedger){
-      let group = ledgerMap[t.debitLedger];
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
 
+    // Debit
+    if(debitKey){
+      let group = ledgerMap[debitKey];
       if(group === "Expense"){
         personal[monthIndex] += amount;
       }
     }
 
-    // ✅ Credit impact (reversal)
-    if(t.creditLedger){
-      let group = ledgerMap[t.creditLedger];
-
+    // Credit (reversal)
+    if(creditKey){
+      let group = ledgerMap[creditKey];
       if(group === "Expense"){
         personal[monthIndex] -= amount;
       }
@@ -2150,7 +2150,7 @@ function renderPersonalExpenseChart(){
   });
 
   //////////////////////////////////////////////////
-  // CHART RENDER (UNCHANGED STRUCTURE)
+  // RENDER CHART
   //////////////////////////////////////////////////
 
   const ctx = document.getElementById("personalExpenseChart");
@@ -2171,7 +2171,7 @@ function renderPersonalExpenseChart(){
 
         {
           label: "Expense",
-          data: personal.map(v => Math.abs(v)), // ✅ safe UI
+          data: personal.map(v => Math.abs(v)),
           backgroundColor: "#001d4c"
         },
 
@@ -2190,21 +2190,13 @@ function renderPersonalExpenseChart(){
     },
 
     options:{
-
       responsive:true,
-
       plugins:{
-        legend:{
-          position:"bottom"
-        }
+        legend:{ position:"bottom" }
       },
-
       scales:{
-        y:{
-          beginAtZero:true
-        }
+        y:{ beginAtZero:true }
       }
-
     }
 
   });
@@ -2232,7 +2224,7 @@ function renderPersonalMonthlySummary(){
 
   let ledgerMap = {};
   ledgerList.forEach(l=>{
-    ledgerMap[l.id] = l.group; // ✅ CHANGED (name → id)
+    ledgerMap[l.id] = l.group;
   });
 
   //////////////////////////////////////////////////
@@ -2242,25 +2234,25 @@ function renderPersonalMonthlySummary(){
   transactionsCache.forEach(t => {
 
     let d = new Date(t.date);
-
     if(d.getFullYear() !== currentYear) return;
 
     let amount = Number(t.amount);
     let monthIndex = d.getMonth();
 
-    // ✅ Debit impact
-    if(t.debitLedger){
-      let group = ledgerMap[t.debitLedger];
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
 
+    // Debit
+    if(debitKey){
+      let group = ledgerMap[debitKey];
       if(group === "Expense"){
         monthly[monthIndex] += amount;
       }
     }
 
-    // ✅ Credit impact (REVERSAL)
-    if(t.creditLedger){
-      let group = ledgerMap[t.creditLedger];
-
+    // Credit
+    if(creditKey){
+      let group = ledgerMap[creditKey];
       if(group === "Expense"){
         monthly[monthIndex] -= amount;
       }
