@@ -2404,6 +2404,39 @@ function renderPersonalMonthlySummary(){
 
 
 //////////////////////////////////////////////////
+// GET LEDGER NAME BY ID
+//////////////////////////////////////////////////
+
+function getLedgerNameById(id){
+  let l = ledgerList.find(x => x.id === id);
+  return l ? l.name : "";
+}
+
+//////////////////////////////////////////////////
+// GET DISPLAY NAME (SAFE FOR OLD + NEW)
+//////////////////////////////////////////////////
+
+function getLedgerDisplayName(t, type){
+
+  if(type === "debit"){
+    if(t.debitLedgerId){
+      return getLedgerNameById(t.debitLedgerId);
+    }
+    return t.debitLedger || "";
+  }
+
+  if(type === "credit"){
+    if(t.creditLedgerId){
+      return getLedgerNameById(t.creditLedgerId);
+    }
+    return t.creditLedger || "";
+  }
+
+  return "";
+}
+
+	
+//////////////////////////////////////////////////
 // TRANSACTION ENTRY FORMS
 //////////////////////////////////////////////////
 
@@ -2465,7 +2498,7 @@ if(type === "payment"){
     .filter(l =>
       ["Expense","Asset","Drawings"].includes(l.group)
     )
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   let cashOptions = ledgerList
@@ -3046,8 +3079,10 @@ function runPaymentReport() {
 
     });
 
+let ledgerName = getLedgerNameById(ledger);
+	
   let html = `
-    <h3>${ledger ? ledger + " " : ""}Payments Report</h3>
+    <h3>${ledger ? ledgerName + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
@@ -3266,8 +3301,10 @@ function refreshPaymentReport(){
 
     });
 
+let ledgerName = getLedgerNameById(ledger);
+	
   let html = `
-    <h3>${ledger ? ledger + " " : ""}Payments Report</h3>
+    <h3>${ledger ? ledgerName + " " : ""}Payments Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
