@@ -1981,11 +1981,11 @@ function getLedgerBalance(ledgerId){
 function renderLedgerPieChart(fromDate,toDate){
 
   let ledgerMap = {};
-  let ledgerNameMap = {}; // ✅ NEW (for display only)
+  let ledgerNameMap = {};
 
   ledgerList.forEach(l=>{
-    ledgerMap[l.id] = l.group;        // ✅ CHANGED (name → id)
-    ledgerNameMap[l.id] = l.name;     // ✅ NEW (id → name)
+    ledgerMap[l.id] = l.group;
+    ledgerNameMap[l.id] = l.name;
   });
 
   let allowedGroups = ["Expense"];
@@ -2002,23 +2002,26 @@ function renderLedgerPieChart(fromDate,toDate){
 
     let amount = Number(t.amount);
 
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
     // Debit
-    if(t.debitLedger){
-      let group = ledgerMap[t.debitLedger];
+    if(debitKey){
+      let group = ledgerMap[debitKey];
 
       if(allowedGroups.includes(group)){
-        if(!totals[t.debitLedger]) totals[t.debitLedger] = 0;
-        totals[t.debitLedger] += amount;
+        if(!totals[debitKey]) totals[debitKey] = 0;
+        totals[debitKey] += amount;
       }
     }
 
     // Credit
-    if(t.creditLedger){
-      let group = ledgerMap[t.creditLedger];
+    if(creditKey){
+      let group = ledgerMap[creditKey];
 
       if(allowedGroups.includes(group)){
-        if(!totals[t.creditLedger]) totals[t.creditLedger] = 0;
-        totals[t.creditLedger] -= amount;
+        if(!totals[creditKey]) totals[creditKey] = 0;
+        totals[creditKey] -= amount;
       }
     }
 
@@ -2037,12 +2040,12 @@ function renderLedgerPieChart(fromDate,toDate){
 
     if(value === 0) return;
 
-    labels.push(ledgerNameMap[id] || id); // ✅ SHOW NAME instead of ID
+    labels.push(ledgerNameMap[id] || id);
     data.push(Math.abs(value));
   });
 
   //////////////////////////////////////////////////
-  // AUTO COLORS
+  // COLORS
   //////////////////////////////////////////////////
 
   let colors = labels.map((_,i)=>{
@@ -2051,7 +2054,7 @@ function renderLedgerPieChart(fromDate,toDate){
   });
 
   //////////////////////////////////////////////////
-  // RENDER CHART
+  // RENDER
   //////////////////////////////////////////////////
 
   const ctx = document.getElementById("expensePieChart");
@@ -2072,17 +2075,13 @@ function renderLedgerPieChart(fromDate,toDate){
     options: {
       responsive: true,
       plugins:{
-        legend:{
-          position:"bottom"
-        },
+        legend:{ position:"bottom" },
         tooltip:{
           callbacks:{
             label: function(context){
-
               let total = context.dataset.data.reduce((a,b)=>a+b,0);
               let value = context.raw;
               let percent = ((value/total)*100).toFixed(1);
-
               return `${context.label}: ${value} (${percent}%)`;
             }
           }
