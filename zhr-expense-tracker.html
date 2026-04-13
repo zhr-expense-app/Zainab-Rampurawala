@@ -2440,7 +2440,6 @@ function getLedgerDisplayName(t, type){
 // TRANSACTION ENTRY FORMS
 //////////////////////////////////////////////////
 
-
 function showForm(type){
 
 if(ledgerList.length === 0){
@@ -2458,12 +2457,12 @@ if(type === "receipt"){
     .filter(l =>
       ["Capital","Income","Liability"].includes(l.group)
     )
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   let cashOptions = ledgerList
     .filter(l => l.group === "Cash & Bank")
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   openPopup(`
@@ -2503,7 +2502,7 @@ if(type === "payment"){
 
   let cashOptions = ledgerList
     .filter(l => l.group === "Cash & Bank")
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   openPopup(`
@@ -2535,7 +2534,7 @@ if(type === "payment"){
 if(type === "journal"){
 
   let allLedgers = ledgerList
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   openPopup(`
@@ -2667,11 +2666,22 @@ if(ledgerList.length === 0){
 
     let txnNumber = await getNextTransactionNumber("receipt");
 
+    // ✅ GET LEDGER NAMES FROM ID
+    let debitLedgerObj = ledgerList.find(l => l.id === debitLedger);
+    let creditLedgerObj = ledgerList.find(l => l.id === creditLedger);
+
     await db.collection("transactions").add({
-      transactionNumber: txnNumber,   // ✅ IMPORTANT
+      transactionNumber: txnNumber,
       type: "receipt",
-      debitLedger: debitLedger,
-      creditLedger: creditLedger,
+
+      // ✅ NEW SYSTEM (ID)
+      debitLedgerId: debitLedger,
+      creditLedgerId: creditLedger,
+
+      // ✅ OLD SYSTEM (NAME - for backward compatibility)
+      debitLedger: debitLedgerObj ? debitLedgerObj.name : debitLedger,
+      creditLedger: creditLedgerObj ? creditLedgerObj.name : creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -2880,7 +2890,7 @@ function showReceiptsReport() {
 
   let ledgerOptions = ledgerList
     .filter(l => ["Capital","Income","Liability"].includes(l.group))
-    .map(l => `<option value="${l.name}">${l.name}</option>`)
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
     .join("");
 
   openPopup(`
@@ -2902,6 +2912,7 @@ function showReceiptsReport() {
   `);
 }
 
+	
 //////////////////////////////////////////////////
 // RUN RECEIPTS REPORT (NEW SYSTEM)
 //////////////////////////////////////////////////
@@ -2922,6 +2933,10 @@ function runReceiptsReport() {
 
   closePopup();
 
+  // ✅ GET LEDGER NAME FOR TITLE
+  let ledgerObj = ledgerList.find(l => l.id === ledger);
+  let ledgerName = ledgerObj ? ledgerObj.name : ledger;
+
   let receipts = transactionsCache
     .filter(t => {
 
@@ -2938,7 +2953,7 @@ function runReceiptsReport() {
       let isLedger = true;
 
       if(ledger){
-        isLedger = t.creditLedger === ledger;
+        isLedger = (t.creditLedgerId === ledger || t.creditLedger === ledger);
       }
 
       return isReceipt && isLedger && isInRange;
@@ -2955,7 +2970,7 @@ function runReceiptsReport() {
     });
 
   let html = `
-    <h3>${ledger ? ledger + " " : ""}Receipts Report</h3>
+    <h3>${ledger ? ledgerName + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
@@ -2979,8 +2994,8 @@ function runReceiptsReport() {
         <td>${r.date}</td>
         <td>${r.transactionNumber || "-"}</td>
         <td>Receipt</td>
-        <td>${r.debitLedger}</td>
-        <td>${r.creditLedger}</td>
+        <td>${getLedgerDisplayName(r,"debit")}</td>
+        <td>${getLedgerDisplayName(r,"credit")}</td>
         <td>${r.narration}</td>
         <td class="amount">${Number(r.amount).toFixed(2)}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
@@ -3595,13 +3610,13 @@ function editTransaction(id){
 
   let creditOptions = ledgerList
     .filter(l => ["Capital","Income","Liability"].includes(l.group))
-    .map(l => `<option ${l.name===t.creditLedger?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id===t.creditLedgerId || l.name===t.creditLedger)?"selected":""}>${l.name}</option>`)
     .join("");
 
 
   let debitOptions = ledgerList
     .filter(l => l.group === "Cash & Bank")
-    .map(l => `<option ${l.name===t.debitLedger?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id===t.debitLedgerId || l.name===t.debitLedger)?"selected":""}>${l.name}</option>`)
     .join("");
 
 
@@ -3626,6 +3641,8 @@ function editTransaction(id){
     <button onclick="updateTransaction('${id}')">Update</button>
   `);
 }
+
+	
 //////////////////////////////////////////////////
 // UPDATE RECEIPT (NEW SYSTEM)
 //////////////////////////////////////////////////
@@ -3666,9 +3683,20 @@ async function updateTransaction(id){
 
     showLoader();
 
+    // ✅ GET LEDGER NAMES FROM ID
+    let debitLedgerObj = ledgerList.find(l => l.id === debitLedger);
+    let creditLedgerObj = ledgerList.find(l => l.id === creditLedger);
+
     await db.collection("transactions").doc(id).update({
-      debitLedger: debitLedger,
-      creditLedger: creditLedger,
+
+      // ✅ NEW SYSTEM (ID)
+      debitLedgerId: debitLedger,
+      creditLedgerId: creditLedger,
+
+      // ✅ OLD SYSTEM (NAME - fallback)
+      debitLedger: debitLedgerObj ? debitLedgerObj.name : debitLedger,
+      creditLedger: creditLedgerObj ? creditLedgerObj.name : creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -3704,6 +3732,10 @@ function refreshReceiptsReport(){
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate = sessionStorage.getItem("currentToDate");
 
+  // ✅ GET LEDGER NAME FOR HEADER
+  let ledgerObj = ledgerList.find(l => l.id === ledger);
+  let ledgerName = ledgerObj ? ledgerObj.name : ledger;
+
   let receipts = transactionsCache
     .filter(t => {
 
@@ -3720,7 +3752,7 @@ function refreshReceiptsReport(){
       let isLedger = true;
 
       if(ledger){
-        isLedger = t.creditLedger === ledger;
+        isLedger = (t.creditLedgerId === ledger || t.creditLedger === ledger);
       }
 
       return isReceipt && isLedger && isInRange;
@@ -3737,7 +3769,7 @@ function refreshReceiptsReport(){
     });
 
   let html = `
-    <h3>${ledger ? ledger + " " : ""}Receipts Report</h3>
+    <h3>${ledger ? ledgerName + " " : ""}Receipts Report</h3>
     <table class="report-table">
       <tr>
         <th>Serial No</th>
@@ -3761,8 +3793,8 @@ function refreshReceiptsReport(){
         <td>${r.date}</td>
         <td>${r.transactionNumber || "-"}</td>
         <td>Receipt</td>
-        <td>${r.debitLedger}</td>
-        <td>${r.creditLedger}</td>
+        <td>${getLedgerDisplayName(r,"debit")}</td>
+        <td>${getLedgerDisplayName(r,"credit")}</td>
         <td>${r.narration}</td>
         <td class="amount">${Number(r.amount).toFixed(2)}</td>
         <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
