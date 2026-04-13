@@ -1932,43 +1932,14 @@ showToast("Dashboard Exported 📊");
 
 
 
-//////////////////////////////////////////////////
-// Balance Checker Function
-//////////////////////////////////////////////////
 
-
-function getCurrentBalance(account) {
-
-  let balances = {};
-
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
-
-  transactionsCache.forEach(t => {
-
-    if (t.type === "receipt" || t.type === "inflow")
-      balances[t.account] += Number(t.amount);
-
-    if (t.type === "payment" || t.type === "outflow")
-      balances[t.account] -= Number(t.amount);
-
-    if (t.type === "contra") {
-      balances[t.from] -= Number(t.amount);
-      balances[t.to] += Number(t.amount);
-    }
-
-  });
-
-  return balances[account];
-}
 
 
 //////////////////////////////////////////////////
-// ✅ GET LEDGER BALANCE (CORRECT SYSTEM)
+// ✅ GET LEDGER BALANCE (ID BASED SYSTEM)
 //////////////////////////////////////////////////
 
-function getLedgerBalance(ledgerName){
+function getLedgerBalance(ledgerId){
 
   let balances = {};
 
@@ -1980,7 +1951,7 @@ function getLedgerBalance(ledgerName){
       value = -value;
     }
 
-    balances[l.name] = value;
+    balances[l.id] = value; // ✅ CHANGED (name → id)
   });
 
   // Apply all transactions
@@ -1998,7 +1969,7 @@ function getLedgerBalance(ledgerName){
 
   });
 
-  return balances[ledgerName] || 0;
+  return balances[ledgerId] || 0; // ✅ CHANGED (name → id)
 }
 
 	
@@ -2010,8 +1981,11 @@ function getLedgerBalance(ledgerName){
 function renderLedgerPieChart(fromDate,toDate){
 
   let ledgerMap = {};
+  let ledgerNameMap = {}; // ✅ NEW (for display only)
+
   ledgerList.forEach(l=>{
-    ledgerMap[l.name] = l.group;
+    ledgerMap[l.id] = l.group;        // ✅ CHANGED (name → id)
+    ledgerNameMap[l.id] = l.name;     // ✅ NEW (id → name)
   });
 
   let allowedGroups = ["Expense"];
@@ -2057,13 +2031,13 @@ function renderLedgerPieChart(fromDate,toDate){
   let labels = [];
   let data = [];
 
-  Object.keys(totals).forEach(name => {
+  Object.keys(totals).forEach(id => {
 
-    let value = totals[name];
+    let value = totals[id];
 
     if(value === 0) return;
 
-    labels.push(name);
+    labels.push(ledgerNameMap[id] || id); // ✅ SHOW NAME instead of ID
     data.push(Math.abs(value));
   });
 
@@ -2140,7 +2114,7 @@ function renderPersonalExpenseChart(){
 
   let ledgerMap = {};
   ledgerList.forEach(l=>{
-    ledgerMap[l.name] = l.group;
+    ledgerMap[l.id] = l.group; // ✅ CHANGED (name → id)
   });
 
   //////////////////////////////////////////////////
@@ -2237,7 +2211,6 @@ function renderPersonalExpenseChart(){
   });
 
 }
-
 
 //////////////////////////////////////////////////
 // Monthly Expense Summary (FINAL - CORRECT)
