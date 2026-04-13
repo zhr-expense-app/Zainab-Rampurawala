@@ -2233,7 +2233,7 @@ function renderPersonalMonthlySummary(){
 
   let ledgerMap = {};
   ledgerList.forEach(l=>{
-    ledgerMap[l.name] = l.group;
+    ledgerMap[l.id] = l.group; // ✅ CHANGED (name → id)
   });
 
   //////////////////////////////////////////////////
