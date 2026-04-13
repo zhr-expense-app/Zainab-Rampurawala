@@ -1320,6 +1320,67 @@ function loadTransactions() {
 
 
 //////////////////////////////////////////////////
+// REFRESH DASHBOARD UI
+//////////////////////////////////////////////////
+
+function refreshDashboardUI(){
+
+  //////////////////////////////////////////////////
+  // 1. RE-RUN CURRENT SUMMARY (3 TABLES + CHARTS)
+  //////////////////////////////////////////////////
+
+  let activeSummary = sessionStorage.getItem("activeSummary");
+
+  if(activeSummary === "currentMonth"){
+    showCurrentMonth();
+  }
+
+  else if(activeSummary === "lastMonth"){
+    showLastMonth();
+  }
+
+  else if(activeSummary === "fullYear"){
+    showFullYear();
+  }
+
+  else if(activeSummary === "customSummary"){
+
+    let fromDate = sessionStorage.getItem("summaryFromDate");
+    let toDate = sessionStorage.getItem("summaryToDate");
+
+    let balanceTitle = `Balance as on ${toDate}`;
+    let expenseTitle = `From ${fromDate} till ${toDate}`;
+
+    calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+  }
+
+  else{
+    // default
+    showCurrentMonth();
+  }
+
+  //////////////////////////////////////////////////
+  // 2. REFRESH CURRENT REPORT (NO CHANGE NEEDED)
+  //////////////////////////////////////////////////
+
+  let currentReport = sessionStorage.getItem("currentReport");
+
+  if(currentReport === "receipts"){
+    refreshReceiptsReport();
+  }
+
+  if(currentReport === "payments"){
+    refreshPaymentReport();
+  }
+
+  if(currentReport === "journal"){
+    refreshJournalReport();
+  }
+
+}
+
+	
+//////////////////////////////////////////////////
 // LOAD OPENING BALANCE (REAL TIME)
 //////////////////////////////////////////////////
 
