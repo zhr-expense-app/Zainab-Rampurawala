@@ -2859,11 +2859,20 @@ if(ledgerList.length === 0){
 
     let txnNumber = await getNextTransactionNumber("journal");
 
+    // 🔥 NEW: get ledger objects
+    let debitObj = ledgerList.find(l => l.id === debitLedger);
+    let creditObj = ledgerList.find(l => l.id === creditLedger);
+
     await db.collection("transactions").add({
       transactionNumber: txnNumber,
       type: "journal",
-      debitLedger: debitLedger,
-      creditLedger: creditLedger,
+
+      debitLedger: debitObj?.name || debitLedger,
+      creditLedger: creditObj?.name || creditLedger,
+
+      debitLedgerId: debitLedger,
+      creditLedgerId: creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -3411,11 +3420,11 @@ function editJournal(id){
 
 
   let debitOptions = ledgerList
-    .map(l => `<option ${l.name===(t.debitLedger || "")?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id === t.debitLedgerId || l.name === t.debitLedger)?"selected":""}>${l.name}</option>`)
     .join("");
 
   let creditOptions = ledgerList
-    .map(l => `<option ${l.name===(t.creditLedger || "")?"selected":""}>${l.name}</option>`)
+    .map(l => `<option value="${l.id}" ${(l.id === t.creditLedgerId || l.name === t.creditLedger)?"selected":""}>${l.name}</option>`)
     .join("");
 
 
@@ -3493,9 +3502,18 @@ async function updateJournal(id){
 
     showLoader();
 
+    // 🔥 NEW: get ledger objects
+    let debitObj = ledgerList.find(l => l.id === debitLedger);
+    let creditObj = ledgerList.find(l => l.id === creditLedger);
+
     await db.collection("transactions").doc(id).update({
-      debitLedger: debitLedger,
-      creditLedger: creditLedger,
+
+      debitLedger: debitObj?.name || debitLedger,
+      creditLedger: creditObj?.name || creditLedger,
+
+      debitLedgerId: debitLedger,
+      creditLedgerId: creditLedger,
+
       date: date,
       narration: narration,
       amount: amount
@@ -3518,7 +3536,6 @@ async function updateJournal(id){
 
   }
 }
-
 
 //////////////////////////////////////////////////
 // REFRESH JOURNAL REPORT (NEW SYSTEM)
@@ -3580,15 +3597,14 @@ function refreshJournalReport(){
         <td>${j.date}</td>
         <td>${j.transactionNumber || "-"}</td>
         <td>Journal</td>
-        <td>${j.debitLedger}</td>
-        <td>${j.creditLedger}</td>
+        <td>${getLedgerDisplayName(j,"debit")}</td>
+        <td>${getLedgerDisplayName(j,"credit")}</td>
         <td>${j.narration}</td>
         <td class="amount">${Number(j.amount).toFixed(2)}</td>
         <td><button onclick="editJournal('${j.id}')">Edit</button></td>
         <td><button onclick="deleteTransaction('${j.id}')">Delete</button></td>
       </tr>
     `;
-
   });
 
   html += "</table>";
