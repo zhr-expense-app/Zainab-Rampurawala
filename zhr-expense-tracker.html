@@ -1582,6 +1582,7 @@ openPopup(`
 }
 
 
+
 //////////////////////////////////////////////////
 // Summary Calculation Engine (NEW LEDGER SYSTEM)
 //////////////////////////////////////////////////
@@ -1605,7 +1606,7 @@ ledgerList
       value = -value;
     }
 
-    balances[l.name] = value;
+    balances[l.id] = value;   // 🔥 CHANGED (name → id)
   });
 
 // ✅ Apply ALL transactions till TO date
@@ -1615,12 +1616,15 @@ transactionsCache.forEach(t => {
 
   let amount = Number(t.amount);
 
-  if(t.debitLedger && balances.hasOwnProperty(t.debitLedger)){
-    balances[t.debitLedger] += amount;
+  let debitKey = t.debitLedgerId || t.debitLedger;   // 🔥 NEW
+  let creditKey = t.creditLedgerId || t.creditLedger; // 🔥 NEW
+
+  if(debitKey && balances.hasOwnProperty(debitKey)){
+    balances[debitKey] += amount;
   }
 
-  if(t.creditLedger && balances.hasOwnProperty(t.creditLedger)){
-    balances[t.creditLedger] -= amount;
+  if(creditKey && balances.hasOwnProperty(creditKey)){
+    balances[creditKey] -= amount;
   }
 
 });
@@ -1629,11 +1633,13 @@ transactionsCache.forEach(t => {
 let totalBalance = 0;
 let rows1 = "";
 
-Object.keys(balances).forEach(name => {
+Object.keys(balances).forEach(key => {
 
-  let value = balances[name];
-
+  let value = balances[key];
   totalBalance += value;
+
+  let ledger = ledgerList.find(l => l.id === key);
+  let name = ledger ? ledger.name : key;  // 🔥 NEW
 
   rows1 += `
   <tr>
@@ -1669,10 +1675,10 @@ let allowedGroups = [
   "Drawings"
 ];
 
-// ✅ Map ledger name → group
+// ✅ Map ledger id → group
 let ledgerMap = {};
 ledgerList.forEach(l=>{
-  ledgerMap[l.name] = l.group;
+  ledgerMap[l.id] = l.group;   // 🔥 CHANGED
 });
 
 // ✅ Process ONLY transactions within period
@@ -1682,33 +1688,36 @@ transactionsCache.forEach(t => {
 
   let amount = Number(t.amount);
 
-  // 🔹 Debit side
-  if(t.debitLedger){
+  let debitKey = t.debitLedgerId || t.debitLedger;   // 🔥 NEW
+  let creditKey = t.creditLedgerId || t.creditLedger; // 🔥 NEW
 
-    let group = ledgerMap[t.debitLedger];
+  // 🔹 Debit side
+  if(debitKey){
+
+    let group = ledgerMap[debitKey];
 
     if(allowedGroups.includes(group)){
 
-      if(!movement[t.debitLedger]){
-        movement[t.debitLedger] = 0;
+      if(!movement[debitKey]){
+        movement[debitKey] = 0;
       }
 
-      movement[t.debitLedger] += amount;
+      movement[debitKey] += amount;
     }
   }
 
   // 🔹 Credit side
-  if(t.creditLedger){
+  if(creditKey){
 
-    let group = ledgerMap[t.creditLedger];
+    let group = ledgerMap[creditKey];
 
     if(allowedGroups.includes(group)){
 
-      if(!movement[t.creditLedger]){
-        movement[t.creditLedger] = 0;
+      if(!movement[creditKey]){
+        movement[creditKey] = 0;
       }
 
-      movement[t.creditLedger] -= amount;
+      movement[creditKey] -= amount;
     }
   }
 
@@ -1718,13 +1727,16 @@ transactionsCache.forEach(t => {
 let rows2 = "";
 let totalMovement = 0;
 
-Object.keys(movement).forEach(name => {
+Object.keys(movement).forEach(key => {
 
-  let value = movement[name];
+  let value = movement[key];
 
-  if(value === 0) return; // ✅ skip no activity
+  if(value === 0) return;
 
   totalMovement += value;
+
+  let ledger = ledgerList.find(l => l.id === key);
+  let name = ledger ? ledger.name : key;  // 🔥 NEW
 
   rows2 += `
   <tr>
@@ -1758,16 +1770,9 @@ renderPersonalMonthlySummary();
 // 📊 CHARTS (KEEP SAFE FOR NOW)
 //////////////////////////////////////////////////
 
-// ⚠️ Optional: You can later upgrade this
-// For now keeping to avoid breaking
 renderPersonalExpenseChart();
-
-//////////////////////////////////////////////////
-// 📊 CHARTS (KEEP SAFE FOR NOW)
-//////////////////////////////////////////////////
 renderLedgerPieChart(fromDate,toDate);
 
-	
 //////////////////////////////////////////////////
 // FINAL FORMATTING
 //////////////////////////////////////////////////
@@ -1776,6 +1781,7 @@ formatAllAmounts();
 lucide.createIcons();
 
 }
+
 
 
 
@@ -1924,89 +1930,7 @@ showToast("Dashboard Exported 📊");
 }
 
 
-//////////////////////////////////////////////////
-// DASHBOARD CALCULATION
-//////////////////////////////////////////////////
 
-function calculateDashboard() {
-
-  let balances = {};
-
-accountsList.forEach(acc=>{
-  balances[acc] = Number(openingBalances[acc] || 0);
-});
-
-  let expenses = {
-    Personal: 0,
-    Home: 0,
-    "Office Reimbursement": 0
-  };
-
-  transactionsCache.forEach(t => {
-
-    // RECEIPTS
-    if (t.type === "receipt" || t.type === "inflow") {
-      balances[t.account] += Number(t.amount);
-    }
-
-    // PAYMENTS
-    if (t.type === "payment" || t.type === "outflow") {
-      balances[t.account] -= Number(t.amount);
-      if(!expenses[t.category]){
-  expenses[t.category] = 0;
-}
-
-expenses[t.category] += Number(t.amount);
-    }
-
-    // CONTRA
-    if (t.type === "contra") {
-      balances[t.from] -= Number(t.amount);
-      balances[t.to] += Number(t.amount);
-    }
-
-  });
-
-  //////////////////////////////////////////////
-  // DISPLAY CLOSING BALANCE
-  //////////////////////////////////////////////
-
-
-let rows = "";
-
-accountsList.forEach(acc => {
-
-  rows += `
-    <tr>
-      <td>${acc}</td>
-      <td>${balances[acc] || 0}</td>
-    </tr>
-  `;
-
-});
-	
-  document.getElementById("closingSummary").innerHTML = `
-    <table>
-      <tr><th>Account</th><th>Balance</th></tr>
-      ${rows}
-    </table>
-  `;
-
-  //////////////////////////////////////////////
-  // EXPENSE SUMMARY
-  //////////////////////////////////////////////
-
-  document.getElementById("expenseSummary").innerHTML = `
-    <table>
-      <tr><th>Category</th><th>Total</th></tr>
-      <tr><td>Personal</td><td> ${expenses.Personal}</td></tr>
-      <tr><td>Home</td><td> ${expenses.Home}</td></tr>
-      <tr><td>Office Reimbursement</td><td> ${expenses["Office Reimbursement"]}</td></tr>
-    </table>
-  `;
-lucide.createIcons(); // ✅ HERE
-	
-}
 
 //////////////////////////////////////////////////
 // Balance Checker Function
