@@ -904,7 +904,7 @@ function loadAccounts() {
 
     // ✅ ONLY PLACE where dashboard should run
     setTimeout(() => {
-      calculateDashboard();
+      refreshDashboardUI();
     }, 100);
 
   });
@@ -1282,7 +1282,7 @@ function loadTransactions() {
       }
 
       // ✅ ALWAYS refresh dashboard
-      calculateDashboard();
+      refreshDashboardUI();
 
       // ✅ Refresh current summary
       let activeSummary = sessionStorage.getItem("activeSummary");
@@ -3813,7 +3813,7 @@ async function confirmDelete(id){
   closePopup();
 
 // refresh dashboard also
-calculateDashboard();	
+refreshDashboardUI();	
 
   //////////////////////////////////////////////////
   // REFRESH ACTIVE REPORT (NEW SYSTEM)
@@ -3841,7 +3841,7 @@ calculateDashboard();
 
 function refreshCurrentReport(){
 
-  calculateDashboard(); // 🔥 keeps UI fully synced
+  refreshDashboardUI(); // 🔥 keeps UI fully synced
 
   let currentReport = sessionStorage.getItem("currentReport");
 
