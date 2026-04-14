@@ -2001,7 +2001,7 @@ showToast("Dashboard Exported 📊");
 
 
 //////////////////////////////////////////////////
-// ✅ GET LEDGER BALANCE (ID BASED SYSTEM)
+// ✅ GET LEDGER BALANCE (FULLY FIXED - ID BASED)
 //////////////////////////////////////////////////
 
 function getLedgerBalance(ledgerId){
@@ -2016,7 +2016,7 @@ function getLedgerBalance(ledgerId){
       value = -value;
     }
 
-    balances[l.id] = value; // ✅ CHANGED (name → id)
+    balances[l.id] = value;
   });
 
   // Apply all transactions
@@ -2024,17 +2024,21 @@ function getLedgerBalance(ledgerId){
 
     let amount = Number(t.amount);
 
-    if(t.debitLedger){
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+    // ✅ USE ID FIRST, FALLBACK TO NAME
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
+    if(debitKey){
+      balances[debitKey] = (balances[debitKey] || 0) + amount;
     }
 
-    if(t.creditLedger){
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
+    if(creditKey){
+      balances[creditKey] = (balances[creditKey] || 0) - amount;
     }
 
   });
 
-  return balances[ledgerId] || 0; // ✅ CHANGED (name → id)
+  return balances[ledgerId] || 0;
 }
 
 	
@@ -3870,13 +3874,14 @@ function refreshCurrentReport(){
 
 
 //////////////////////////////////////////////////
-// GET BALANCE EXCLUDING CURRENT TRANSACTION
+// ✅ GET BALANCE EXCLUDING CURRENT TRANSACTION (FIXED - ID BASED)
 //////////////////////////////////////////////////
 
-function getBalanceExcludingTransaction(ledgerName, transactionId){
+function getBalanceExcludingTransaction(ledgerId, transactionId){
 
   let balances = {};
 
+  // Opening balances (ID based)
   ledgerList.forEach(l=>{
     let value = Number(l.openingBalance || 0);
 
@@ -3884,40 +3889,45 @@ function getBalanceExcludingTransaction(ledgerName, transactionId){
       value = -value;
     }
 
-    balances[l.name] = value;
+    balances[l.id] = value;
   });
 
+  // Apply transactions (excluding current)
   transactionsCache.forEach(t=>{
 
     if(t.id === transactionId) return;
 
     let amount = Number(t.amount);
 
-    if(t.debitLedger){
-      balances[t.debitLedger] = (balances[t.debitLedger] || 0) + amount;
+    // ✅ USE ID FIRST, FALLBACK TO NAME
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
+    if(debitKey){
+      balances[debitKey] = (balances[debitKey] || 0) + amount;
     }
 
-    if(t.creditLedger){
-      balances[t.creditLedger] = (balances[t.creditLedger] || 0) - amount;
+    if(creditKey){
+      balances[creditKey] = (balances[creditKey] || 0) - amount;
     }
 
   });
 
-  return balances[ledgerName] || 0;
+  return balances[ledgerId] || 0;
 }
 
 //////////////////////////////////////////////////
-// EXPORT REPORTS
+// EXPORT REPORTS (HEADER MATCH FIXED)
 //////////////////////////////////////////////////
 
 function exportCurrentReport(){
 
-showLoader(); // ADD	
+showLoader();
 
 let reportType = sessionStorage.getItem("currentReport");
 
 if(!reportType){
-  hideLoader(); // ✅ ADD THIS
+  hideLoader();
   showToast("Please run a report first ❌","error");
   return;
 }
@@ -3937,19 +3947,30 @@ if(reportType === "receipts"){
 
 title = "Receipts_Report";
 
-rows.push(["Serial No","Date","Mode","Category","Particular","Amount"]);
+rows.push(["Serial No","Date","Transaction No","Type","Mode","Ledger","Narration","Amount"]);
+
+let ledger = sessionStorage.getItem("receiptLedger");
 
 let receipts = transactionsCache
 .filter(t=>{
 
-let isReceipt = (t.type === "receipt" || t.type === "inflow");
+let isReceipt = t.type === "receipt";
 
-let category = sessionStorage.getItem("receiptCategory");
+let isInRange = true;
 
-return isReceipt &&
-       (!category || (t.category || "") === category) &&
-       t.date >= fromDate &&
-       t.date <= toDate;
+if(fromDate)
+  isInRange = t.date >= fromDate;
+
+if(toDate)
+  isInRange = isInRange && t.date <= toDate;
+
+let isLedger = true;
+
+if(ledger){
+  isLedger = (t.creditLedgerId === ledger || t.creditLedger === ledger);
+}
+
+return isReceipt && isLedger && isInRange;
 
 })
 .sort((a,b)=>{
@@ -3969,8 +3990,10 @@ total += Number(r.amount);
 rows.push([
   i+1,
   r.date,
-  r.account,
-  r.category || "-",   
+  r.transactionNumber || "-",
+  "Receipt",
+  getLedgerDisplayName(r,"debit"),
+  getLedgerDisplayName(r,"credit"),
   r.narration,
   Number(r.amount)
 ]);
@@ -3985,23 +4008,32 @@ rows.push([
 
 if(reportType === "payments"){
 
-let category = sessionStorage.getItem("currentCategory");
+let ledger = sessionStorage.getItem("paymentLedger");
 
-title = category+"_Payments_Report";
+title = "Payments_Report";
 
-rows.push(["Serial No","Date","Mode","Category","Particular","Amount"]);
+rows.push(["Serial No","Date","Transaction No","Type","Mode","Ledger","Narration","Amount"]);
 
 let payments = transactionsCache
 .filter(t=>{
 
-let isPayment = (t.type === "payment" || t.type === "outflow");
-let isCategory = true;
+let isPayment = t.type === "payment";
 
-if(category){
-  isCategory = t.category === category;
+let isInRange = true;
+
+if(fromDate)
+  isInRange = t.date >= fromDate;
+
+if(toDate)
+  isInRange = isInRange && t.date <= toDate;
+
+let isLedger = true;
+
+if(ledger){
+  isLedger = (t.debitLedgerId === ledger || t.debitLedger === ledger);
 }
 
-return isPayment && isCategory && t.date >= fromDate && t.date <= toDate;
+return isPayment && isLedger && isInRange;
 
 })
 .sort((a,b)=>{
@@ -4021,8 +4053,10 @@ total += Number(p.amount);
 rows.push([
   i+1,
   p.date,
-  p.account,
-  p.category || "-", 
+  p.transactionNumber || "-",
+  "Payment",
+  getLedgerDisplayName(p,"credit"),
+  getLedgerDisplayName(p,"debit"),
   p.narration,
   Number(p.amount)
 ]);
@@ -4032,19 +4066,29 @@ rows.push([
 }
 
 //////////////////////////////////////////////////
-// CONTRA REPORT
+// JOURNAL REPORT
 //////////////////////////////////////////////////
 
-if(reportType === "contra"){
+if(reportType === "journal"){
 
-title = "Contra_Report";
+title = "Journal_Report";
 
-rows.push(["Serial No","Date","From Account","To Account","Particular","Amount"]);
+rows.push(["Serial No","Date","Transaction No","Type","Debit","Credit","Narration","Amount"]);
 
-let contra = transactionsCache
+let journals = transactionsCache
 .filter(t=>{
 
-return t.type === "contra" && t.date >= fromDate && t.date <= toDate;
+let isJournal = t.type === "journal";
+
+let isInRange = true;
+
+if(fromDate)
+  isInRange = t.date >= fromDate;
+
+if(toDate)
+  isInRange = isInRange && t.date <= toDate;
+
+return isJournal && isInRange;
 
 })
 .sort((a,b)=>{
@@ -4057,17 +4101,19 @@ return new Date(a.date) - new Date(b.date);
 
 });
 
-contra.forEach((c,i)=>{
+journals.forEach((j,i)=>{
 
-total += Number(c.amount);
+total += Number(j.amount);
 
 rows.push([
-i+1,
-c.date,
-c.from,
-c.to,
-c.narration,
-Number(c.amount)
+  i+1,
+  j.date,
+  j.transactionNumber || "-",
+  "Journal",
+  getLedgerDisplayName(j,"debit"),
+  getLedgerDisplayName(j,"credit"),
+  j.narration,
+  Number(j.amount)
 ]);
 
 });
@@ -4079,7 +4125,7 @@ Number(c.amount)
 //////////////////////////////////////////////////
 
 rows.push([]);
-rows.push(["","","","Total Amount",total]);
+rows.push(["","","","","","Total Amount","",total]);
 
 //////////////////////////////////////////////////
 // CREATE SHEET
@@ -4088,15 +4134,18 @@ rows.push(["","","","Total Amount",total]);
 let worksheet = XLSX.utils.aoa_to_sheet(rows);
 
 //////////////////////////////////////////////////
-// AUTO COLUMN WIDTH
+// AUTO COLUMN WIDTH (UPDATED FOR 8 COLUMNS)
 //////////////////////////////////////////////////
 
 worksheet["!cols"] = [
-{wch:10},
-{wch:12},
-{wch:15},
-{wch:30},
-{wch:15}
+{wch:10},  // Serial No
+{wch:12},  // Date
+{wch:18},  // Transaction No
+{wch:12},  // Type
+{wch:18},  // Mode
+{wch:20},  // Ledger
+{wch:30},  // Narration
+{wch:15}   // Amount
 ];
 
 //////////////////////////////////////////////////
@@ -4118,12 +4167,12 @@ font:{bold:true}
 }
 
 //////////////////////////////////////////////////
-// CURRENCY FORMAT
+// CURRENCY FORMAT (UPDATED COLUMN INDEX)
 //////////////////////////////////////////////////
 
 for(let i=1;i<rows.length;i++){
 
-let cellRef = XLSX.utils.encode_cell({r:i,c:4});
+let cellRef = XLSX.utils.encode_cell({r:i,c:7}); // ✅ Amount column
 
 if(worksheet[cellRef]){
 
@@ -4137,12 +4186,12 @@ alignment:{horizontal:"right"}
 }
 
 //////////////////////////////////////////////////
-// BOLD TOTAL ROW
+// BOLD TOTAL ROW (UPDATED COLUMN COUNT)
 //////////////////////////////////////////////////
 
 let totalRowIndex = rows.length - 1;
 
-for(let c=0;c<5;c++){
+for(let c=0;c<8;c++){
 
 let cellRef = XLSX.utils.encode_cell({r:totalRowIndex,c:c});
 
@@ -4175,10 +4224,10 @@ let fileName = `${title}_${fromDate}_to_${toDate}.xlsx`;
 
 XLSX.writeFile(workbook,fileName);
 
-hideLoader(); // ADD
-showToast("Report Exported 📊");	
+hideLoader();
+showToast("Report Exported 📊");
 
-}
+
 
 
 //////////////////////////////////////////////////
