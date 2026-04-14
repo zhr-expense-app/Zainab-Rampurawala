@@ -2568,8 +2568,12 @@ async function getNextTransactionNumber(type){
 // HELPER FUNCTION
 //////////////////////////////////////////////////
 	
-function isCashBankLedger(ledgerName){
-  let l = ledgerList.find(x => x.name === ledgerName);
+function isCashBankLedger(ledger){
+
+  let l = ledgerList.find(x => 
+    x.id === ledger || x.name === ledger
+  );
+
   return l && l.group === "Cash & Bank";
 }
 	
@@ -2705,7 +2709,7 @@ if(ledgerList.length === 0){
 
 if(isCashBankLedger(creditLedger)){
 
-  let balance = getLedgerBalance(creditLedger);
+  let balance = getLedgerBalance(creditLedgerId); // ✅ FIX
 
   let projected = balance - amount;
 
