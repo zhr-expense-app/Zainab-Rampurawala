@@ -4001,7 +4001,7 @@ function getBalanceExcludingTransaction(ledgerId, transactionId){
 // EXPORT REPORTS (HEADER MATCH FIXED)
 //////////////////////////////////////////////////
 
-function exportCurrentReport(){
+async function exportCurrentReport(){
 
 showLoader();
 
@@ -4210,6 +4210,8 @@ rows.forEach((r, i) => {
 //////////////////////////////////////////////////
 // EXPORT FILE
 //////////////////////////////////////////////////
+
+let fileName = `${ledgerName}_Statement_${fromDate}_to_${toDate}.xlsx`;
 
 const buffer = await workbook.xlsx.writeBuffer();
 saveAs(new Blob([buffer]), fileName);
