@@ -4161,6 +4161,78 @@ if(reportType === "ledgerStatement"){
     {wch:20},{wch:30},{wch:12},{wch:12},{wch:15}
   ];
 
+//////////////////////////////////////////////////
+// APPLY FORMATTING (COLOR + DECIMAL)
+//////////////////////////////////////////////////
+
+for(let i = 0; i < rows.length; i++){
+
+  let typeCell = XLSX.utils.encode_cell({r:i,c:3}); // Type column
+  let debitCell = XLSX.utils.encode_cell({r:i,c:6});
+  let creditCell = XLSX.utils.encode_cell({r:i,c:7});
+  let balanceCell = XLSX.utils.encode_cell({r:i,c:8});
+
+  let type = worksheet[typeCell]?.v;
+
+  //////////////////////////////////////////////////
+  // 🎨 COLOR LOGIC
+  //////////////////////////////////////////////////
+
+  if(type === "Receipt"){
+
+    if(worksheet[debitCell]){
+      worksheet[debitCell].s = {
+        font:{color:{rgb:"008000"}} // green
+      };
+    }
+
+    if(worksheet[creditCell]){
+      worksheet[creditCell].s = {
+        font:{color:{rgb:"008000"}}
+      };
+    }
+
+  }
+
+  else if(type === "Payment"){
+
+    if(worksheet[debitCell]){
+      worksheet[debitCell].s = {
+        font:{color:{rgb:"FF0000"}} // red
+      };
+    }
+
+    if(worksheet[creditCell]){
+      worksheet[creditCell].s = {
+        font:{color:{rgb:"FF0000"}}
+      };
+    }
+
+  }
+
+  //////////////////////////////////////////////////
+  // 💰 DECIMAL FORMATTING
+  //////////////////////////////////////////////////
+
+  [debitCell, creditCell, balanceCell].forEach(cellRef => {
+
+    if(worksheet[cellRef] && typeof worksheet[cellRef].v === "number"){
+
+      worksheet[cellRef].z = '#,##0.00';
+
+      worksheet[cellRef].s = {
+        ...(worksheet[cellRef].s || {}),
+        alignment:{horizontal:"right"}
+      };
+
+    }
+
+  });
+
+}
+
+
+	
   //////////////////////////////////////////////////
   // FILE NAME
   //////////////////////////////////////////////////
