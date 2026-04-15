@@ -4011,6 +4011,178 @@ let total = 0;
 let fromDate = sessionStorage.getItem("currentFromDate");
 let toDate = sessionStorage.getItem("currentToDate");
 
+
+//////////////////////////////////////////////////
+// LEDGER STATEMENT EXPORT (NEW)
+//////////////////////////////////////////////////
+
+if(reportType === "ledgerStatement"){
+
+  let ledgerId = sessionStorage.getItem("ledgerStatementId");
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  let ledger = ledgerList.find(l => l.id === ledgerId);
+  let ledgerName = ledger ? ledger.name : "Ledger";
+
+  let group = ledger ? ledger.group : "";
+  let isPL = ["Income","Expense"].includes(group);
+
+  let rows = [];
+
+  //////////////////////////////////////////////////
+  // HEADER
+  //////////////////////////////////////////////////
+
+  rows.push([`${ledgerName} Statement`]);
+  rows.push([`From ${fromDate} to ${toDate}`]);
+  rows.push([]);
+
+  rows.push([
+    "Serial No","Date","Transaction No","Type",
+    "Opposite Ledger","Narration","Debit","Credit",
+    isPL ? "Amount" : "Balance"
+  ]);
+
+  //////////////////////////////////////////////////
+  // OPENING BALANCE
+  //////////////////////////////////////////////////
+
+  let runningBalance = 0;
+
+  if(!isPL){
+
+    runningBalance = Number(ledger.openingBalance || 0);
+
+    if(ledger.openingType === "credit"){
+      runningBalance = -runningBalance;
+    }
+
+    transactionsCache.forEach(t=>{
+      if(t.date >= fromDate) return;
+
+      let debitKey = t.debitLedgerId || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+      let amount = Number(t.amount);
+
+      if(debitKey === ledgerId) runningBalance += amount;
+      if(creditKey === ledgerId) runningBalance -= amount;
+    });
+
+    rows.push([
+      "","","","",
+      "Opening Balance","",
+      "", "",
+      runningBalance
+    ]);
+  }
+
+  //////////////////////////////////////////////////
+  // TRANSACTIONS
+  //////////////////////////////////////////////////
+
+  let serial = 1;
+  let total = 0;
+
+  let txns = transactionsCache
+    .filter(t => t.date >= fromDate && t.date <= toDate)
+    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+  txns.forEach(t=>{
+
+    let amount = Number(t.amount);
+
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
+    let type="", debit="", credit="", opposite="";
+
+    if(t.type === "receipt" || t.type === "payment" || t.type === "journal"){
+
+      if(debitKey === ledgerId){
+        type = t.type.charAt(0).toUpperCase() + t.type.slice(1);
+        opposite = getLedgerDisplayName(t,"credit");
+        debit = amount;
+
+        if(!isPL) runningBalance += amount;
+        else total += amount;
+      }
+
+      if(creditKey === ledgerId){
+        type = t.type.charAt(0).toUpperCase() + t.type.slice(1);
+        opposite = getLedgerDisplayName(t,"debit");
+        credit = amount;
+
+        if(!isPL) runningBalance -= amount;
+        else total += amount;
+      }
+
+    }
+
+    if(debit || credit){
+
+      rows.push([
+        serial,
+        t.date,
+        t.transactionNumber || "-",
+        type,
+        opposite,
+        t.narration,
+        debit || "",
+        credit || "",
+        isPL ? amount : runningBalance
+      ]);
+
+      serial++;
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // CLOSING / TOTAL
+  //////////////////////////////////////////////////
+
+  if(isPL){
+    rows.push([]);
+    rows.push(["","","","","","","","Total",total]);
+  }else{
+    rows.push([]);
+    rows.push(["","","","","","","","Closing Balance",runningBalance]);
+  }
+
+  //////////////////////////////////////////////////
+  // CREATE SHEET
+  //////////////////////////////////////////////////
+
+  let worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+  worksheet["!cols"] = [
+    {wch:10},{wch:12},{wch:18},{wch:12},
+    {wch:20},{wch:30},{wch:12},{wch:12},{wch:15}
+  ];
+
+  //////////////////////////////////////////////////
+  // FILE NAME
+  //////////////////////////////////////////////////
+
+  let fileName = `${ledgerName}_${fromDate}_to_${toDate}.xlsx`;
+
+  //////////////////////////////////////////////////
+  // EXPORT
+  //////////////////////////////////////////////////
+
+  let workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Ledger");
+
+  XLSX.writeFile(workbook, fileName);
+
+  hideLoader();
+  showToast("Ledger Statement Exported 📊");
+
+  return;
+}	
+	
+	
 //////////////////////////////////////////////////
 // RECEIPTS REPORT
 //////////////////////////////////////////////////
