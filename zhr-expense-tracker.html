@@ -1234,6 +1234,11 @@ resetInactivityTimer();
       refreshContraReport();
     }
 
+if (currentReport === "ledgerStatement") {
+  renderLedgerStatement();
+}
+
+	  
   }, 600);
 
 }
@@ -1319,6 +1324,12 @@ function loadTransactions() {
         refreshContraReport();
       }
 
+
+if (currentReport === "ledgerStatement") {
+  renderLedgerStatement();
+}
+
+		
     });
 }
 
@@ -1381,6 +1392,11 @@ function refreshDashboardUI(){
     refreshJournalReport();
   }
 
+if (currentReport === "ledgerStatement") {
+  renderLedgerStatement();
+}
+
+	
 }
 
 	
@@ -4292,20 +4308,285 @@ showToast("Report Exported 📊");
 
 function showMiniStatement(){
 
-openPopup(`
-<h3>Mini Statement</h3>
+  let ledgerOptions = ledgerList
+    .map(l => `<option value="${l.id}">${l.name}</option>`)
+    .join("");
 
-<label>From Date</label>
-<input type="date" id="miniFrom">
+  openPopup(`
+    <h3>Ledger Statement</h3>
 
-<label>To Date</label>
-<input type="date" id="miniTo">
+    <label>Ledger</label>
+    <select id="ledgerSelect">
+      ${ledgerOptions}
+    </select>
 
-<button onclick="exportMiniStatement()">Export</button>
-`);
+    <label>From Date</label>
+    <input type="date" id="miniFrom">
 
+    <label>To Date</label>
+    <input type="date" id="miniTo">
+
+    <button onclick="runLedgerStatement()">Run</button>
+  `);
 }
 
+
+//////////////////////////////////////////////////
+// RUN LEDGER STATEMENT
+//////////////////////////////////////////////////
+
+function runLedgerStatement(){
+
+  let ledgerId = document.getElementById("ledgerSelect").value;
+  let fromDate = document.getElementById("miniFrom").value;
+  let toDate = document.getElementById("miniTo").value;
+
+  if(!validateDateRange(fromDate,toDate)) return;
+
+  // ✅ IMPORTANT: set global variable also
+  currentReport = "ledgerStatement";
+
+  // ✅ Save filters
+  sessionStorage.setItem("currentReport","ledgerStatement");
+  sessionStorage.setItem("ledgerStatementId",ledgerId);
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  renderLedgerStatement();
+}
+
+//////////////////////////////////////////////////
+// RENDER LEDGER STATEMENT
+//////////////////////////////////////////////////
+
+function renderLedgerStatement(){
+
+  let ledgerId = sessionStorage.getItem("ledgerStatementId");
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  let ledger = ledgerList.find(l => l.id === ledgerId);
+  let ledgerName = ledger ? ledger.name : "";
+
+  let group = ledger ? ledger.group : "";
+
+  let isPL = ["Income","Expense"].includes(group);
+
+//////////////////////////////////////////////////
+// OPENING BALANCE (ONLY FOR BS ITEMS)
+//////////////////////////////////////////////////
+
+  let runningBalance = 0;
+
+  if(!isPL){
+
+    runningBalance = Number(ledger.openingBalance || 0);
+
+    if(ledger.openingType === "credit"){
+      runningBalance = -runningBalance;
+    }
+
+    transactionsCache.forEach(t=>{
+
+      if(t.date >= fromDate) return;
+
+      let debitKey = t.debitLedgerId || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+      let amount = Number(t.amount);
+
+      if(debitKey === ledgerId){
+        runningBalance += amount;
+      }
+
+      if(creditKey === ledgerId){
+        runningBalance -= amount;
+      }
+
+    });
+
+  }
+
+//////////////////////////////////////////////////
+// FILTER TRANSACTIONS
+//////////////////////////////////////////////////
+
+  let txns = transactionsCache
+    .filter(t => t.date >= fromDate && t.date <= toDate)
+    .sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+//////////////////////////////////////////////////
+// BUILD TABLE
+//////////////////////////////////////////////////
+
+  let html = `
+    <h3>${ledgerName} Statement</h3>
+
+    <table class="report-table">
+      <tr>
+        <th>Serial No</th>
+        <th>Date</th>
+        <th>Transaction No</th>
+        <th>Type</th>
+        <th>Opposite Ledger</th>
+        <th>Narration</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>${isPL ? "Amount" : "Balance"}</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+  `;
+
+  let serial = 1;
+  let total = 0;
+
+//////////////////////////////////////////////////
+// OPENING ROW (ONLY FOR BS)
+//////////////////////////////////////////////////
+
+  if(!isPL){
+
+    html += `
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><b>Opening Balance</b></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>${runningBalance}</td>
+        <td></td>
+        <td></td>
+      </tr>
+    `;
+  }
+
+//////////////////////////////////////////////////
+// LOOP TRANSACTIONS
+//////////////////////////////////////////////////
+
+  txns.forEach(t=>{
+
+    let debitKey = t.debitLedgerId || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
+    let amount = Number(t.amount);
+
+    let type = "";
+    let opposite = "";
+    let debit = "";
+    let credit = "";
+
+    // RECEIPT
+    if(t.type === "receipt" && debitKey === ledgerId){
+      type = "Receipt";
+      opposite = getLedgerDisplayName(t,"credit");
+      debit = amount;
+
+      if(!isPL) runningBalance += amount;
+      else total += amount;
+    }
+
+    // PAYMENT
+    if(t.type === "payment" && creditKey === ledgerId){
+      type = "Payment";
+      opposite = getLedgerDisplayName(t,"debit");
+      credit = amount;
+
+      if(!isPL) runningBalance -= amount;
+      else total += amount;
+    }
+
+    // JOURNAL
+    if(t.type === "journal"){
+
+      if(debitKey === ledgerId){
+        type = "Journal";
+        opposite = getLedgerDisplayName(t,"credit");
+        debit = amount;
+
+        if(!isPL) runningBalance += amount;
+        else total += amount;
+      }
+
+      if(creditKey === ledgerId){
+        type = "Journal";
+        opposite = getLedgerDisplayName(t,"debit");
+        credit = amount;
+
+        if(!isPL) runningBalance -= amount;
+        else total += amount;
+      }
+    }
+
+    if(type !== ""){
+
+      html += `
+        <tr>
+          <td>${serial}</td>
+          <td>${t.date}</td>
+          <td>${t.transactionNumber || "-"}</td>
+          <td>${type}</td>
+          <td>${opposite}</td>
+          <td>${t.narration}</td>
+          <td style="color:green">${debit || ""}</td>
+          <td style="color:red">${credit || ""}</td>
+          <td>${isPL ? amount : runningBalance}</td>
+          <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
+          <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
+        </tr>
+      `;
+
+      serial++;
+    }
+
+  });
+
+//////////////////////////////////////////////////
+// CLOSING / TOTAL ROW
+//////////////////////////////////////////////////
+
+  if(isPL){
+
+    html += `
+      <tr>
+        <td colspan="8"><b>Total</b></td>
+        <td><b>${total}</b></td>
+        <td></td>
+        <td></td>
+      </tr>
+    `;
+
+  }else{
+
+    html += `
+      <tr>
+        <td colspan="8"><b>Closing Balance</b></td>
+        <td><b>${runningBalance}</b></td>
+        <td></td>
+        <td></td>
+      </tr>
+    `;
+  }
+
+//////////////////////////////////////////////////
+// FINAL RENDER
+//////////////////////////////////////////////////
+
+  html += "</table>";
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
+}
+
+
+	
+	
 //////////////////////////////////////////////////
 // Full Mini Statement Export Function
 //////////////////////////////////////////////////
