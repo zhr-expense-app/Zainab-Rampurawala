@@ -4466,85 +4466,80 @@ function renderLedgerStatement(){
   }
 
 //////////////////////////////////////////////////
-// LOOP TRANSACTIONS
+// LOOP TRANSACTIONS (FIXED FOR ALL LEDGERS)
 //////////////////////////////////////////////////
 
-  txns.forEach(t=>{
+txns.forEach(t=>{
 
-    let debitKey = t.debitLedgerId || t.debitLedger;
-    let creditKey = t.creditLedgerId || t.creditLedger;
+  let debitKey = t.debitLedgerId || t.debitLedger;
+  let creditKey = t.creditLedgerId || t.creditLedger;
 
-    let amount = Number(t.amount);
+  let amount = Number(t.amount);
 
-    let type = "";
-    let opposite = "";
-    let debit = "";
-    let credit = "";
+  let type = t.type.charAt(0).toUpperCase() + t.type.slice(1);
 
-    // RECEIPT
-    if(t.type === "receipt" && debitKey === ledgerId){
-      type = "Receipt";
-      opposite = getLedgerDisplayName(t,"credit");
-      debit = amount;
+  let opposite = "";
+  let debit = "";
+  let credit = "";
 
-      if(!isPL) runningBalance += amount;
-      else total += amount;
+  //////////////////////////////////////////////////
+  // 🔹 IF LEDGER IS DEBIT SIDE
+  //////////////////////////////////////////////////
+
+  if(debitKey === ledgerId){
+
+    opposite = getLedgerDisplayName(t,"credit");
+    debit = amount;
+
+    if(!isPL){
+      runningBalance += amount;
+    }else{
+      total += amount;
     }
+  }
 
-    // PAYMENT
-    if(t.type === "payment" && creditKey === ledgerId){
-      type = "Payment";
-      opposite = getLedgerDisplayName(t,"debit");
-      credit = amount;
+  //////////////////////////////////////////////////
+  // 🔹 IF LEDGER IS CREDIT SIDE
+  //////////////////////////////////////////////////
 
-      if(!isPL) runningBalance -= amount;
-      else total += amount;
+  else if(creditKey === ledgerId){
+
+    opposite = getLedgerDisplayName(t,"debit");
+    credit = amount;
+
+    if(!isPL){
+      runningBalance -= amount;
+    }else{
+      total += amount;
     }
+  }
 
-    // JOURNAL
-    if(t.type === "journal"){
+  //////////////////////////////////////////////////
+  // ONLY PUSH IF RELEVANT
+  //////////////////////////////////////////////////
 
-      if(debitKey === ledgerId){
-        type = "Journal";
-        opposite = getLedgerDisplayName(t,"credit");
-        debit = amount;
+  if(debit || credit){
 
-        if(!isPL) runningBalance += amount;
-        else total += amount;
-      }
+    html += `
+      <tr>
+        <td>${serial}</td>
+        <td>${t.date}</td>
+        <td>${t.transactionNumber || "-"}</td>
+        <td>${type}</td>
+        <td>${opposite}</td>
+        <td>${t.narration}</td>
+        <td style="color:green">${debit || ""}</td>
+        <td style="color:red">${credit || ""}</td>
+        <td>${isPL ? amount : runningBalance}</td>
+        <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
+        <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
+      </tr>
+    `;
 
-      if(creditKey === ledgerId){
-        type = "Journal";
-        opposite = getLedgerDisplayName(t,"debit");
-        credit = amount;
+    serial++;
+  }
 
-        if(!isPL) runningBalance -= amount;
-        else total += amount;
-      }
-    }
-
-    if(type !== ""){
-
-      html += `
-        <tr>
-          <td>${serial}</td>
-          <td>${t.date}</td>
-          <td>${t.transactionNumber || "-"}</td>
-          <td>${type}</td>
-          <td>${opposite}</td>
-          <td>${t.narration}</td>
-          <td style="color:green">${debit || ""}</td>
-          <td style="color:red">${credit || ""}</td>
-          <td>${isPL ? amount : runningBalance}</td>
-          <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
-          <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
-        </tr>
-      `;
-
-      serial++;
-    }
-
-  });
+});
 
 //////////////////////////////////////////////////
 // CLOSING / TOTAL ROW
