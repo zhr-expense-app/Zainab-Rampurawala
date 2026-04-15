@@ -4514,6 +4514,24 @@ txns.forEach(t=>{
     }
   }
 
+
+//////////////////////////////////////////////////
+// COLOR BASED ON TRANSACTION TYPE
+//////////////////////////////////////////////////
+
+let color = "black";
+
+if(t.type === "receipt"){
+  color = "green";
+}
+else if(t.type === "payment"){
+  color = "red";
+}
+else{
+  color = "black"; // journal or fallback
+}
+
+	
   //////////////////////////////////////////////////
   // ONLY PUSH IF RELEVANT
   //////////////////////////////////////////////////
@@ -4521,20 +4539,20 @@ txns.forEach(t=>{
   if(debit || credit){
 
     html += `
-      <tr>
-        <td>${serial}</td>
-        <td>${t.date}</td>
-        <td>${t.transactionNumber || "-"}</td>
-        <td>${type}</td>
-        <td>${opposite}</td>
-        <td>${t.narration}</td>
-        <td style="color:green">${debit || ""}</td>
-        <td style="color:red">${credit || ""}</td>
-        <td>${isPL ? amount : runningBalance}</td>
-        <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
-      </tr>
-    `;
+  <tr>
+    <td>${serial}</td>
+    <td>${t.date}</td>
+    <td>${t.transactionNumber || "-"}</td>
+    <td>${type}</td>
+    <td>${opposite}</td>
+    <td>${t.narration}</td>
+    <td style="color:green">${debit || ""}</td>
+    <td style="color:red">${credit || ""}</td>
+    <td>${isPL ? amount : runningBalance}</td>
+    <td><button onclick="editTransaction('${t.id}')">Edit</button></td>
+    <td><button onclick="deleteTransaction('${t.id}')">Delete</button></td>
+  </tr>
+`;
 
     serial++;
   }
