@@ -1851,20 +1851,19 @@ lucide.createIcons();
 
 
 //////////////////////////////////////////////////
-// Final Export Function
+// Final Export Function (ID SAFE + FILTER SAFE)
 //////////////////////////////////////////////////
-
 
 async function exportSummaryExcel(){
 
-showLoader(); // ADD at top	
+showLoader();
 
 //////////////////////////////////////////////////
-// GET TITLES
+// GET TITLES (SAFE)
 //////////////////////////////////////////////////
 
-let balanceTitle = document.querySelector("#closingSummary .summary-title").innerText;
-let expenseTitle = document.querySelector("#expenseSummary .summary-title").innerText;
+let balanceTitle = document.querySelector("#closingSummary .summary-title")?.innerText || "";
+let expenseTitle = document.querySelector("#expenseSummary .summary-title")?.innerText || "";
 
 //////////////////////////////////////////////////
 // CREATE WORKBOOK
@@ -1884,8 +1883,23 @@ sheet.addRow(["Account","Balance"]);
 
 document.querySelectorAll("#closingSummary table tr").forEach((row,i)=>{
   if(i===0) return;
+
   let cells = row.querySelectorAll("td");
-  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+
+  if(cells.length >= 2){
+
+    let amount = Number(cells[1].innerText.replace(/,/g,"")) || 0;
+
+    let newRow = sheet.addRow([
+      cells[0].innerText,
+      amount
+    ]);
+
+    // ✅ 2 decimal formatting
+    newRow.getCell(2).numFmt = '#,##0.00';
+    newRow.getCell(2).alignment = { horizontal: "right" };
+  }
+
 });
 
 sheet.addRow([]);
@@ -1902,8 +1916,22 @@ sheet.addRow(["Category","Total"]);
 
 document.querySelectorAll("#expenseSummary table tr").forEach((row,i)=>{
   if(i===0) return;
+
   let cells = row.querySelectorAll("td");
-  sheet.addRow([cells[0].innerText,cells[1].innerText]);
+
+  if(cells.length >= 2){
+
+    let amount = Number(cells[1].innerText.replace(/,/g,"")) || 0;
+
+    let newRow = sheet.addRow([
+      cells[0].innerText,
+      amount
+    ]);
+
+    newRow.getCell(2).numFmt = '#,##0.00';
+    newRow.getCell(2).alignment = { horizontal: "right" };
+  }
+
 });
 
 sheet.addRow([]);
@@ -1917,52 +1945,76 @@ sheet.addRow(["Monthly Personal Expense"]);
 sheet.addRow([]);
 
 document.querySelectorAll("#personalMonthlySummary table tr").forEach((row)=>{
+
   let cells = row.querySelectorAll("th,td");
+
   let data = [];
-  cells.forEach(c=>data.push(c.innerText));
-  sheet.addRow(data);
+
+  cells.forEach((c,index)=>{
+
+    if(index === 1){
+      let val = c.innerText === "-" ? 0 : Number(c.innerText.replace(/,/g,""));
+      data.push(val);
+    }else{
+      data.push(c.innerText);
+    }
+
+  });
+
+  let newRow = sheet.addRow(data);
+
+  // Apply decimal format to amount column
+  if(data.length > 1){
+    newRow.getCell(2).numFmt = '#,##0.00';
+    newRow.getCell(2).alignment = { horizontal: "right" };
+  }
+
 });
 
 //////////////////////////////////////////////////
-// CAPTURE CHART IMAGES
+// CAPTURE CHART IMAGES (SAFE)
 //////////////////////////////////////////////////
 
 let pieCanvas = document.getElementById("expensePieChart");
 let barCanvas = document.getElementById("personalExpenseChart");
 
-let pieImage = pieCanvas.toDataURL("image/png");
-let barImage = barCanvas.toDataURL("image/png");
+if(pieCanvas && barCanvas){
+
+  let pieImage = pieCanvas.toDataURL("image/png");
+  let barImage = barCanvas.toDataURL("image/png");
+
+  //////////////////////////////////////////////////
+  // ADD PIE CHART
+  //////////////////////////////////////////////////
+
+  const pieId = workbook.addImage({
+    base64: pieImage,
+    extension: 'png',
+  });
+
+  sheet.addImage(pieId,{
+    tl: { col: 5, row: 1 },
+    ext: { width: 400, height: 300 }
+  });
+
+  //////////////////////////////////////////////////
+  // ADD BAR CHART
+  //////////////////////////////////////////////////
+
+  const barId = workbook.addImage({
+    base64: barImage,
+    extension: 'png',
+  });
+
+  sheet.addImage(barId,{
+    tl: { col: 5, row: 20 },
+    ext: { width: 400, height: 300 }
+  });
+
+}
 
 //////////////////////////////////////////////////
-// ADD PIE CHART
-//////////////////////////////////////////////////
-
-const pieId = workbook.addImage({
-  base64: pieImage,
-  extension: 'png',
-});
-
-sheet.addImage(pieId,{
-  tl: { col: 5, row: 1 },
-  ext: { width: 400, height: 300 }
-});
-
-//////////////////////////////////////////////////
-// ADD BAR CHART
-//////////////////////////////////////////////////
-
-const barId = workbook.addImage({
-  base64: barImage,
-  extension: 'png',
-});
-
-sheet.addImage(barId,{
-  tl: { col: 5, row: 20 },
-  ext: { width: 400, height: 300 }
-});
-
-//////////////////////////////////////////////////
-// FILE NAME BASED ON PERIOD
+// FILE NAME BASED ON CURRENT FILTER
 //////////////////////////////////////////////////
 
 let title = expenseTitle
@@ -1973,13 +2025,17 @@ let title = expenseTitle
 let fileName = `Expense_Dashboard_${title}.xlsx`;
 
 //////////////////////////////////////////////////
-// ALIGN ALL CELLS RIGHT
+// ALIGN TEXT CELLS (EXCEPT NUMBERS)
 //////////////////////////////////////////////////
 
 sheet.eachRow(row=>{
-row.eachCell(cell=>{
-cell.alignment = { horizontal: "right" };
-});
+  row.eachCell((cell,colNumber)=>{
+
+    if(colNumber !== 2){
+      cell.alignment = { horizontal: "left" };
+    }
+
+  });
 });
 
 //////////////////////////////////////////////////
