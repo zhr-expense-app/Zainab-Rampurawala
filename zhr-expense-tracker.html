@@ -11,6 +11,7 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>  
 	
+	
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1234,9 +1235,17 @@ resetInactivityTimer();
       refreshContraReport();
     }
 
-if (currentReport === "ledgerStatement") {
-  renderLedgerStatement();
-}
+if(savedReport === "ledgerStatement"){
+
+  let ledgerId = sessionStorage.getItem("ledgerStatementId");
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate = sessionStorage.getItem("currentToDate");
+
+  if(ledgerId && fromDate && toDate){
+    renderLedgerStatement();
+  }
+
+		  }
 
 	  
   }, 600);
@@ -4150,108 +4159,67 @@ if(reportType === "ledgerStatement"){
     rows.push(["","","","","","","","Closing Balance",runningBalance]);
   }
 
-  //////////////////////////////////////////////////
-  // CREATE SHEET
-  //////////////////////////////////////////////////
-
-  let worksheet = XLSX.utils.aoa_to_sheet(rows);
-
-  worksheet["!cols"] = [
-    {wch:10},{wch:12},{wch:18},{wch:12},
-    {wch:20},{wch:30},{wch:12},{wch:12},{wch:15}
-  ];
-
 //////////////////////////////////////////////////
-// APPLY FORMATTING (COLOR + DECIMAL)
+// CREATE EXCEL USING EXCELJS (FINAL FIX)
 //////////////////////////////////////////////////
 
-for(let i = 0; i < rows.length; i++){
+const workbook = new ExcelJS.Workbook();
+const sheet = workbook.addWorksheet("Ledger");
 
-  let typeCell = XLSX.utils.encode_cell({r:i,c:3}); // Type column
-  let debitCell = XLSX.utils.encode_cell({r:i,c:6});
-  let creditCell = XLSX.utils.encode_cell({r:i,c:7});
-  let balanceCell = XLSX.utils.encode_cell({r:i,c:8});
+// column width (same as before)
+sheet.columns = [
+  {width:10},{width:12},{width:18},{width:12},
+  {width:20},{width:30},{width:12},{width:12},{width:15}
+];
 
-  let type = worksheet[typeCell]?.v;
+rows.forEach((r, i) => {
+
+  let row = sheet.addRow(r);
+
+  let type = r[3]; // Type column
 
   //////////////////////////////////////////////////
-  // 🎨 COLOR LOGIC
+  // COLOR LOGIC
   //////////////////////////////////////////////////
 
   if(type === "Receipt"){
-
-    if(worksheet[debitCell]){
-      worksheet[debitCell].s = {
-        font:{color:{rgb:"008000"}} // green
-      };
-    }
-
-    if(worksheet[creditCell]){
-      worksheet[creditCell].s = {
-        font:{color:{rgb:"008000"}}
-      };
-    }
-
+    row.getCell(7).font = { color: { argb: "FF008000" } }; // debit
+    row.getCell(8).font = { color: { argb: "FF008000" } }; // credit
   }
 
   else if(type === "Payment"){
-
-    if(worksheet[debitCell]){
-      worksheet[debitCell].s = {
-        font:{color:{rgb:"FF0000"}} // red
-      };
-    }
-
-    if(worksheet[creditCell]){
-      worksheet[creditCell].s = {
-        font:{color:{rgb:"FF0000"}}
-      };
-    }
-
+    row.getCell(7).font = { color: { argb: "FFFF0000" } };
+    row.getCell(8).font = { color: { argb: "FFFF0000" } };
   }
 
   //////////////////////////////////////////////////
-  // 💰 DECIMAL FORMATTING
+  // DECIMAL + ALIGNMENT
   //////////////////////////////////////////////////
 
-  [debitCell, creditCell, balanceCell].forEach(cellRef => {
+  [7,8,9].forEach(col=>{
+    let cell = row.getCell(col);
 
-    if(worksheet[cellRef] && typeof worksheet[cellRef].v === "number"){
-
-      worksheet[cellRef].z = '#,##0.00';
-
-      worksheet[cellRef].s = {
-        ...(worksheet[cellRef].s || {}),
-        alignment:{horizontal:"right"}
-      };
-
+    if(typeof cell.value === "number"){
+      cell.numFmt = '#,##0.00';
+      cell.alignment = { horizontal: "right" };
     }
-
   });
 
-}
+});
+
+//////////////////////////////////////////////////
+// EXPORT FILE
+//////////////////////////////////////////////////
+
+const buffer = await workbook.xlsx.writeBuffer();
+saveAs(new Blob([buffer]), fileName);
+
+hideLoader();
+showToast("Ledger Statement Exported 📊");
+
+return;
 
 
-	
-  //////////////////////////////////////////////////
-  // FILE NAME
-  //////////////////////////////////////////////////
-
-  let fileName = `${ledgerName}_${fromDate}_to_${toDate}.xlsx`;
-
-  //////////////////////////////////////////////////
-  // EXPORT
-  //////////////////////////////////////////////////
-
-  let workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Ledger");
-
-  XLSX.writeFile(workbook, fileName);
-
-  hideLoader();
-  showToast("Ledger Statement Exported 📊");
-
-  return;
 }	
 	
 	
