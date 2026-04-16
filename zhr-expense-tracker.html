@@ -6093,7 +6093,7 @@ openPopup(`
 <h4>Supplier Details</h4>
 
 <label>Supplier Name</label>
-<input id="supName">
+<input id="supName" value="ZHR ACCOUNTING & TAX CONSULTANTS" readonly style="background:#f5f5f5">
 
 <label>Supplier Address</label>
 <input id="supAddress">
@@ -6101,8 +6101,14 @@ openPopup(`
 <label>Supplier GSTIN</label>
 <input id="supGST">
 
+<label>Supplier Contact</label>
+<input id="supContact">
+
 <label>Supplier State</label>
 <input id="supState">
+
+<label>Supplier Website</label>
+<input id="supWebsite" value="www.zhrconsultants.com" readonly style="background:#f5f5f5">
 
 <label>Invoice Number</label>
 <input id="invoiceNumber" readonly placeholder="Auto-generated on preview"
@@ -6126,6 +6132,9 @@ style="background:#f5f5f5;font-weight:bold;color:#001d4c">
 
 <label>Recipient TRN</label>
 <input id="recTRN">
+
+<label>Recipient Contact</label>
+<input id="recContact">
 
 <label>Recipient State</label>
 <input id="recState">
@@ -6167,13 +6176,29 @@ style="background:#f5f5f5;font-weight:bold;color:#001d4c">
 
 `);
 
+setTimeout(()=>{
+  let el = document.getElementById("invoiceNumber");
+  if(el){
+    el.value = getNextInvoiceNumber(); // preview only
+  }
+}, 100);	
 	
 setTimeout(()=>{
   document.getElementById("currency").addEventListener("change", calculateInvoiceTotal);
 },100);
 	
 }
-	
+
+//////////////////////////////////////////////////
+// GENERATE NEXT INVOICE NUMBER
+//////////////////////////////////////////////////		
+
+function getNextInvoiceNumber(){
+  let last = localStorage.getItem("lastInvoiceNumber") || 0;
+  let next = parseInt(last) + 1;
+  return "ZHR-" + String(next).padStart(4, '0');
+}
+
 //////////////////////////////////////////////////
 // GENERATE INVOICE AUTO NUMBER
 //////////////////////////////////////////////////	
@@ -6284,8 +6309,7 @@ let recTRN = document.getElementById("recTRN").value;
 let recState = document.getElementById("recState").value;
 let place = document.getElementById("placeSupply").value;
 
-let invoiceNo = generateInvoiceNumber();
-document.getElementById("invoiceNumber").value = invoiceNo;
+let invoiceNo = document.getElementById("invoiceNumber").value;
 	
 let invoiceDate = document.getElementById("invoiceDate").value;
 
