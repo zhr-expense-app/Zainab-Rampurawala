@@ -6396,17 +6396,49 @@ ${rows}
 <br>
 
 <!-- ACTION BUTTONS -->
-<div style="display:flex;gap:10px">
 
-<button onclick="window.print()" style="background:#001d4c;color:white;padding:10px;border:none;border-radius:6px">
-🖨 Print
+
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+
+<button onclick="saveInvoice()" 
+style="background:green;color:white;padding:10px;border:none;border-radius:6px">
+💾 Save
 </button>
+
+<button onclick="editInvoice()" 
+style="background:#f59e0b;color:white;padding:10px;border:none;border-radius:6px">
+✏️ Edit
+</button>
+
+<button onclick="closePreview()" 
+style="background:#555;color:white;padding:10px;border:none;border-radius:6px">
+❌ Close
+</button>
+
+</div>
 
 </div>
 
 </div>
 `;
 }
+	
+//////////////////////////////////////////////////
+// CLOSE PREVIEW
+//////////////////////////////////////////////////
+	
+function closePreview(){
+  document.getElementById("reportOutput").innerHTML = "";
+}
+
+//////////////////////////////////////////////////
+// GENERATE INVOICE
+//////////////////////////////////////////////////
+
+function editInvoice(){
+  openInvoicePopup();
+}
+
 	
 	
 </script>
