@@ -6465,7 +6465,7 @@ function closePreview(){
 }
 
 //////////////////////////////////////////////////
-// GENERATE INVOICE
+// EDIT INVOICE
 //////////////////////////////////////////////////
 
 function editInvoice(){
@@ -6517,6 +6517,78 @@ setTimeout(()=>{
 }, 150);
 
 }
+
+//////////////////////////////////////////////////
+// SAVE INVOICE
+//////////////////////////////////////////////////
+	
+async function saveInvoice(){
+
+try{
+
+  // 🔒 FINAL NUMBER (LOCK)
+  let finalInvoiceNo = generateInvoiceNumber();
+
+  let data = currentInvoiceData;
+
+  let total = data.items.reduce((sum, i)=> sum + Number(i.amt), 0);
+
+  let words = convertAmountToWords(total, data.currency);
+
+  // 🔥 FIRESTORE SAVE (COMPAT VERSION)
+  await db.collection("invoices").doc(finalInvoiceNo).set({
+
+    invoiceNo: finalInvoiceNo,
+    invoiceDate: data.invoiceDate,
+    currency: data.currency,
+
+    supplier: {
+      name: data.supName,
+      address: data.supAddress,
+      gst: data.supGST,
+      state: data.supState,
+      contact: data.supContact,
+      website: data.supWebsite
+    },
+
+    recipient: {
+      name: data.recName,
+      address: data.recAddress,
+      trn: data.recTRN,
+      state: data.recState,
+      placeOfSupply: data.place,
+      contact: data.recContact
+    },
+
+    items: data.items,
+
+    total: total,
+    amountWords: words,
+
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
+  });
+
+  // ✅ SUCCESS POPUP
+  openPopup(`
+
+  <h3>✅ Invoice Saved Successfully</h3>
+
+  <button onclick="printInvoice()">🖨 Print</button>
+  <br><br>
+  <button onclick="downloadInvoice()">⬇ Download PDF</button>
+  <br><br>
+  <button onclick="closePopup()">Close</button>
+
+  `);
+
+}catch(err){
+  console.error(err);
+  alert("Error saving invoice");
+}
+
+}
+
 	
 	
 </script>
