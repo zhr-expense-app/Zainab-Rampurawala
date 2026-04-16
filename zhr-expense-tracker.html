@@ -825,6 +825,7 @@ let currentUserRole = "viewer";
 let ledgerList = [];
 let invoiceItems = [];
 let invoiceCounter = 1;
+let currentInvoiceData = {};	
 	
 
 //////////////////////////////////////////////////
@@ -6315,6 +6316,28 @@ let invoiceNo = document.getElementById("invoiceNumber").value;
 	
 let invoiceDate = document.getElementById("invoiceDate").value;
 
+currentInvoiceData = {
+  supName,
+  supAddress,
+  supGST,
+  supState,
+
+  recName,
+  recAddress,
+  recTRN,
+  recState,
+  place,
+
+  currency,
+  invoiceNo,
+  invoiceDate,
+
+  items: Array.from(items).map(row => ({
+    desc: row.children[0].value,
+    amt: row.children[1].value
+  }))
+};
+	
 document.getElementById("reportOutput").innerHTML = `
 
 <div style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
@@ -6436,9 +6459,51 @@ function closePreview(){
 //////////////////////////////////////////////////
 
 function editInvoice(){
-  openInvoicePopup();
-}
 
+openInvoicePopup();
+
+setTimeout(()=>{
+
+  let d = currentInvoiceData;
+
+  // SUPPLIER
+  document.getElementById("supName").value = d.supName;
+  document.getElementById("supAddress").value = d.supAddress;
+  document.getElementById("supGST").value = d.supGST;
+  document.getElementById("supState").value = d.supState;
+
+  // RECIPIENT
+  document.getElementById("recName").value = d.recName;
+  document.getElementById("recAddress").value = d.recAddress;
+  document.getElementById("recTRN").value = d.recTRN;
+  document.getElementById("recState").value = d.recState;
+  document.getElementById("placeSupply").value = d.place;
+
+  // OTHER
+  document.getElementById("currency").value = d.currency;
+  document.getElementById("invoiceDate").value = d.invoiceDate;
+  document.getElementById("invoiceNumber").value = d.invoiceNo;
+
+  // CLEAR OLD ITEMS
+  document.getElementById("items").innerHTML = "";
+
+  // ADD ITEMS BACK
+  d.items.forEach(item=>{
+    addItemRow();
+
+    let rows = document.querySelectorAll("#items div");
+    let last = rows[rows.length - 1];
+
+    last.children[0].value = item.desc;
+    last.children[1].value = item.amt;
+  });
+
+  // RECALCULATE
+  calculateInvoiceTotal();
+
+}, 150);
+
+}
 	
 	
 </script>
