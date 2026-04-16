@@ -762,6 +762,10 @@ text-align:right;
   <i data-lucide="repeat"></i> Journal
 </button>
 
+<button onclick="openInvoicePopup()">
+  <i data-lucide="file-text"></i> Invoice
+</button>
+	
 <button onclick="showOpening()">
   <i data-lucide="wallet"></i> Opening Balance
 </button>
@@ -818,7 +822,10 @@ let personalExpenseChart = null;
 let accountsList = [];
 let activeAccounts = []; 		 	
 let currentUserRole = "viewer";
-	let ledgerList = [];
+let ledgerList = [];
+let invoiceItems = [];
+let invoiceCounter = 1;
+	
 
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -5991,6 +5998,364 @@ async function deleteLedger(id){
   }
 }
 
+
+//////////////////////////////////////////////////
+// CURRENCY LIST
+//////////////////////////////////////////////////
+
+const currencyList = [
+  { code: "INR", name: "Indian Rupee", symbol: "₹" },
+  { code: "AED", name: "UAE Dirham", symbol: "AED" },
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+
+  { divider: true },
+
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "SAR", name: "Saudi Riyal", symbol: "SAR" },
+  { code: "QAR", name: "Qatari Riyal", symbol: "QAR" },
+  { code: "KWD", name: "Kuwaiti Dinar", symbol: "KWD" },
+  { code: "OMR", name: "Omani Rial", symbol: "OMR" },
+  { code: "BHD", name: "Bahraini Dinar", symbol: "BHD" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "CAD" },
+  { code: "AUD", name: "Australian Dollar", symbol: "AUD" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "SGD" }
+];
+
+//////////////////////////////////////////////////
+// CURRENCY WORDS + FUNCTION
+//////////////////////////////////////////////////
+	
+const currencyWords = {
+  INR: { main: "Rupees", sub: "Paise" },
+  AED: { main: "Dirhams", sub: "Fils" },
+  USD: { main: "Dollars", sub: "Cents" },
+  GBP: { main: "Pounds", sub: "Pence" },
+  EUR: { main: "Euros", sub: "Cents" },
+  SAR: { main: "Riyals", sub: "Halalas" },
+  QAR: { main: "Riyals", sub: "Dirhams" },
+  KWD: { main: "Dinars", sub: "Fils" },
+  OMR: { main: "Rials", sub: "Baisa" },
+  BHD: { main: "Dinars", sub: "Fils" },
+  CAD: { main: "Dollars", sub: "Cents" },
+  AUD: { main: "Dollars", sub: "Cents" },
+  SGD: { main: "Dollars", sub: "Cents" }
+};
+
+function numberToWords(num){
+  // simple version (can upgrade later)
+  const a = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+  const b = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+
+  if(num < 20) return a[num];
+  if(num < 100) return b[Math.floor(num/10)] + " " + a[num%10];
+  if(num < 1000) return a[Math.floor(num/100)] + " Hundred " + numberToWords(num%100);
+  if(num < 1000000) return numberToWords(Math.floor(num/1000)) + " Thousand " + numberToWords(num%1000);
+
+  return num;
+}
+
+function convertAmountToWords(amount, currency){
+  let [intPart, decPart] = amount.toFixed(2).split(".");
+  let unit = currencyWords[currency];
+
+  let main = numberToWords(parseInt(intPart));
+  let sub = numberToWords(parseInt(decPart));
+
+  if(decPart === "00"){
+    return `${main} ${unit.main} Only`;
+  }
+
+  return `${main} ${unit.main} and ${sub} ${unit.sub} Only`;
+	  }
+	
+//////////////////////////////////////////////////
+// OPEN INVOICE POPUP
+//////////////////////////////////////////////////
+
+function openInvoicePopup(){
+
+invoiceItems = [];
+
+let currencyOptions = currencyList.map(c=>{
+  if(c.divider) return `<option disabled>────────</option>`;
+  return `<option value="${c.code}">${c.code} - ${c.name}</option>`;
+}).join("");
+
+let today = new Date().toISOString().split("T")[0];
+
+openPopup(`
+
+<h3>Generate Invoice</h3>
+
+<!-- ================= SUPPLIER ================= -->
+
+<h4>Supplier Details</h4>
+
+<label>Supplier Name</label>
+<input id="supName">
+
+<label>Supplier Address</label>
+<input id="supAddress">
+
+<label>Supplier GSTIN</label>
+<input id="supGST">
+
+<label>Supplier State</label>
+<input id="supState">
+
+<label>Invoice Number</label>
+<input id="invoiceNumber" placeholder="Auto generated">
+
+<label>Invoice Date</label>
+<input type="date" id="invoiceDate" value="${today}">
+
+
+<hr>
+
+<!-- ================= RECIPIENT ================= -->
+
+<h4>Recipient Details</h4>
+
+<label>Recipient Name</label>
+<input id="recName">
+
+<label>Recipient Address</label>
+<input id="recAddress">
+
+<label>Recipient TRN</label>
+<input id="recTRN">
+
+<label>Recipient State</label>
+<input id="recState">
+
+<label>Place of Supply</label>
+<input id="placeSupply">
+
+
+<hr>
+
+<!-- ================= CURRENCY ================= -->
+
+<label>Currency</label>
+<select id="currency">${currencyOptions}</select>
+
+<hr>
+
+<!-- ================= SERVICES ================= -->
+
+<h4>Services</h4>
+
+<div id="items"></div>
+
+<button onclick="addItemRow()">➕ Add Service</button>
+
+<hr>
+
+<!-- ================= TOTAL ================= -->
+
+<label>Total Invoice Value</label>
+<input id="totalValue" readonly>
+
+<label>Amount in Words</label>
+<input id="amountWords" readonly>
+
+<hr>
+
+<button onclick="generateInvoice()">Preview Invoice</button>
+
+`);
+
+setTimeout(()=>{
+  document.getElementById("currency").addEventListener("change", calculateInvoiceTotal);
+},100);
+	
+}
+
+
+//////////////////////////////////////////////////
+// ADD INVOICE ITEM ROW
+//////////////////////////////////////////////////	
+
+function addItemRow(){
+
+let div = document.createElement("div");
+
+div.style.display = "flex";
+div.style.gap = "10px";
+div.style.marginBottom = "8px";
+
+div.innerHTML = `
+<input placeholder="Description of Service" style="flex:2">
+<input type="number" placeholder="Value" style="flex:1" oninput="calculateInvoiceTotal()">
+`;
+
+document.getElementById("items").appendChild(div);
+}
+
+//////////////////////////////////////////////////
+// INVOICE AUTO TOTAL + WORDS
+//////////////////////////////////////////////////
+	
+function calculateInvoiceTotal(){
+
+let currency = document.getElementById("currency").value;
+
+let rows = document.querySelectorAll("#items div");
+
+let total = 0;
+
+rows.forEach(r=>{
+  let val = Number(r.children[1].value);
+  if(val) total += val;
+});
+
+document.getElementById("totalValue").value = total.toFixed(2);
+
+if(currency){
+  document.getElementById("amountWords").value =
+    convertAmountToWords(total, currency);
+}
+}
+
+//////////////////////////////////////////////////
+// GENERATE INVOICE
+//////////////////////////////////////////////////
+	
+function generateInvoice(){
+
+let currency = document.getElementById("currency").value;
+
+let items = document.querySelectorAll("#items div");
+
+let total = 0;
+let rows = "";
+
+items.forEach(row=>{
+  let desc = row.children[0].value;
+  let amt = Number(row.children[1].value);
+
+  if(desc && amt){
+    total += amt;
+    rows += `
+    <tr>
+      <td style="padding:10px;border:1px solid #ddd">${desc}</td>
+      <td style="padding:10px;border:1px solid #ddd;text-align:right">
+        ${amt.toFixed(2)}
+      </td>
+    </tr>`;
+  }
+});
+
+let words = convertAmountToWords(total, currency);
+
+// GET ALL FIELDS
+let supName = document.getElementById("supName").value;
+let supAddress = document.getElementById("supAddress").value;
+let supGST = document.getElementById("supGST").value;
+let supState = document.getElementById("supState").value;
+
+let recName = document.getElementById("recName").value;
+let recAddress = document.getElementById("recAddress").value;
+let recTRN = document.getElementById("recTRN").value;
+let recState = document.getElementById("recState").value;
+let place = document.getElementById("placeSupply").value;
+
+let invoiceNo = document.getElementById("invoiceNumber").value || "Auto";
+let invoiceDate = document.getElementById("invoiceDate").value;
+
+document.getElementById("reportOutput").innerHTML = `
+
+<div style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
+
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;align-items:center">
+
+  <div>
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg" width="140">
+  </div>
+
+  <div style="text-align:right">
+    <h2 style="color:#001d4c;margin:0">INVOICE</h2>
+    <p><b>Invoice No:</b> ${invoiceNo}</p>
+    <p><b>Date:</b> ${invoiceDate}</p>
+    <p><b>Currency:</b> ${currency}</p>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- SUPPLIER / RECIPIENT -->
+<div style="display:flex;justify-content:space-between;gap:20px">
+
+  <div style="width:48%">
+    <h4 style="color:#001d4c">Supplier</h4>
+    <p><b>${supName}</b></p>
+    <p>${supAddress}</p>
+    <p>GSTIN: ${supGST}</p>
+    <p>State: ${supState}</p>
+  </div>
+
+  <div style="width:48%">
+    <h4 style="color:#001d4c">Bill To</h4>
+    <p><b>${recName}</b></p>
+    <p>${recAddress}</p>
+    <p>TRN: ${recTRN}</p>
+    <p>State: ${recState}</p>
+    <p>Place of Supply: ${place}</p>
+  </div>
+
+</div>
+
+<br>
+
+<!-- TABLE -->
+<table style="width:100%;border-collapse:collapse">
+
+<tr style="background:#001d4c;color:white">
+  <th style="padding:10px;border:1px solid #ddd;text-align:left">Description</th>
+  <th style="padding:10px;border:1px solid #ddd;text-align:right">Amount</th>
+</tr>
+
+${rows}
+
+<tr>
+  <td style="padding:10px;border:1px solid #ddd"><b>Total</b></td>
+  <td style="padding:10px;border:1px solid #ddd;text-align:right">
+    <b>${total.toFixed(2)}</b>
+  </td>
+</tr>
+
+</table>
+
+<br>
+
+<!-- AMOUNT IN WORDS -->
+<p><b>Amount in Words:</b> ${words}</p>
+
+<br><br>
+
+<!-- SIGNATURE -->
+<div style="text-align:right">
+  <p>Authorized Signatory</p>
+  <p style="font-size:12px">This is a computer-generated invoice</p>
+</div>
+
+<br>
+
+<!-- ACTION BUTTONS -->
+<div style="display:flex;gap:10px">
+
+<button onclick="window.print()" style="background:#001d4c;color:white;padding:10px;border:none;border-radius:6px">
+🖨 Print
+</button>
+
+</div>
+
+</div>
+`;
+}
 	
 	
 </script>
