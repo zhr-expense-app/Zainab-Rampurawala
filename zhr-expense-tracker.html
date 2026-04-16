@@ -22,7 +22,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+	
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAFTO-WWVdZhHDG12OJt8u1elEJPVrInb8",
@@ -6380,7 +6382,7 @@ currentInvoiceData = {
 	
 document.getElementById("reportOutput").innerHTML = `
 
-<div style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
+<div id="invoicePreview" style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
 
 <!-- HEADER -->
 <div style="display:flex;justify-content:space-between;align-items:center">
@@ -6462,9 +6464,7 @@ ${rows}
 <br>
 
 <!-- ACTION BUTTONS -->
-
-
-<div style="display:flex;gap:10px;flex-wrap:wrap">
+<div style="display:flex;gap:10px;margin-top:20px">
 
 <button onclick="saveInvoice()" 
 style="background:green;color:white;padding:10px;border:none;border-radius:6px">
@@ -6472,12 +6472,12 @@ style="background:green;color:white;padding:10px;border:none;border-radius:6px">
 </button>
 
 <button onclick="editInvoice()" 
-style="background:#f59e0b;color:white;padding:10px;border:none;border-radius:6px">
-✏️ Edit
+style="background:#ff9800;color:white;padding:10px;border:none;border-radius:6px">
+✏ Edit
 </button>
 
-<button onclick="closePreview()" 
-style="background:#555;color:white;padding:10px;border:none;border-radius:6px">
+<button onclick="closeInvoicePreview()" 
+style="background:#777;color:white;padding:10px;border:none;border-radius:6px">
 ❌ Close
 </button>
 
@@ -6493,10 +6493,11 @@ style="background:#555;color:white;padding:10px;border:none;border-radius:6px">
 // CLOSE PREVIEW
 //////////////////////////////////////////////////
 	
-function closePreview(){
+function closeInvoicePreview(){
   document.getElementById("reportOutput").innerHTML = "";
 }
 
+	
 //////////////////////////////////////////////////
 // EDIT INVOICE
 //////////////////////////////////////////////////
@@ -6622,6 +6623,50 @@ try{
 
 }
 
+//////////////////////////////////////////////////
+// PRINT INVOICE
+//////////////////////////////////////////////////
+
+function printInvoice(){
+
+  let content = document.getElementById("invoicePreview").innerHTML;
+
+  let win = window.open('', '', 'width=900,height=700');
+
+  win.document.write(`
+  <html>
+  <head>
+    <title>Invoice</title>
+    <style>
+      body{ font-family:Segoe UI; padding:20px; }
+      table{ width:100%; border-collapse:collapse; }
+      th, td{ border:1px solid #ddd; padding:10px; }
+      th{ background:#001d4c; color:white; }
+    </style>
+  </head>
+  <body>${content}</body>
+  </html>
+  `);
+
+  win.document.close();
+  win.print();
+}
+
+//////////////////////////////////////////////////
+// DOWNLOAD INVOICE
+//////////////////////////////////////////////////
+	
+function downloadInvoice(){
+
+  let element = document.getElementById("invoicePreview");
+
+  let invoiceNo = currentInvoiceData?.invoiceNo || "Invoice";
+
+  html2pdf().from(element).save(`${invoiceNo}.pdf`);
+
+  showToast("📄 Invoice downloaded successfully");
+
+}
 	
 	
 </script>
