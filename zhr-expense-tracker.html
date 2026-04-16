@@ -6305,11 +6305,15 @@ let supName = document.getElementById("supName").value;
 let supAddress = document.getElementById("supAddress").value;
 let supGST = document.getElementById("supGST").value;
 let supState = document.getElementById("supState").value;
+let supContact = document.getElementById("supContact")?.value || "";
+let supWebsite = document.getElementById("supWebsite")?.value || "";
+
 
 let recName = document.getElementById("recName").value;
 let recAddress = document.getElementById("recAddress").value;
 let recTRN = document.getElementById("recTRN").value;
 let recState = document.getElementById("recState").value;
+let recContact = document.getElementById("recContact")?.value || "";	
 let place = document.getElementById("placeSupply").value;
 
 let invoiceNo = document.getElementById("invoiceNumber").value;
@@ -6321,12 +6325,15 @@ currentInvoiceData = {
   supAddress,
   supGST,
   supState,
+  supContact,
+  supWebsite,
 
   recName,
   recAddress,
   recTRN,
   recState,
   place,
+  recContact,
 
   currency,
   invoiceNo,
@@ -6363,22 +6370,25 @@ document.getElementById("reportOutput").innerHTML = `
 <!-- SUPPLIER / RECIPIENT -->
 <div style="display:flex;justify-content:space-between;gap:20px">
 
-  <div style="width:48%">
-    <h4 style="color:#001d4c">Supplier</h4>
-    <p><b>${supName}</b></p>
-    <p>${supAddress}</p>
-    <p>GSTIN: ${supGST}</p>
-    <p>State: ${supState}</p>
-  </div>
+  <div style="width:48%;text-align:left">
+  <h4 style="color:#001d4c">Supplier</h4>
+  <p><b>${supName}</b></p>
+  <p>${supAddress}</p>
+  <p>GSTIN: ${supGST}</p>
+  <p>State: ${supState}</p>
+  <p>Contact: ${supContact}</p>
+  <p>Website: ${supWebsite}</p>
+</div>
 
-  <div style="width:48%">
-    <h4 style="color:#001d4c">Bill To</h4>
-    <p><b>${recName}</b></p>
-    <p>${recAddress}</p>
-    <p>TRN: ${recTRN}</p>
-    <p>State: ${recState}</p>
-    <p>Place of Supply: ${place}</p>
-  </div>
+  <div style="width:48%;text-align:left">
+  <h4 style="color:#001d4c">Bill To</h4>
+  <p><b>${recName}</b></p>
+  <p>${recAddress}</p>
+  <p>TRN: ${recTRN}</p>
+  <p>State: ${recState}</p>
+  <p>Place of Supply: ${place}</p>
+  <p>Contact: ${recContact}</p>
+</div>
 
 </div>
 
@@ -6471,6 +6481,8 @@ setTimeout(()=>{
   document.getElementById("supAddress").value = d.supAddress;
   document.getElementById("supGST").value = d.supGST;
   document.getElementById("supState").value = d.supState;
+  document.getElementById("supContact").value = d.supContact || "";
+  document.getElementById("supWebsite").value = d.supWebsite || "www.zhrconsultants.com";
 
   // RECIPIENT
   document.getElementById("recName").value = d.recName;
@@ -6478,6 +6490,7 @@ setTimeout(()=>{
   document.getElementById("recTRN").value = d.recTRN;
   document.getElementById("recState").value = d.recState;
   document.getElementById("placeSupply").value = d.place;
+  document.getElementById("recContact").value = d.recContact || "";
 
   // OTHER
   document.getElementById("currency").value = d.currency;
