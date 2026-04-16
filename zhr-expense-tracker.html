@@ -6265,6 +6265,8 @@ if(currency){
 	
 function generateInvoice(){
 
+closePopup(); // ✅ ADD THIS LINE HERE (FIRST LINE INSIDE FUNCTION)
+	
 function getCurrencySymbol(code){
   let obj = currencyList.find(c => c.code === code);
   return obj ? obj.symbol : code;
