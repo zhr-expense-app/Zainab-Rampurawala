@@ -6204,14 +6204,31 @@ function getNextInvoiceNumber(){
 // GENERATE INVOICE AUTO NUMBER
 //////////////////////////////////////////////////	
 
-function generateInvoiceNumber(){
-  let last = localStorage.getItem("lastInvoiceNumber") || 0;
+async function generateInvoiceNumber(){
 
-  let next = parseInt(last) + 1;
+  const counterRef = db.collection("counters").doc("invoiceCounter");
 
-  localStorage.setItem("lastInvoiceNumber", next);
+  return db.runTransaction(async (transaction) => {
 
-  return "ZHR-" + String(next).padStart(4, '0');
+    const doc = await transaction.get(counterRef);
+
+    let lastNumber = 0;
+
+    if(doc.exists){
+      lastNumber = doc.data().lastNumber;
+    }
+
+    let nextNumber = lastNumber + 1;
+
+    // UPDATE COUNTER
+    transaction.update(counterRef, {
+      lastNumber: nextNumber
+    });
+
+    return "ZHR-" + String(nextNumber).padStart(4, '0');
+
+  });
+
 }
 
 	
@@ -6261,10 +6278,25 @@ if(currency){
 }
 
 //////////////////////////////////////////////////
+// GENERATE NEXT INVOICE NUMBER PREVIEW
+//////////////////////////////////////////////////
+async function getNextInvoicePreviewNumber(){
+
+  const doc = await db.collection("counters").doc("invoiceCounter").get();
+
+  let last = doc.exists ? doc.data().lastNumber : 0;
+
+  let next = last + 1;
+
+  return "ZHR-" + String(next).padStart(4, '0');
+}
+
+	
+//////////////////////////////////////////////////
 // GENERATE INVOICE
 //////////////////////////////////////////////////
 	
-function generateInvoice(){
+async function generateInvoice(){
 
 closePopup(); // ✅ ADD THIS LINE HERE (FIRST LINE INSIDE FUNCTION)
 	
@@ -6316,7 +6348,8 @@ let recState = document.getElementById("recState").value;
 let recContact = document.getElementById("recContact")?.value || "";	
 let place = document.getElementById("placeSupply").value;
 
-let invoiceNo = document.getElementById("invoiceNumber").value;
+let invoiceNo = await getNextInvoicePreviewNumber();
+document.getElementById("invoiceNumber").value = invoiceNo;
 	
 let invoiceDate = document.getElementById("invoiceDate").value;
 
@@ -6527,7 +6560,7 @@ async function saveInvoice(){
 try{
 
   // 🔒 FINAL NUMBER (LOCK)
-  let finalInvoiceNo = generateInvoiceNumber();
+  let finalInvoiceNo = await generateInvoiceNumber();
 
   let data = currentInvoiceData;
 
