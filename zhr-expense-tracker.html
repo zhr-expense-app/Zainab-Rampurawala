@@ -6359,8 +6359,13 @@ document.getElementById("reportOutput").innerHTML = `
 <div style="display:flex;justify-content:space-between;align-items:center">
 
   <div>
-    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg" width="140">
-  </div>
+    <img 
+  src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
+  width="140"
+  crossorigin="anonymous"
+  style="display:block"
+/>
+</div>
 
   <div style="text-align:right">
     <h2 style="color:#001d4c;margin:0">INVOICE</h2>
@@ -6679,18 +6684,40 @@ function printInvoice(){
 	
 function downloadInvoice(){
 
-  let element = document.getElementById("invoicePreview").cloneNode(true);
+  let element = document.getElementById("invoicePreview");
 
-  // ❌ Remove buttons
+  if(!element){
+    showToast("❌ Invoice not ready", "error");
+    return;
+  }
+
+  // ❌ Hide buttons instead of removing
   let btns = element.querySelectorAll("button");
-  btns.forEach(b => b.remove());
+  btns.forEach(b => b.style.display = "none");
 
-  html2pdf().set({
-    margin: 10,
-    filename: `${currentInvoiceData.invoiceNo}.pdf`,
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }).from(element).save();
+  // ⏳ Wait for DOM render (important)
+  setTimeout(() => {
+
+    html2pdf().set({
+      margin: 10,
+      filename: `${currentInvoiceData.invoiceNo || "Invoice"}.pdf`,
+      html2canvas: { 
+        scale: 2,
+        useCORS: true   // ✅ IMPORTANT (for images)
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      }
+    }).from(element).save().then(() => {
+
+      // ✅ Restore buttons after download
+      btns.forEach(b => b.style.display = "flex");
+
+    });
+
+  }, 300);
 
 }
 	
