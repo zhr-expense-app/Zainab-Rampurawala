@@ -22,7 +22,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>	
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 	
   <script>
@@ -6556,27 +6557,37 @@ async function updateInvoice(id){
 	
 function openInvoicePrintPopup(invoiceNo){
 
-  openPopup(`
-  <div style="text-align:center;padding:20px">
+openPopup(`
+<div style="text-align:center">
 
-    <h3 style="color:#16a34a;margin-bottom:20px">
-      Invoice ${invoiceNo} Saved
-    </h3>
+  <div id="invoicePDFContainer">
+    ${buildInvoiceHTML({
+      ...data,
+      invoiceNo: finalInvoiceNo,
+      total,
+      amountWords: words
+    })}
+  </div>
 
-    <div style="display:flex;gap:12px;justify-content:center">
+  <br>
 
-  <button onclick="printInvoice('${invoiceNo}')">
-  <i data-lucide="printer"></i> Print
-</button>
+  <div style="display:flex;gap:10px;justify-content:center">
 
-<button onclick="downloadInvoice('${invoiceNo}')">
-  <i data-lucide="download"></i> PDF
-</button>
+    <button onclick="printInvoicePDF()">
+      <i data-lucide="printer"></i> Print
+    </button>
 
-</div>
+    <button onclick="downloadInvoicePDF()">
+      <i data-lucide="download"></i> PDF
+    </button>
 
   </div>
-  `);
+
+</div>
+`);
+
+requestAnimationFrame(()=> lucide.createIcons());
+	
 }	
 
 //////////////////////////////////////////////////
@@ -6695,16 +6706,9 @@ ${rows}
 // PRINT INVOICE
 //////////////////////////////////////////////////
 
-async function printInvoice(invoiceNo){
+function printInvoicePDF(){
 
-  let doc = await db.collection("invoices").doc(invoiceNo).get();
-
-  if(!doc.exists){
-    showToast("Invoice not found","error");
-    return;
-  }
-
-  let html = buildInvoiceHTML(doc.data());
+  let content = document.getElementById("invoicePDFContainer").innerHTML;
 
   let win = window.open('', '', 'width=900,height=700');
 
@@ -6714,9 +6718,12 @@ async function printInvoice(invoiceNo){
       <title>Invoice</title>
       <style>
         body{ font-family:Segoe UI; padding:20px; }
+        table{ width:100%; border-collapse:collapse; }
+        th, td{ border:1px solid #ddd; padding:10px; }
+        th{ background:#001d4c; color:white; }
       </style>
     </head>
-    <body>${html}</body>
+    <body>${content}</body>
     </html>
   `);
 
@@ -6728,53 +6735,33 @@ async function printInvoice(invoiceNo){
 // DOWNLOAD INVOICE
 //////////////////////////////////////////////////
 	
-async function downloadInvoice(invoiceNo){
+async function downloadInvoicePDF(){
 
-  try{
+  const { jsPDF } = window.jspdf;
 
-    let doc = await db.collection("invoices").doc(invoiceNo).get();
+  let element = document.getElementById("invoicePDFContainer");
 
-    if(!doc.exists){
-      showToast("Invoice not found","error");
-      return;
-    }
-
-    let html = buildInvoiceHTML(doc.data());
-
-    // ✅ hidden container (no UI disturbance)
-    let element = document.createElement("div");
-    element.innerHTML = html;
-
-    element.style.position = "fixed";
-    element.style.left = "-9999px";
-    element.style.top = "0";
-
-    document.body.appendChild(element);
-
-    // ✅ use html2pdf (BEST)
-    await html2pdf().set({
-      margin: 10,
-      filename: `${invoiceNo}.pdf`,
-      html2canvas: {
-        scale: 2,
-        useCORS: true
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
-      }
-    }).from(element).save();
-
-    // cleanup
-    document.body.removeChild(element);
-
-    showToast("📄 Invoice downloaded", "success");
-
-  }catch(e){
-    console.error(e);
-    showToast("Download failed ❌","error");
+  if(!element){
+    showToast("Invoice not ready","error");
+    return;
   }
+
+  // convert HTML → canvas
+  let canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true
+  });
+
+  let imgData = canvas.toDataURL("image/png");
+
+  let pdf = new jsPDF("p", "mm", "a4");
+
+  let imgWidth = 210;
+  let imgHeight = canvas.height * imgWidth / canvas.width;
+
+  pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+  pdf.save(`${currentInvoiceData.invoiceNo}.pdf`);
 }
 	
 	
