@@ -6467,18 +6467,24 @@ ${rows}
 <div style="display:flex;gap:10px;margin-top:20px">
 
 <button onclick="saveInvoice()" 
-style="background:green;color:white;padding:10px;border:none;border-radius:6px">
-💾 Save
+style="display:flex;align-items:center;gap:6px;
+background:green;color:white;padding:10px 14px;
+border:none;border-radius:8px">
+<i data-lucide="save"></i> Save
 </button>
 
 <button onclick="editInvoice()" 
-style="background:#ff9800;color:white;padding:10px;border:none;border-radius:6px">
-✏ Edit
+style="display:flex;align-items:center;gap:6px;
+background:#ff9800;color:white;padding:10px 14px;
+border:none;border-radius:8px">
+<i data-lucide="edit"></i> Edit
 </button>
 
 <button onclick="closeInvoicePreview()" 
-style="background:#777;color:white;padding:10px;border:none;border-radius:6px">
-❌ Close
+style="display:flex;align-items:center;gap:6px;
+background:#777;color:white;padding:10px 14px;
+border:none;border-radius:8px">
+<i data-lucide="x"></i> Close
 </button>
 
 </div>
@@ -6487,6 +6493,11 @@ style="background:#777;color:white;padding:10px;border:none;border-radius:6px">
 
 </div>
 `;
+
+setTimeout(()=> {
+  lucide.createIcons();
+}, 100);
+	
 }
 	
 //////////////////////////////////////////////////
@@ -6603,23 +6614,44 @@ try{
 
   });
 
-  // ✅ SUCCESS POPUP
-  openPopup(`
+  // ✅ SUCCESS POPUP (UI)
+openPopup(`
 
-  <h3>✅ Invoice Saved Successfully</h3>
+<div style="text-align:center;padding:10px">
 
-  <button onclick="printInvoice()">🖨 Print</button>
-  <br><br>
-  <button onclick="downloadInvoice()">⬇ Download PDF</button>
-  <br><br>
-  <button onclick="closePopup()">Close</button>
+  <h3 style="margin-bottom:20px;color:#16a34a">
+    ✅ Invoice Saved Successfully
+  </h3>
 
-  `);
+  <div style="display:flex;gap:12px;justify-content:center">
 
-}catch(err){
-  console.error("FULL ERROR:", err);
-  alert(err.message);
-}
+    <button onclick="printInvoice()" 
+    style="display:flex;align-items:center;gap:6px;
+    background:#001d4c;color:white;padding:10px 16px;
+    border:none;border-radius:8px;font-weight:500">
+      <i data-lucide="printer"></i>
+      Print
+    </button>
+
+    <button onclick="downloadInvoice()" 
+    style="display:flex;align-items:center;gap:6px;
+    background:#001d4c;color:white;padding:10px 16px;
+    border:none;border-radius:8px;font-weight:500">
+      <i data-lucide="download"></i>
+      PDF
+    </button>
+
+  </div>
+
+</div>
+
+`);
+
+// ✅ SUCCESS TOAST (NEW ADDITION)
+showToast("✅ Invoice saved successfully", "success");
+
+// render lucide icons
+setTimeout(()=> lucide.createIcons(), 100);
 
 }
 
@@ -6629,7 +6661,11 @@ try{
 
 function printInvoice(){
 
-  let content = document.getElementById("invoicePreview").innerHTML;
+  let content = document.getElementById("invoicePreview").cloneNode(true);
+
+  // ❌ Remove action buttons
+  let btns = content.querySelectorAll("button");
+  btns.forEach(b => b.remove());
 
   let win = window.open('', '', 'width=900,height=700');
 
@@ -6644,7 +6680,7 @@ function printInvoice(){
       th{ background:#001d4c; color:white; }
     </style>
   </head>
-  <body>${content}</body>
+  <body>${content.innerHTML}</body>
   </html>
   `);
 
@@ -6658,13 +6694,18 @@ function printInvoice(){
 	
 function downloadInvoice(){
 
-  let element = document.getElementById("invoicePreview");
+  let element = document.getElementById("invoicePreview").cloneNode(true);
 
-  let invoiceNo = currentInvoiceData?.invoiceNo || "Invoice";
+  // ❌ Remove buttons
+  let btns = element.querySelectorAll("button");
+  btns.forEach(b => b.remove());
 
-  html2pdf().from(element).save(`${invoiceNo}.pdf`);
-
-  showToast("📄 Invoice downloaded successfully");
+  html2pdf().set({
+    margin: 10,
+    filename: `${currentInvoiceData.invoiceNo}.pdf`,
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(element).save();
 
 }
 	
