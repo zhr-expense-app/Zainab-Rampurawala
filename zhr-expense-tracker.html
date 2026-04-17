@@ -6575,34 +6575,20 @@ function openInvoicePrintPopup(invoiceNo){
     let data = doc.data();
 
     openPopup(`
-    <div style="text-align:center;max-height:90vh;overflow:auto;">
+    <div style="text-align:center">
 
-      <div style="display:flex;justify-content:center;">
-
-        <div id="invoicePDFContainer" 
-             style="
-               width:210mm;
-               min-height:297mm;
-               background:#fff;
-               padding:15mm;
-               box-shadow:0 0 10px rgba(0,0,0,0.1);
-               box-sizing:border-box;
-               transform:scale(0.8);
-               transform-origin:top center;
-             ">
-
-          ${buildInvoiceHTML(data)}
-
-        </div>
-
+      <div id="invoicePDFContainer">
+        ${buildInvoiceHTML(data)}
       </div>
 
       <br>
 
       <div style="display:flex;justify-content:center">
+
         <button onclick="printInvoicePDF()">
           <i data-lucide="printer"></i> Print
         </button>
+
       </div>
 
     </div>
@@ -6767,7 +6753,7 @@ function printInvoicePDF(){
   win.document.write(`
     <html>
     <head>
-      <title>Invoice</title>
+      <title>${currentInvoiceNo}</title>
       <style>
         body{ font-family:Segoe UI; padding:20px; }
         table{ width:100%; border-collapse:collapse; }
