@@ -6571,16 +6571,20 @@ async function saveInvoice(){
 
 try{
 
+  if(!currentInvoiceData){
+    showToast("❌ No invoice data found", "error");
+    return;
+  }
+
   // 🔒 FINAL NUMBER (LOCK)
   let finalInvoiceNo = await generateInvoiceNumber();
 
   let data = currentInvoiceData;
 
-  let total = data.items.reduce((sum, i)=> sum + Number(i.amt), 0);
+  let total = data.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
 
   let words = convertAmountToWords(total, data.currency);
 
-  // 🔥 FIRESTORE SAVE (COMPAT VERSION)
   await db.collection("invoices").doc(finalInvoiceNo).set({
 
     invoiceNo: finalInvoiceNo,
@@ -6614,44 +6618,47 @@ try{
 
   });
 
-  // ✅ SUCCESS POPUP (UI)
-openPopup(`
+  // ✅ POPUP
+  openPopup(`
+  <div style="text-align:center;padding:10px">
 
-<div style="text-align:center;padding:10px">
+    <h3 style="margin-bottom:20px;color:#16a34a">
+      ✅ Invoice Saved Successfully
+    </h3>
 
-  <h3 style="margin-bottom:20px;color:#16a34a">
-    ✅ Invoice Saved Successfully
-  </h3>
+    <div style="display:flex;gap:12px;justify-content:center">
 
-  <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="printInvoice()" 
+      style="display:flex;align-items:center;gap:6px;
+      background:#001d4c;color:white;padding:10px 16px;
+      border:none;border-radius:8px;font-weight:500">
+        <i data-lucide="printer"></i>
+        Print
+      </button>
 
-    <button onclick="printInvoice()" 
-    style="display:flex;align-items:center;gap:6px;
-    background:#001d4c;color:white;padding:10px 16px;
-    border:none;border-radius:8px;font-weight:500">
-      <i data-lucide="printer"></i>
-      Print
-    </button>
+      <button onclick="downloadInvoice()" 
+      style="display:flex;align-items:center;gap:6px;
+      background:#001d4c;color:white;padding:10px 16px;
+      border:none;border-radius:8px;font-weight:500">
+        <i data-lucide="download"></i>
+        PDF
+      </button>
 
-    <button onclick="downloadInvoice()" 
-    style="display:flex;align-items:center;gap:6px;
-    background:#001d4c;color:white;padding:10px 16px;
-    border:none;border-radius:8px;font-weight:500">
-      <i data-lucide="download"></i>
-      PDF
-    </button>
+    </div>
 
   </div>
+  `);
 
-</div>
+  // ✅ TOAST
+  showToast("✅ Invoice saved successfully", "success");
 
-`);
+  // ✅ ICON RENDER
+  requestAnimationFrame(() => lucide.createIcons());
 
-// ✅ SUCCESS TOAST (NEW ADDITION)
-showToast("✅ Invoice saved successfully", "success");
-
-// render lucide icons
-setTimeout(()=> lucide.createIcons(), 100);
+}catch(err){
+  console.error("FULL ERROR:", err);
+  showToast("❌ " + err.message, "error");
+}
 
 }
 
