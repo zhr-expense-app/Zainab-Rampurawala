@@ -6641,35 +6641,44 @@ if(finalInvoiceNo === "Auto-generated on save"){
   }
 
   // ✅ SUCCESS POPUP (KEEP YOUR UI)
-  openPopup(`
-  <div style="text-align:center;padding:10px">
+openPopup(`
 
-    <h3 style="margin-bottom:20px;color:#16a34a">
-      ✅ Invoice Saved Successfully
-    </h3>
+<div style="position:relative;text-align:center;padding:20px">
 
-    <div style="display:flex;gap:12px;justify-content:center">
+  <!-- ❌ CLOSE BUTTON -->
+  <div onclick="closeInvoiceSuccessPopup()" 
+  style="position:absolute;top:10px;right:12px;
+  cursor:pointer;font-size:20px;color:#777">
+    ✖
+  </div>
 
-      <button onclick="printInvoice()" 
-      style="display:flex;align-items:center;gap:6px;
-      background:#001d4c;color:white;padding:10px 16px;
-      border:none;border-radius:8px;font-weight:500">
-        <i data-lucide="printer"></i>
-        Print
-      </button>
+  <h3 style="margin-bottom:20px;color:#16a34a">
+    ✅ Invoice Saved Successfully
+  </h3>
 
-      <button onclick="downloadInvoice()" 
-      style="display:flex;align-items:center;gap:6px;
-      background:#001d4c;color:white;padding:10px 16px;
-      border:none;border-radius:8px;font-weight:500">
-        <i data-lucide="download"></i>
-        PDF
-      </button>
+  <div style="display:flex;gap:12px;justify-content:center">
 
-    </div>
+    <button onclick="printInvoice()" 
+    style="display:flex;align-items:center;gap:6px;
+    background:#001d4c;color:white;padding:10px 16px;
+    border:none;border-radius:8px;font-weight:500">
+      <i data-lucide="printer"></i>
+      Print
+    </button>
+
+    <button onclick="downloadInvoice()" 
+    style="display:flex;align-items:center;gap:6px;
+    background:#001d4c;color:white;padding:10px 16px;
+    border:none;border-radius:8px;font-weight:500">
+      <i data-lucide="download"></i>
+      PDF
+    </button>
 
   </div>
-  `);
+
+</div>
+
+`);
 
   requestAnimationFrame(() => lucide.createIcons());
 
@@ -6722,17 +6731,26 @@ function printInvoice(){
 	
 function downloadInvoice(){
 
-  let element = document.getElementById("invoicePreview");
+  let original = document.getElementById("invoicePreview");
 
-  if(!element){
+  if(!original){
     showToast("❌ Invoice not ready", "error");
     return;
   }
 
-  let btns = element.querySelectorAll("button");
-  btns.forEach(b => b.style.display = "none");
+  // ✅ CLONE (safe)
+  let element = original.cloneNode(true);
 
-  // wait for layout + image load
+  // ❌ Remove buttons ONLY in clone
+  let btns = element.querySelectorAll("button");
+  btns.forEach(b => b.remove());
+
+  // create temp container
+  let temp = document.createElement("div");
+  temp.appendChild(element);
+
+  document.body.appendChild(temp);
+
   setTimeout(() => {
 
     html2canvas(element, {
@@ -6741,23 +6759,172 @@ function downloadInvoice(){
     }).then(canvas => {
 
       const imgData = canvas.toDataURL("image/png");
-
       const pdf = new jsPDF("p", "mm", "a4");
 
       const imgWidth = 210;
-      const pageHeight = 295;
-
       const imgHeight = canvas.height * imgWidth / canvas.width;
 
       pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
 
       pdf.save(`${currentInvoiceData.invoiceNo || "Invoice"}.pdf`);
 
-      btns.forEach(b => b.style.display = "flex");
+      // ✅ CLEANUP (IMPORTANT)
+      temp.remove();
 
     });
 
-  }, 500);
+  }, 300);
+}
+
+//////////////////////////////////////////////////
+// CLOSE INVOICE SUCCESS POPUP
+//////////////////////////////////////////////////
+	
+function closeInvoiceSuccessPopup(){
+  closePopup(); // close popup
+
+  // restore invoice preview
+  if(currentInvoiceData){
+    generateInvoicePreviewFromData(currentInvoiceData);
+  }
+}
+
+
+//////////////////////////////////////////////////
+// GENERATE INVOICE PREVIEW FROM DATA
+//////////////////////////////////////////////////
+
+function generateInvoicePreviewFromData(d){
+
+function getCurrencySymbol(code){
+  let obj = currencyList.find(c => c.code === code);
+  return obj ? obj.symbol : code;
+}
+
+let symbol = getCurrencySymbol(d.currency);
+
+let total = d.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
+
+let rows = "";
+
+d.items.forEach(item=>{
+  rows += `
+  <tr>
+    <td style="padding:10px;border:1px solid #ddd">${item.desc}</td>
+    <td style="padding:10px;border:1px solid #ddd;text-align:right">
+      ${symbol} ${Number(item.amt).toFixed(2)}
+    </td>
+  </tr>`;
+});
+
+let words = convertAmountToWords(total, d.currency);
+
+document.getElementById("reportOutput").innerHTML = `
+
+<div id="invoicePreview" style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+
+  <div>
+    <img 
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
+      width="140"
+      crossorigin="anonymous"
+    />
+  </div>
+
+  <div style="text-align:right">
+    <h2 style="color:#001d4c;margin:0">INVOICE</h2>
+    <p><b>Invoice No:</b> <span id="invNoText">${d.invoiceNo || "Auto-generated on save"}</span></p>
+    <p><b>Date:</b> ${d.invoiceDate}</p>
+    <p><b>Currency:</b> ${d.currency}</p>
+  </div>
+
+</div>
+
+<hr>
+
+<div style="display:flex;justify-content:space-between;gap:20px">
+
+  <div style="width:48%">
+    <h4>Supplier</h4>
+    <p><b>${d.supName}</b></p>
+    <p>${d.supAddress}</p>
+    <p>GSTIN: ${d.supGST}</p>
+    <p>State: ${d.supState}</p>
+    <p>Contact: ${d.supContact}</p>
+    <p>Website: ${d.supWebsite}</p>
+  </div>
+
+  <div style="width:48%">
+    <h4>Bill To</h4>
+    <p><b>${d.recName}</b></p>
+    <p>${d.recAddress}</p>
+    <p>TRN: ${d.recTRN}</p>
+    <p>State: ${d.recState}</p>
+    <p>Place of Supply: ${d.place}</p>
+    <p>Contact: ${d.recContact}</p>
+  </div>
+
+</div>
+
+<br>
+
+<table style="width:100%;border-collapse:collapse">
+
+<tr style="background:#001d4c;color:white">
+  <th style="padding:10px;border:1px solid #ddd;text-align:left">Description</th>
+  <th style="padding:10px;border:1px solid #ddd;text-align:right">Amount</th>
+</tr>
+
+${rows}
+
+<tr>
+  <td style="padding:10px;border:1px solid #ddd"><b>Total</b></td>
+  <td style="padding:10px;border:1px solid #ddd;text-align:right">
+    <b>${symbol} ${total.toFixed(2)}</b>
+  </td>
+</tr>
+
+</table>
+
+<br>
+
+<p><b>Amount in Words:</b> ${words}</p>
+
+<br><br>
+
+<div style="text-align:right">
+  <p>Authorized Signatory</p>
+  <p style="font-size:12px">This is a computer-generated invoice</p>
+</div>
+
+<br>
+
+<div style="display:flex;gap:10px;margin-top:20px">
+
+<button onclick="saveInvoice()" 
+style="display:flex;align-items:center;gap:6px;background:green;color:white;padding:10px 14px;border:none;border-radius:8px">
+<i data-lucide="save"></i> Save
+</button>
+
+<button onclick="editInvoice()" 
+style="display:flex;align-items:center;gap:6px;background:#ff9800;color:white;padding:10px 14px;border:none;border-radius:8px">
+<i data-lucide="edit"></i> Edit
+</button>
+
+<button onclick="closeInvoicePreview()" 
+style="display:flex;align-items:center;gap:6px;background:#777;color:white;padding:10px 14px;border:none;border-radius:8px">
+<i data-lucide="x"></i> Close
+</button>
+
+</div>
+
+</div>
+`;
+
+requestAnimationFrame(() => lucide.createIcons());
+
 }
 	
 	
