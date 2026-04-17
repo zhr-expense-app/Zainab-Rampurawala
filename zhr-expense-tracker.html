@@ -22,7 +22,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>	
 
 	
   <script>
@@ -6741,43 +6741,40 @@ async function downloadInvoice(invoiceNo){
 
     let html = buildInvoiceHTML(doc.data());
 
-    // ✅ create hidden container (NOT visible)
+    // ✅ hidden container (no UI disturbance)
     let element = document.createElement("div");
+    element.innerHTML = html;
+
     element.style.position = "fixed";
     element.style.left = "-9999px";
-    element.innerHTML = html;
+    element.style.top = "0";
 
     document.body.appendChild(element);
 
-    // ⏳ wait for render (important)
-    setTimeout(async () => {
-
-      const canvas = await html2canvas(element, {
+    // ✅ use html2pdf (BEST)
+    await html2pdf().set({
+      margin: 10,
+      filename: `${invoiceNo}.pdf`,
+      html2canvas: {
         scale: 2,
         useCORS: true
-      });
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
+    }).from(element).save();
 
-      const imgData = canvas.toDataURL("image/png");
+    // cleanup
+    document.body.removeChild(element);
 
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-      pdf.save(`${invoiceNo}.pdf`);
-
-      // ✅ cleanup
-      document.body.removeChild(element);
-
-    }, 500);
+    showToast("📄 Invoice downloaded", "success");
 
   }catch(e){
     console.error(e);
-    showToast("PDF generation failed","error");
+    showToast("Download failed ❌","error");
   }
-
 }
 	
 	
