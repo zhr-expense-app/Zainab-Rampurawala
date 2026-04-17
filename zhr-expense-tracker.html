@@ -6114,12 +6114,12 @@ openPopup(`
 <input id="supWebsite" value="www.zhrconsultants.com" readonly style="background:#f5f5f5">
 
 <label>Invoice Number</label>
-<input id="invoiceNumber" readonly placeholder="Auto-generated on preview"
+<input id="invoiceNumber" readonly 
+value="Auto-generated on save"
 style="background:#f5f5f5;font-weight:bold;color:#001d4c">
 
 <label>Invoice Date</label>
 <input type="date" id="invoiceDate" value="${today}">
-
 
 <hr>
 
@@ -6144,7 +6144,6 @@ style="background:#f5f5f5;font-weight:bold;color:#001d4c">
 
 <label>Place of Supply</label>
 <input id="placeSupply">
-
 
 <hr>
 
@@ -6180,16 +6179,9 @@ style="background:#f5f5f5;font-weight:bold;color:#001d4c">
 `);
 
 setTimeout(()=>{
-  let el = document.getElementById("invoiceNumber");
-  if(el){
-    el.value = getNextInvoiceNumber(); // preview only
-  }
-}, 100);	
-	
-setTimeout(()=>{
   document.getElementById("currency").addEventListener("change", calculateInvoiceTotal);
 },100);
-	
+
 }
 
 
@@ -6329,7 +6321,7 @@ let recState = document.getElementById("recState").value;
 let recContact = document.getElementById("recContact")?.value || "";	
 let place = document.getElementById("placeSupply").value;
 
-let invoiceNo = await getNextInvoicePreviewNumber();
+let invoiceNo = "Auto-generated on save";
 document.getElementById("invoiceNumber").value = invoiceNo;
 	
 let invoiceDate = document.getElementById("invoiceDate").value;
