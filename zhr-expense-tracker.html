@@ -6263,463 +6263,270 @@ if(currency){
 }
 
 
-
-	
 //////////////////////////////////////////////////
-// GENERATE INVOICE
+// SAVE INVOICE
 //////////////////////////////////////////////////
 	
-async function generateInvoice(){
+async function saveInvoice(){
 
-closePopup(); // ✅ ADD THIS LINE HERE (FIRST LINE INSIDE FUNCTION)
-	
-function getCurrencySymbol(code){
-  let obj = currencyList.find(c => c.code === code);
-  return obj ? obj.symbol : code;
-}
+  try{
 
-	
-let currency = document.getElementById("currency").value;
-let symbol = getCurrencySymbol(currency);	
+    // 🔹 GET VALUES DIRECTLY FROM FORM (NO currentInvoiceData)
+    let supName = document.getElementById("supName").value;
+    let supAddress = document.getElementById("supAddress").value;
+    let supGST = document.getElementById("supGST").value;
+    let supState = document.getElementById("supState").value;
+    let supContact = document.getElementById("supContact").value;
+    let supWebsite = document.getElementById("supWebsite").value;
 
-let items = document.querySelectorAll("#items div");
+    let recName = document.getElementById("recName").value;
+    let recAddress = document.getElementById("recAddress").value;
+    let recTRN = document.getElementById("recTRN").value;
+    let recState = document.getElementById("recState").value;
+    let recContact = document.getElementById("recContact").value;
+    let place = document.getElementById("placeSupply").value;
 
-let total = 0;
-let rows = "";
+    let currency = document.getElementById("currency").value;
+    let invoiceDate = document.getElementById("invoiceDate").value;
 
-items.forEach(row=>{
-  let desc = row.children[0].value;
-  let amt = Number(row.children[1].value);
+    let items = document.querySelectorAll("#items div");
 
-  if(desc && amt){
-    total += amt;
-    rows += `
-    <tr>
-      <td style="padding:10px;border:1px solid #ddd">${desc}</td>
-      <td style="padding:10px;border:1px solid #ddd;text-align:right">
-        ${symbol} ${amt.toFixed(2)}
-      </td>
-    </tr>`;
+    // 🔴 VALIDATION
+    if(!supAddress || !supGST || !supState){
+      showToast("Fill supplier details","error"); return;
+    }
+
+    if(!recName || !recAddress || !recState || !place){
+      showToast("Fill recipient details","error"); return;
+    }
+
+    if(!currency){
+      showToast("Select currency","error"); return;
+    }
+
+    if(items.length === 0){
+      showToast("Add at least one service","error"); return;
+    }
+
+    let itemList = [];
+    let total = 0;
+
+    items.forEach(row=>{
+      let desc = row.children[0].value;
+      let amt = Number(row.children[1].value);
+
+      if(!desc || !amt){
+        showToast("Service fields required","error");
+        throw "validation";
+      }
+
+      total += amt;
+
+      itemList.push({desc, amt});
+    });
+
+    let words = convertAmountToWords(total, currency);
+
+    // 🔢 GENERATE NUMBER
+    let invoiceNo = await generateInvoiceNumber();
+
+    // 💾 SAVE
+    await db.collection("invoices").doc(invoiceNo).set({
+
+      invoiceNo,
+      invoiceDate,
+      currency,
+
+      supplier: {
+        name: supName,
+        address: supAddress,
+        gst: supGST,
+        state: supState,
+        contact: supContact,
+        website: supWebsite
+      },
+
+      recipient: {
+        name: recName,
+        address: recAddress,
+        trn: recTRN,
+        state: recState,
+        placeOfSupply: place,
+        contact: recContact
+      },
+
+      items: itemList,
+      total,
+      amountWords: words,
+
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+    showToast(`Invoice ${invoiceNo} saved`, "success");
+
+    closePopup();
+
+    // ✅ SHOW PRINT/PDF POPUP
+    openInvoicePrintPopup(invoiceNo);
+
+  }catch(err){
+
+    if(err !== "validation"){
+      console.error(err);
+      showToast("Error saving invoice","error");
+    }
+
   }
-});
-
-let words = convertAmountToWords(total, currency);
-
-// GET ALL FIELDS
-let supName = document.getElementById("supName").value;
-let supAddress = document.getElementById("supAddress").value;
-let supGST = document.getElementById("supGST").value;
-let supState = document.getElementById("supState").value;
-let supContact = document.getElementById("supContact")?.value || "";
-let supWebsite = document.getElementById("supWebsite")?.value || "";
-
-
-let recName = document.getElementById("recName").value;
-let recAddress = document.getElementById("recAddress").value;
-let recTRN = document.getElementById("recTRN").value;
-let recState = document.getElementById("recState").value;
-let recContact = document.getElementById("recContact")?.value || "";	
-let place = document.getElementById("placeSupply").value;
-
-let invoiceNo = "Auto-generated on save";
-document.getElementById("invoiceNumber").value = invoiceNo;
-	
-let invoiceDate = document.getElementById("invoiceDate").value;
-
-currentInvoiceData = {
-  supName,
-  supAddress,
-  supGST,
-  supState,
-  supContact,
-  supWebsite,
-
-  recName,
-  recAddress,
-  recTRN,
-  recState,
-  place,
-  recContact,
-
-  currency,
-  invoiceNo: null, // ✅ IMPORTANT FIX
-  invoiceDate,
-
-  items: Array.from(items).map(row => ({
-    desc: row.children[0].value,
-    amt: row.children[1].value
-  }))
-};
-	
-document.getElementById("reportOutput").innerHTML = `
-
-<div id="invoicePreview" style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
-
-<!-- HEADER -->
-<div style="display:flex;justify-content:space-between;align-items:center">
-
-  <div>
-    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg" width="140">
-  </div>
-
-  <div style="text-align:right">
-    <h2 style="color:#001d4c;margin:0">INVOICE</h2>
-    <p><b>Invoice No:</b> <span id="invNoText">Auto-generated on save</span></p>
-    <p><b>Date:</b> ${invoiceDate}</p>
-    <p><b>Currency:</b> ${currency}</p>
-  </div>
-
-</div>
-
-<hr>
-
-<!-- SUPPLIER / RECIPIENT -->
-<div style="display:flex;justify-content:space-between;gap:20px">
-
-  <div style="width:48%;text-align:left">
-  <h4 style="color:#001d4c">Supplier</h4>
-  <p><b>${supName}</b></p>
-  <p>${supAddress}</p>
-  <p>GSTIN: ${supGST}</p>
-  <p>State: ${supState}</p>
-  <p>Contact: ${supContact}</p>
-  <p>Website: ${supWebsite}</p>
-</div>
-
-  <div style="width:48%;text-align:left">
-  <h4 style="color:#001d4c">Bill To</h4>
-  <p><b>${recName}</b></p>
-  <p>${recAddress}</p>
-  <p>TRN: ${recTRN}</p>
-  <p>State: ${recState}</p>
-  <p>Place of Supply: ${place}</p>
-  <p>Contact: ${recContact}</p>
-</div>
-
-</div>
-
-<br>
-
-<!-- TABLE -->
-<table style="width:100%;border-collapse:collapse">
-
-<tr style="background:#001d4c;color:white">
-  <th style="padding:10px;border:1px solid #ddd;text-align:left">Description</th>
-  <th style="padding:10px;border:1px solid #ddd;text-align:right">Amount</th>
-</tr>
-
-${rows}
-
-<tr>
-  <td style="padding:10px;border:1px solid #ddd"><b>Total</b></td>
-  <td style="padding:10px;border:1px solid #ddd;text-align:right">
-    <b>${symbol} ${total.toFixed(2)}</b>
-  </td>
-</tr>
-
-</table>
-
-<br>
-
-<!-- AMOUNT IN WORDS -->
-<p><b>Amount in Words:</b> ${words}</p>
-
-<br><br>
-
-<!-- SIGNATURE -->
-<div style="text-align:right">
-  <p>Authorized Signatory</p>
-  <p style="font-size:12px">This is a computer-generated invoice</p>
-</div>
-
-<br>
-
-<!-- ACTION BUTTONS -->
-<div style="display:flex;gap:10px;margin-top:20px">
-
-<button onclick="saveInvoice()" 
-style="display:flex;align-items:center;gap:6px;
-background:green;color:white;padding:10px 14px;
-border:none;border-radius:8px">
-<i data-lucide="save"></i> Save
-</button>
-
-<button onclick="editInvoice()" 
-style="display:flex;align-items:center;gap:6px;
-background:#ff9800;color:white;padding:10px 14px;
-border:none;border-radius:8px">
-<i data-lucide="edit"></i> Edit
-</button>
-
-<button onclick="closeInvoicePreview()" 
-style="display:flex;align-items:center;gap:6px;
-background:#777;color:white;padding:10px 14px;
-border:none;border-radius:8px">
-<i data-lucide="x"></i> Close
-</button>
-
-</div>
-
-</div>
-
-</div>
-`;
-
-setTimeout(()=> {
-  lucide.createIcons();
-}, 100);
-	
 }
-	
-//////////////////////////////////////////////////
-// CLOSE PREVIEW
-//////////////////////////////////////////////////
-	
-function closeInvoicePreview(){
-  document.getElementById("reportOutput").innerHTML = "";
-}
-
 	
 //////////////////////////////////////////////////
 // EDIT INVOICE
 //////////////////////////////////////////////////
 
-function editInvoice(){
+function editInvoice(id){
 
-openInvoicePopup();
+  db.collection("invoices").doc(id).get().then(doc=>{
 
-setTimeout(()=>{
+    let d = doc.data();
 
-  let d = currentInvoiceData;
+    openInvoicePopup();
 
-  // SUPPLIER
-  document.getElementById("supName").value = d.supName;
-  document.getElementById("supAddress").value = d.supAddress;
-  document.getElementById("supGST").value = d.supGST;
-  document.getElementById("supState").value = d.supState;
-  document.getElementById("supContact").value = d.supContact || "";
-  document.getElementById("supWebsite").value = d.supWebsite || "www.zhrconsultants.com";
+    setTimeout(()=>{
 
-  // RECIPIENT
-  document.getElementById("recName").value = d.recName;
-  document.getElementById("recAddress").value = d.recAddress;
-  document.getElementById("recTRN").value = d.recTRN;
-  document.getElementById("recState").value = d.recState;
-  document.getElementById("placeSupply").value = d.place;
-  document.getElementById("recContact").value = d.recContact || "";
+      document.getElementById("supName").value = d.supplier.name;
+      document.getElementById("supAddress").value = d.supplier.address;
+      document.getElementById("supGST").value = d.supplier.gst;
+      document.getElementById("supState").value = d.supplier.state;
 
-  // OTHER
-  document.getElementById("currency").value = d.currency;
-  document.getElementById("invoiceDate").value = d.invoiceDate;
-  document.getElementById("invoiceNumber").value = d.invoiceNo;
+      document.getElementById("recName").value = d.recipient.name;
+      document.getElementById("recAddress").value = d.recipient.address;
+      document.getElementById("recState").value = d.recipient.state;
+      document.getElementById("placeSupply").value = d.recipient.placeOfSupply;
 
-  // CLEAR OLD ITEMS
-  document.getElementById("items").innerHTML = "";
+      document.getElementById("currency").value = d.currency;
+      document.getElementById("invoiceDate").value = d.invoiceDate;
 
-  // ADD ITEMS BACK
-  d.items.forEach(item=>{
-    addItemRow();
+      document.getElementById("items").innerHTML = "";
 
-    let rows = document.querySelectorAll("#items div");
-    let last = rows[rows.length - 1];
+      d.items.forEach(i=>{
+        addItemRow();
+        let rows = document.querySelectorAll("#items div");
+        let last = rows[rows.length-1];
+        last.children[0].value = i.desc;
+        last.children[1].value = i.amt;
+      });
 
-    last.children[0].value = item.desc;
-    last.children[1].value = item.amt;
+      calculateInvoiceTotal();
+
+      // 🔁 CHANGE BUTTON TO UPDATE
+      document.querySelector("button[onclick='saveInvoice()']")
+        .setAttribute("onclick", `updateInvoice('${id}')`);
+
+      document.querySelector("button")
+        .innerText = "Update Invoice";
+
+    },100);
+
   });
 
-  // RECALCULATE
-  calculateInvoiceTotal();
-
-}, 150);
-
 }
 
 //////////////////////////////////////////////////
-// SAVE INVOICE
+// UPDATE INVOICE
+//////////////////////////////////////////////////
+
+async function updateInvoice(id){
+
+  try{
+
+    let items = document.querySelectorAll("#items div");
+
+    let itemList = [];
+    let total = 0;
+
+    items.forEach(row=>{
+      let desc = row.children[0].value;
+      let amt = Number(row.children[1].value);
+
+      total += amt;
+      itemList.push({desc, amt});
+    });
+
+    await db.collection("invoices").doc(id).update({
+      items: itemList,
+      total
+    });
+
+    showToast("Invoice Updated", "success");
+
+    closePopup();
+
+    openInvoicePrintPopup(id);
+
+  }catch(e){
+    console.error(e);
+    showToast("Update failed","error");
+  }
+}
+	
+	
+//////////////////////////////////////////////////
+// OPEN INVOICE PRINT POPUP
 //////////////////////////////////////////////////
 	
+function openInvoicePrintPopup(invoiceNo){
 
-async function saveInvoice(){
+  openPopup(`
+  <div style="text-align:center;padding:20px">
 
-try{
+    <h3 style="color:#16a34a;margin-bottom:20px">
+      Invoice ${invoiceNo} Saved
+    </h3>
 
-  if(!currentInvoiceData){
-    showToast("❌ No invoice data found", "error");
-    return;
-  }
+    <div style="display:flex;gap:12px;justify-content:center">
 
-  // 🚫 Prevent double click
-  if(currentInvoiceData.isSaving){
-    showToast("⏳ Invoice is already being saved...", "warning");
-    return;
-  }
+  <button onclick="printInvoice('${invoiceNo}')"
+  style="display:flex;align-items:center;gap:6px;
+  background:#001d4c;color:white;padding:10px 16px;
+  border:none;border-radius:8px;font-weight:500;cursor:pointer">
+    <i data-lucide="printer"></i>
+    Print
+  </button>
 
-  let data = currentInvoiceData;
-
-  // ================= VALIDATION =================
-
-  if(!data.supAddress || !data.supGST || !data.supState){
-    showToast("❌ Fill all supplier details", "error");
-    return;
-  }
-
-  if(!data.recName || !data.recAddress || !data.recState || !data.place){
-    showToast("❌ Fill all recipient details", "error");
-    return;
-  }
-
-  if(!data.currency){
-    showToast("❌ Select currency", "error");
-    return;
-  }
-
-  if(!data.items || data.items.length === 0){
-    showToast("❌ Add at least one service", "error");
-    return;
-  }
-
-  for(let i of data.items){
-    if(!i.desc || !i.amt){
-      showToast("❌ Service description & amount required", "error");
-      return;
-    }
-  }
-
-  currentInvoiceData.isSaving = true;
-
-  // ================= CALCULATIONS =================
-
-  let total = data.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
-  let words = convertAmountToWords(total, data.currency);
-
-  let finalInvoiceNo = currentInvoiceData.invoiceNo;
-
-if(finalInvoiceNo === "Auto-generated on save"){
-  finalInvoiceNo = null;
-}
-  let docRef;
-
-  // ================= CREATE OR UPDATE =================
-
-  if(finalInvoiceNo && finalInvoiceNo.startsWith("ZHR-")){
-    // ✅ UPDATE EXISTING
-    docRef = db.collection("invoices").doc(finalInvoiceNo);
-
-    await docRef.update({
-      ...data,
-      total,
-      amountWords: words,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showToast(`✏️ Invoice ${finalInvoiceNo} updated`, "success");
-
-  }else{
-    // ✅ CREATE NEW
-    finalInvoiceNo = await generateInvoiceNumber();
-
-    currentInvoiceData.invoiceNo = finalInvoiceNo;
-
-    docRef = db.collection("invoices").doc(finalInvoiceNo);
-
-    await docRef.set({
-      ...data,
-      invoiceNo: finalInvoiceNo,
-      total,
-      amountWords: words,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showToast(`✅ Invoice ${finalInvoiceNo} saved`, "success");
-  }
-
-  // ================= UI UPDATE =================
-
-  let el = document.getElementById("invNoText");
-  if(el){
-    el.innerText = finalInvoiceNo;
-  }
-
-  // ✅ SUCCESS POPUP (KEEP YOUR UI)
-openPopup(`
-
-<div style="position:relative;text-align:center;padding:20px">
-
-  <!-- ❌ CLOSE BUTTON -->
-  <div onclick="closeInvoiceSuccessPopup()" 
-  style="position:absolute;top:10px;right:12px;
-  cursor:pointer;font-size:20px;color:#777">
-    ✖
-  </div>
-
-  <h3 style="margin-bottom:20px;color:#16a34a">
-    ✅ Invoice Saved Successfully
-  </h3>
-
-  <div style="display:flex;gap:12px;justify-content:center">
-
-    <button onclick="printInvoice()" 
-    style="display:flex;align-items:center;gap:6px;
-    background:#001d4c;color:white;padding:10px 16px;
-    border:none;border-radius:8px;font-weight:500">
-      <i data-lucide="printer"></i>
-      Print
-    </button>
-
-    <button onclick="downloadInvoice()" 
-    style="display:flex;align-items:center;gap:6px;
-    background:#001d4c;color:white;padding:10px 16px;
-    border:none;border-radius:8px;font-weight:500">
-      <i data-lucide="download"></i>
-      PDF
-    </button>
-
-  </div>
+  <button onclick="downloadInvoice('${invoiceNo}')"
+  style="display:flex;align-items:center;gap:6px;
+  background:#001d4c;color:white;padding:10px 16px;
+  border:none;border-radius:8px;font-weight:500;cursor:pointer">
+    <i data-lucide="download"></i>
+    PDF
+  </button>
 
 </div>
 
-`);
-
-  requestAnimationFrame(() => lucide.createIcons());
-
-  currentInvoiceData.isSaving = false;
-
-}catch(err){
-  console.error(err);
-  showToast(err.message || "Error saving invoice", "error");
-  currentInvoiceData.isSaving = false;
-}
-
-}
+  </div>
+  `);
+}	
 
 //////////////////////////////////////////////////
 // PRINT INVOICE
 //////////////////////////////////////////////////
 
-function printInvoice(){
+async function printInvoice(invoiceNo){
 
-  let content = document.getElementById("invoicePreview").cloneNode(true);
+  let doc = await db.collection("invoices").doc(invoiceNo).get();
 
-  // ❌ Remove action buttons
-  let btns = content.querySelectorAll("button");
-  btns.forEach(b => b.remove());
+  if(!doc.exists){
+    showToast("Invoice not found","error");
+    return;
+  }
+
+  let d = doc.data();
 
   let win = window.open('', '', 'width=900,height=700');
 
-  win.document.write(`
-  <html>
-  <head>
-    <title>Invoice</title>
-    <style>
-      body{ font-family:Segoe UI; padding:20px; }
-      table{ width:100%; border-collapse:collapse; }
-      th, td{ border:1px solid #ddd; padding:10px; }
-      th{ background:#001d4c; color:white; }
-    </style>
-  </head>
-  <body>${content.innerHTML}</body>
-  </html>
-  `);
+  win.document.write(`<h2>Invoice ${d.invoiceNo}</h2>`);
+  win.document.write(`<p>Total: ${d.total}</p>`);
 
   win.document.close();
   win.print();
@@ -6776,156 +6583,6 @@ function downloadInvoice(){
   }, 300);
 }
 
-//////////////////////////////////////////////////
-// CLOSE INVOICE SUCCESS POPUP
-//////////////////////////////////////////////////
-	
-function closeInvoiceSuccessPopup(){
-  closePopup(); // close popup
-
-  // restore invoice preview
-  if(currentInvoiceData){
-    generateInvoicePreviewFromData(currentInvoiceData);
-  }
-}
-
-
-//////////////////////////////////////////////////
-// GENERATE INVOICE PREVIEW FROM DATA
-//////////////////////////////////////////////////
-
-function generateInvoicePreviewFromData(d){
-
-function getCurrencySymbol(code){
-  let obj = currencyList.find(c => c.code === code);
-  return obj ? obj.symbol : code;
-}
-
-let symbol = getCurrencySymbol(d.currency);
-
-let total = d.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
-
-let rows = "";
-
-d.items.forEach(item=>{
-  rows += `
-  <tr>
-    <td style="padding:10px;border:1px solid #ddd">${item.desc}</td>
-    <td style="padding:10px;border:1px solid #ddd;text-align:right">
-      ${symbol} ${Number(item.amt).toFixed(2)}
-    </td>
-  </tr>`;
-});
-
-let words = convertAmountToWords(total, d.currency);
-
-document.getElementById("reportOutput").innerHTML = `
-
-<div id="invoicePreview" style="max-width:900px;margin:auto;background:white;padding:25px;font-family:Segoe UI">
-
-<div style="display:flex;justify-content:space-between;align-items:center">
-
-  <div>
-    <img 
-      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
-      width="140"
-      crossorigin="anonymous"
-    />
-  </div>
-
-  <div style="text-align:right">
-    <h2 style="color:#001d4c;margin:0">INVOICE</h2>
-    <p><b>Invoice No:</b> <span id="invNoText">${d.invoiceNo || "Auto-generated on save"}</span></p>
-    <p><b>Date:</b> ${d.invoiceDate}</p>
-    <p><b>Currency:</b> ${d.currency}</p>
-  </div>
-
-</div>
-
-<hr>
-
-<div style="display:flex;justify-content:space-between;gap:20px">
-
-  <div style="width:48%">
-    <h4>Supplier</h4>
-    <p><b>${d.supName}</b></p>
-    <p>${d.supAddress}</p>
-    <p>GSTIN: ${d.supGST}</p>
-    <p>State: ${d.supState}</p>
-    <p>Contact: ${d.supContact}</p>
-    <p>Website: ${d.supWebsite}</p>
-  </div>
-
-  <div style="width:48%">
-    <h4>Bill To</h4>
-    <p><b>${d.recName}</b></p>
-    <p>${d.recAddress}</p>
-    <p>TRN: ${d.recTRN}</p>
-    <p>State: ${d.recState}</p>
-    <p>Place of Supply: ${d.place}</p>
-    <p>Contact: ${d.recContact}</p>
-  </div>
-
-</div>
-
-<br>
-
-<table style="width:100%;border-collapse:collapse">
-
-<tr style="background:#001d4c;color:white">
-  <th style="padding:10px;border:1px solid #ddd;text-align:left">Description</th>
-  <th style="padding:10px;border:1px solid #ddd;text-align:right">Amount</th>
-</tr>
-
-${rows}
-
-<tr>
-  <td style="padding:10px;border:1px solid #ddd"><b>Total</b></td>
-  <td style="padding:10px;border:1px solid #ddd;text-align:right">
-    <b>${symbol} ${total.toFixed(2)}</b>
-  </td>
-</tr>
-
-</table>
-
-<br>
-
-<p><b>Amount in Words:</b> ${words}</p>
-
-<br><br>
-
-<div style="text-align:right">
-  <p>Authorized Signatory</p>
-  <p style="font-size:12px">This is a computer-generated invoice</p>
-</div>
-
-<br>
-
-<div style="display:flex;gap:10px;margin-top:20px">
-
-<button onclick="saveInvoice()" 
-style="display:flex;align-items:center;gap:6px;background:green;color:white;padding:10px 14px;border:none;border-radius:8px">
-<i data-lucide="save"></i> Save
-</button>
-
-<button onclick="editInvoice()" 
-style="display:flex;align-items:center;gap:6px;background:#ff9800;color:white;padding:10px 14px;border:none;border-radius:8px">
-<i data-lucide="edit"></i> Edit
-</button>
-
-<button onclick="closeInvoicePreview()" 
-style="display:flex;align-items:center;gap:6px;background:#777;color:white;padding:10px 14px;border:none;border-radius:8px">
-<i data-lucide="x"></i> Close
-</button>
-
-</div>
-
-</div>
-`;
-
-requestAnimationFrame(() => lucide.createIcons());
-
-}
 	
 	
 </script>
