@@ -6384,7 +6384,7 @@ async function saveInvoice(){
 // EDIT INVOICE
 //////////////////////////////////////////////////
 
-function editInvoice(id){
+	function editInvoice(id){
 
   db.collection("invoices").doc(id).get().then(doc=>{
 
@@ -6394,44 +6394,54 @@ function editInvoice(id){
 
     setTimeout(()=>{
 
-      document.getElementById("supName").value = d.supplier.name;
-      document.getElementById("supAddress").value = d.supplier.address;
-      document.getElementById("supGST").value = d.supplier.gst;
-      document.getElementById("supState").value = d.supplier.state;
+      // ✅ SUPPLIER
+      document.getElementById("supName").value = d.supplier.name || "";
+      document.getElementById("supAddress").value = d.supplier.address || "";
+      document.getElementById("supGST").value = d.supplier.gst || "";
+      document.getElementById("supState").value = d.supplier.state || "";
+      document.getElementById("supContact").value = d.supplier.contact || "";
+      document.getElementById("supWebsite").value = d.supplier.website || "";
 
-      document.getElementById("recName").value = d.recipient.name;
-      document.getElementById("recAddress").value = d.recipient.address;
-      document.getElementById("recState").value = d.recipient.state;
-      document.getElementById("placeSupply").value = d.recipient.placeOfSupply;
+      // ✅ RECIPIENT
+      document.getElementById("recName").value = d.recipient.name || "";
+      document.getElementById("recAddress").value = d.recipient.address || "";
+      document.getElementById("recTRN").value = d.recipient.trn || "";
+      document.getElementById("recState").value = d.recipient.state || "";
+      document.getElementById("placeSupply").value = d.recipient.placeOfSupply || "";
+      document.getElementById("recContact").value = d.recipient.contact || "";
 
-      document.getElementById("currency").value = d.currency;
-      document.getElementById("invoiceDate").value = d.invoiceDate;
+      // ✅ OTHER
+      document.getElementById("currency").value = d.currency || "";
+      document.getElementById("invoiceDate").value = d.invoiceDate || "";
 
+      // ✅ ITEMS
       document.getElementById("items").innerHTML = "";
 
       d.items.forEach(i=>{
         addItemRow();
         let rows = document.querySelectorAll("#items div");
         let last = rows[rows.length-1];
-        last.children[0].value = i.desc;
-        last.children[1].value = i.amt;
+        last.children[0].value = i.desc || "";
+        last.children[1].value = i.amt || "";
       });
 
       calculateInvoiceTotal();
 
-      // 🔁 CHANGE BUTTON TO UPDATE
-      document.querySelector("button[onclick='saveInvoice()']")
-        .setAttribute("onclick", `updateInvoice('${id}')`);
+      // 🔁 CHANGE BUTTON TO UPDATE (SAFE WAY)
+      let btn = document.querySelector("button[onclick='saveInvoice()']");
+      if(btn){
+        btn.setAttribute("onclick", `updateInvoice('${id}')`);
+        btn.innerHTML = `<i data-lucide="save"></i> Update Invoice`;
+      }
 
-      document.querySelector("button")
-        .innerText = "Update Invoice";
+      requestAnimationFrame(() => lucide.createIcons());
 
     },100);
 
   });
 
 }
-
+	
 //////////////////////////////////////////////////
 // UPDATE INVOICE
 //////////////////////////////////////////////////
@@ -6440,25 +6450,94 @@ async function updateInvoice(id){
 
   try{
 
+    // 🔹 GET VALUES FROM FORM
+    let supName = document.getElementById("supName").value;
+    let supAddress = document.getElementById("supAddress").value;
+    let supGST = document.getElementById("supGST").value;
+    let supState = document.getElementById("supState").value;
+    let supContact = document.getElementById("supContact").value;
+    let supWebsite = document.getElementById("supWebsite").value;
+
+    let recName = document.getElementById("recName").value;
+    let recAddress = document.getElementById("recAddress").value;
+    let recTRN = document.getElementById("recTRN").value;
+    let recState = document.getElementById("recState").value;
+    let recContact = document.getElementById("recContact").value;
+    let place = document.getElementById("placeSupply").value;
+
+    let currency = document.getElementById("currency").value;
+    let invoiceDate = document.getElementById("invoiceDate").value;
+
     let items = document.querySelectorAll("#items div");
+
+    // 🔴 VALIDATION (same as save)
+    if(!supAddress || !supGST || !supState){
+      showToast("Fill supplier details","error"); return;
+    }
+
+    if(!recName || !recAddress || !recState || !place){
+      showToast("Fill recipient details","error"); return;
+    }
+
+    if(!currency){
+      showToast("Select currency","error"); return;
+    }
+
+    if(items.length === 0){
+      showToast("Add at least one service","error"); return;
+    }
 
     let itemList = [];
     let total = 0;
 
-    items.forEach(row=>{
+    for(let row of items){
       let desc = row.children[0].value;
       let amt = Number(row.children[1].value);
 
+      if(!desc || !amt){
+        showToast("Service fields required","error");
+        return;
+      }
+
       total += amt;
       itemList.push({desc, amt});
-    });
+    }
 
+    let words = convertAmountToWords(total, currency);
+
+    // ✅ UPDATE FULL DOCUMENT
     await db.collection("invoices").doc(id).update({
+
+      invoiceDate,
+      currency,
+
+      supplier: {
+        name: supName,
+        address: supAddress,
+        gst: supGST,
+        state: supState,
+        contact: supContact,
+        website: supWebsite
+      },
+
+      recipient: {
+        name: recName,
+        address: recAddress,
+        trn: recTRN,
+        state: recState,
+        placeOfSupply: place,
+        contact: recContact
+      },
+
       items: itemList,
-      total
+      total,
+      amountWords: words,
+
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+
     });
 
-    showToast("Invoice Updated", "success");
+    showToast("Invoice Updated ✏️", "success");
 
     closePopup();
 
@@ -6466,7 +6545,7 @@ async function updateInvoice(id){
 
   }catch(e){
     console.error(e);
-    showToast("Update failed","error");
+    showToast("Update failed ❌","error");
   }
 }
 	
@@ -6534,8 +6613,7 @@ return `
 
   <div>
     <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
-    width="140"
-    crossorigin="anonymous" />
+    width="140"/>
   </div>
 
   <div style="text-align:right">
@@ -6652,40 +6730,55 @@ async function printInvoice(invoiceNo){
 	
 async function downloadInvoice(invoiceNo){
 
-  let doc = await db.collection("invoices").doc(invoiceNo).get();
+  try{
 
-  if(!doc.exists){
-    showToast("Invoice not found","error");
-    return;
-  }
+    let doc = await db.collection("invoices").doc(invoiceNo).get();
 
-  let element = document.createElement("div");
-  element.innerHTML = buildInvoiceHTML(doc.data());
+    if(!doc.exists){
+      showToast("Invoice not found","error");
+      return;
+    }
 
-  document.body.appendChild(element);
+    let html = buildInvoiceHTML(doc.data());
 
-  setTimeout(() => {
+    // ✅ create hidden container (NOT visible)
+    let element = document.createElement("div");
+    element.style.position = "fixed";
+    element.style.left = "-9999px";
+    element.innerHTML = html;
 
-    html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+    document.body.appendChild(element);
+
+    // ⏳ wait for render (important)
+    setTimeout(async () => {
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true
+      });
 
       const imgData = canvas.toDataURL("image/png");
 
       const pdf = new jsPDF("p", "mm", "a4");
 
       const imgWidth = 210;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
 
       pdf.save(`${invoiceNo}.pdf`);
 
-      element.remove();
+      // ✅ cleanup
+      document.body.removeChild(element);
 
-    });
+    }, 500);
 
-  }, 300);
+  }catch(e){
+    console.error(e);
+    showToast("PDF generation failed","error");
+  }
+
 }
-
 	
 	
 </script>
