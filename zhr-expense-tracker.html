@@ -6653,52 +6653,35 @@ return `
 
 <hr>
 
-<!-- PARTIES -->
-<div style="display:flex;justify-content:space-between;gap:20px">
+<!-- ================= PARTIES (SAP STYLE) ================= -->
 
-  <div style="width:48%">
-    <h4 style="color:#001d4c">Supplier</h4>
-    <p><b>${d.supplier.name}</b></p>
-    <p>${d.supplier.address}</p>
-    <p>GSTIN: ${d.supplier.gst}</p>
-    <p>State: ${d.supplier.state}</p>
-    <p>Contact: ${d.supplier.contact}</p>
-    <p>Website: ${d.supplier.website}</p>
-  </div>
-
-  <div style="width:48%">
-    <h4 style="color:#001d4c">Bill To</h4>
-    <p><b>${d.recipient.name}</b></p>
-    <p>${d.recipient.address}</p>
-    <p>TRN: ${d.recipient.trn}</p>
-    <p>State: ${d.recipient.state}</p>
-    <p>Contact: ${d.recipient.contact}</p>
-	<p>Place of Supply: ${d.recipient.placeOfSupply}</p>
-    
-  </div>
-
-</div>
-
-<br>
-
-<!-- TABLE -->
-<table style="width:100%;border-collapse:collapse">
+<table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #001d4c">
 
 <tr>
-  <th style="background:#001d4c;color:#fff;padding:12px;text-align:left;border:1px solid #001d4c;">
-    Description
-  </th>
-  <th style="background:#001d4c;color:#fff;padding:12px;text-align:right;border:1px solid #001d4c;">
-    Amount
-  </th>
-</tr>
+  <td style="width:50%;vertical-align:top;padding:12px;border:1px solid #001d4c">
 
-${rows}
+    <div style="font-weight:bold;color:#001d4c;margin-bottom:8px">Supplier</div>
 
-<tr>
-  <td style="padding:10px;border:1px solid #ddd"><b>Total</b></td>
-  <td style="padding:10px;border:1px solid #ddd;text-align:right">
-    <b>${symbol} ${d.total.toFixed(2)}</b>
+    <div><b>${d.supplier.name}</b></div>
+    <div>${d.supplier.address}</div>
+    <div>GSTIN: ${d.supplier.gst}</div>
+    <div>State: ${d.supplier.state}</div>
+    <div>Contact: ${d.supplier.contact}</div>
+    <div>Website: ${d.supplier.website}</div>
+
+  </td>
+
+  <td style="width:50%;vertical-align:top;padding:12px;border:1px solid #001d4c">
+
+    <div style="font-weight:bold;color:#001d4c;margin-bottom:8px">Bill To</div>
+
+    <div><b>${d.recipient.name}</b></div>
+    <div>${d.recipient.address}</div>
+    <div>TRN: ${d.recipient.trn}</div>
+    <div>State: ${d.recipient.state}</div>
+    <div>Contact: ${d.recipient.contact}</div>
+    <div>Place of Supply: ${d.recipient.placeOfSupply}</div>
+
   </td>
 </tr>
 
@@ -6706,16 +6689,68 @@ ${rows}
 
 <br>
 
-<p><b>Amount in Words:</b> ${d.amountWords}</p>
+<!-- ================= SERVICES TABLE ================= -->
+
+<table style="width:100%;border-collapse:collapse;border:2px solid #001d4c">
+
+<tr>
+  <th style="background:#001d4c;color:#fff;padding:12px;text-align:left;border:1px solid #001d4c;">
+    Description
+  </th>
+  <th style="background:#001d4c;color:#fff;padding:12px;text-align:right;border:1px solid #001d4c;">
+    Amount (${d.currency})
+  </th>
+</tr>
+
+${rows}
+
+<tr>
+  <td style="padding:12px;border:1px solid #001d4c;font-weight:bold">
+    Total
+  </td>
+  <td style="padding:12px;border:1px solid #001d4c;text-align:right;font-weight:bold">
+    ${symbol} ${d.total.toFixed(2)}
+  </td>
+</tr>
+
+</table>
+
+<br>
+
+<!-- ================= AMOUNT IN WORDS ================= -->
+
+<table style="width:100%;border-collapse:collapse;border:1px solid #001d4c">
+
+<tr>
+  <td style="padding:12px;border:1px solid #001d4c">
+    <b>Amount in Words:</b> ${d.amountWords}
+  </td>
+</tr>
+
+</table>
 
 <br><br>
 
-<div style="text-align:right">
-  <p>Authorized Signatory</p>
-  <p style="font-size:12px">This is a computer-generated invoice</p>
-</div>
+<!-- ================= SIGNATURE ================= -->
 
-</div>
+<table style="width:100%">
+
+<tr>
+  <td></td>
+  <td style="text-align:right">
+
+    <div style="margin-top:40px;font-weight:bold">
+      Authorized Signatory
+    </div>
+
+    <div style="font-size:12px;margin-top:5px">
+      This is a computer-generated invoice
+    </div>
+
+  </td>
+</tr>
+
+</table>
 
 `;
 }
