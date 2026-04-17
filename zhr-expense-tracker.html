@@ -6584,14 +6584,10 @@ function openInvoicePrintPopup(invoiceNo){
 
       <br>
 
-      <div style="display:flex;gap:10px;justify-content:center">
+      <div style="display:flex;justify-content:center">
 
         <button onclick="printInvoicePDF()">
           <i data-lucide="printer"></i> Print
-        </button>
-
-        <button onclick="downloadInvoicePDF()">
-          <i data-lucide="download"></i> PDF
         </button>
 
       </div>
@@ -6605,6 +6601,7 @@ function openInvoicePrintPopup(invoiceNo){
 
 }	
 
+	
 //////////////////////////////////////////////////
 // BUILD INVOICE
 //////////////////////////////////////////////////
@@ -6623,8 +6620,10 @@ let rows = "";
 d.items.forEach(item=>{
   rows += `
   <tr>
-    <td style="padding:10px;border:1px solid #ddd">${item.desc}</td>
-    <td style="padding:10px;border:1px solid #ddd;text-align:right">
+    <td style="padding:10px;border:1px solid #001d4c;word-break:break-word;">
+      ${item.desc}
+    </td>
+    <td style="padding:10px;border:1px solid #001d4c;text-align:right;">
       ${symbol} ${Number(item.amt).toFixed(2)}
     </td>
   </tr>`;
@@ -6653,51 +6652,61 @@ return `
 
 <hr>
 
-<!-- ================= PARTIES (SAP STYLE) ================= -->
-
-<table style="width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #001d4c">
+<!-- PARTIES -->
+<table style="width:100%;border-collapse:collapse;margin-top:10px">
 
 <tr>
-  <td style="width:50%;vertical-align:top;padding:12px;border:1px solid #001d4c">
 
-    <div style="font-weight:bold;color:#001d4c;margin-bottom:8px">Supplier</div>
+  <!-- SUPPLIER -->
+  <td style="width:50%;vertical-align:top;padding:10px 40px 10px 0;">
 
-    <div><b>${d.supplier.name}</b></div>
-    <div>${d.supplier.address}</div>
-    <div>GSTIN: ${d.supplier.gst}</div>
-    <div>State: ${d.supplier.state}</div>
-    <div>Contact: ${d.supplier.contact}</div>
-    <div>Website: ${d.supplier.website}</div>
+    <div style="font-weight:600;color:#001d4c;margin-bottom:10px">
+      Supplier
+    </div>
+
+    <div style="line-height:1.8">
+      <div><b>${d.supplier.name}</b></div>
+      <div>${d.supplier.address}</div>
+      <div>GSTIN: ${d.supplier.gst}</div>
+      <div>State: ${d.supplier.state}</div>
+      <div>Contact: ${d.supplier.contact}</div>
+      <div>Website: ${d.supplier.website}</div>
+    </div>
+
+  </td>
+
+  <!-- RECIPIENT -->
+  <td style="width:50%;vertical-align:top;padding:10px 0 10px 40px;">
+
+    <div style="font-weight:600;color:#001d4c;margin-bottom:10px">
+      Bill To
+    </div>
+
+    <div style="line-height:1.8">
+      <div><b>${d.recipient.name}</b></div>
+      <div>${d.recipient.address}</div>
+      <div>TRN: ${d.recipient.trn}</div>
+      <div>State: ${d.recipient.state}</div>
+      <div>Contact: ${d.recipient.contact}</div>
+      <div>Place of Supply: ${d.recipient.placeOfSupply}</div>
+    </div>
 
   </td>
 
-  <td style="width:50%;vertical-align:top;padding:12px;border:1px solid #001d4c">
-
-    <div style="font-weight:bold;color:#001d4c;margin-bottom:8px">Bill To</div>
-
-    <div><b>${d.recipient.name}</b></div>
-    <div>${d.recipient.address}</div>
-    <div>TRN: ${d.recipient.trn}</div>
-    <div>State: ${d.recipient.state}</div>
-    <div>Contact: ${d.recipient.contact}</div>
-    <div>Place of Supply: ${d.recipient.placeOfSupply}</div>
-
-  </td>
 </tr>
 
 </table>
 
 <br>
 
-<!-- ================= SERVICES TABLE ================= -->
-
-<table style="width:100%;border-collapse:collapse;border:2px solid #001d4c">
+<!-- TABLE -->
+<table style="width:100%;border-collapse:collapse;border:1px solid #001d4c;table-layout:fixed">
 
 <tr>
-  <th style="background:#001d4c;color:#fff;padding:12px;text-align:left;border:1px solid #001d4c;">
+  <th style="width:75%;color:#001d4c;font-weight:600;padding:10px;text-align:left;border:1px solid #001d4c;">
     Description
   </th>
-  <th style="background:#001d4c;color:#fff;padding:12px;text-align:right;border:1px solid #001d4c;">
+  <th style="width:25%;color:#001d4c;font-weight:600;padding:10px;text-align:right;border:1px solid #001d4c;">
     Amount (${d.currency})
   </th>
 </tr>
@@ -6705,10 +6714,10 @@ return `
 ${rows}
 
 <tr>
-  <td style="padding:12px;border:1px solid #001d4c;font-weight:bold">
+  <td style="padding:10px;border:1px solid #001d4c;font-weight:600;color:#001d4c;">
     Total
   </td>
-  <td style="padding:12px;border:1px solid #001d4c;text-align:right;font-weight:bold">
+  <td style="padding:10px;border:1px solid #001d4c;text-align:right;font-weight:600;color:#001d4c;">
     ${symbol} ${d.total.toFixed(2)}
   </td>
 </tr>
@@ -6717,43 +6726,20 @@ ${rows}
 
 <br>
 
-<!-- ================= AMOUNT IN WORDS ================= -->
-
-<table style="width:100%;border-collapse:collapse;border:1px solid #001d4c">
-
-<tr>
-  <td style="padding:12px;border:1px solid #001d4c">
-    <b>Amount in Words:</b> ${d.amountWords}
-  </td>
-</tr>
-
-</table>
+<p><b>Amount in Words:</b> ${d.amountWords}</p>
 
 <br><br>
 
-<!-- ================= SIGNATURE ================= -->
+<div style="text-align:right">
+  <p>Authorized Signatory</p>
+  <p style="font-size:12px">This is a computer-generated invoice</p>
+</div>
 
-<table style="width:100%">
-
-<tr>
-  <td></td>
-  <td style="text-align:right">
-
-    <div style="margin-top:40px;font-weight:bold">
-      Authorized Signatory
-    </div>
-
-    <div style="font-size:12px;margin-top:5px">
-      This is a computer-generated invoice
-    </div>
-
-  </td>
-</tr>
-
-</table>
+</div>
 
 `;
 }
+
 	
 	
 //////////////////////////////////////////////////
@@ -6785,69 +6771,7 @@ function printInvoicePDF(){
   win.print();
 }
 
-//////////////////////////////////////////////////
-// DOWNLOAD INVOICE
-//////////////////////////////////////////////////
-	
-function downloadInvoicePDF(){
 
-  let content = document.getElementById("invoicePDFContainer").innerHTML;
-
-  let win = window.open('', '_blank');
-
-  win.document.write(`
-    <html>
-    <head>
-      <title>Invoice</title>
-
-      <style>
-
-        body{
-          font-family: Segoe UI;
-          padding:20px;
-
-          /* 🔥 IMPORTANT */
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-
-        table{
-          width:100%;
-          border-collapse:collapse;
-        }
-
-        th, td{
-          border:1px solid #ddd;
-          padding:10px;
-        }
-
-        th{
-          background:#001d4c !important;
-          color:white !important;
-        }
-
-        @media print {
-          body{
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-
-      </style>
-
-    </head>
-
-    <body onload="window.print(); setTimeout(() => window.close(), 500);">
-
-      ${content}
-
-    </body>
-    </html>
-  `);
-
-  win.document.close();
-}
-	
 	
 </script>
 <script src="layout.js"></script>
