@@ -829,6 +829,7 @@ let ledgerList = [];
 let invoiceItems = [];
 let invoiceCounter = 1;
 let currentInvoiceData = {};	
+let currentInvoiceNo = "";	
 	
 
 //////////////////////////////////////////////////
@@ -6055,7 +6056,8 @@ function numberToWords(num){
   if(num < 100) return b[Math.floor(num/10)] + " " + a[num%10];
   if(num < 1000) return a[Math.floor(num/100)] + " Hundred " + numberToWords(num%100);
   if(num < 1000000) return numberToWords(Math.floor(num/1000)) + " Thousand " + numberToWords(num%1000);
-
+if(num === 0) return "Zero";
+	
   return num;
 }
 
@@ -6207,9 +6209,15 @@ async function generateInvoiceNumber(){
     let nextNumber = lastNumber + 1;
 
     // UPDATE COUNTER
-    transaction.update(counterRef, {
-      lastNumber: nextNumber
-    });
+    if(doc.exists){
+  transaction.update(counterRef, {
+    lastNumber: nextNumber
+  });
+} else {
+  transaction.set(counterRef, {
+    lastNumber: nextNumber
+  });
+}
 
     return "ZHR-" + String(nextNumber).padStart(4, '0');
 
@@ -6330,6 +6338,9 @@ async function saveInvoice(){
 
     // 🔢 GENERATE NUMBER
     let invoiceNo = await generateInvoiceNumber();
+
+	  // ✅ ADD THIS LINE
+currentInvoiceNo = invoiceNo;
 
     // 💾 SAVE
     await db.collection("invoices").doc(invoiceNo).set({
@@ -6495,7 +6506,7 @@ async function updateInvoice(id){
       let desc = row.children[0].value;
       let amt = Number(row.children[1].value);
 
-      if(!desc || !amt){
+      if(!desc || amt === 0 || isNaN(amt)){
         showToast("Service fields required","error");
         return;
       }
@@ -6557,37 +6568,41 @@ async function updateInvoice(id){
 	
 function openInvoicePrintPopup(invoiceNo){
 
-openPopup(`
-<div style="text-align:center">
-
-  <div id="invoicePDFContainer">
-    ${buildInvoiceHTML({
-      ...data,
-      invoiceNo: finalInvoiceNo,
-      total,
-      amountWords: words
-    })}
-  </div>
-
-  <br>
-
-  <div style="display:flex;gap:10px;justify-content:center">
-
-    <button onclick="printInvoicePDF()">
-      <i data-lucide="printer"></i> Print
-    </button>
-
-    <button onclick="downloadInvoicePDF()">
-      <i data-lucide="download"></i> PDF
-    </button>
-
-  </div>
-
-</div>
-`);
-
-requestAnimationFrame(()=> lucide.createIcons());
+  // ✅ ADD THIS
+  currentInvoiceNo = invoiceNo;
 	
+  db.collection("invoices").doc(invoiceNo).get().then(doc => {
+
+    let data = doc.data();
+
+    openPopup(`
+    <div style="text-align:center">
+
+      <div id="invoicePDFContainer">
+        ${buildInvoiceHTML(data)}
+      </div>
+
+      <br>
+
+      <div style="display:flex;gap:10px;justify-content:center">
+
+        <button onclick="printInvoicePDF()">
+          <i data-lucide="printer"></i> Print
+        </button>
+
+        <button onclick="downloadInvoicePDF()">
+          <i data-lucide="download"></i> PDF
+        </button>
+
+      </div>
+
+    </div>
+    `);
+
+    requestAnimationFrame(()=> lucide.createIcons());
+
+  });
+
 }	
 
 //////////////////////////////////////////////////
@@ -6761,7 +6776,7 @@ async function downloadInvoicePDF(){
 
   pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
 
-  pdf.save(`${currentInvoiceData.invoiceNo}.pdf`);
+  pdf.save(`${currentInvoiceNo}.pdf`);
 }
 	
 	
