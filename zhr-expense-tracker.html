@@ -6750,33 +6750,63 @@ function printInvoicePDF(){
 // DOWNLOAD INVOICE
 //////////////////////////////////////////////////
 	
-async function downloadInvoicePDF(){
+function downloadInvoicePDF(){
 
-  const { jsPDF } = window.jspdf;
+  let content = document.getElementById("invoicePDFContainer").innerHTML;
 
-  let element = document.getElementById("invoicePDFContainer");
+  let win = window.open('', '_blank');
 
-  if(!element){
-    showToast("Invoice not ready","error");
-    return;
-  }
+  win.document.write(`
+    <html>
+    <head>
+      <title>Invoice</title>
 
-  // convert HTML → canvas
-  let canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true
-  });
+      <style>
 
-  let imgData = canvas.toDataURL("image/png");
+        body{
+          font-family: Segoe UI;
+          padding:20px;
 
-  let pdf = new jsPDF("p", "mm", "a4");
+          /* 🔥 IMPORTANT */
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
 
-  let imgWidth = 210;
-  let imgHeight = canvas.height * imgWidth / canvas.width;
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
 
-  pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+        th, td{
+          border:1px solid #ddd;
+          padding:10px;
+        }
 
-  pdf.save(`${currentInvoiceNo}.pdf`);
+        th{
+          background:#001d4c !important;
+          color:white !important;
+        }
+
+        @media print {
+          body{
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+
+      </style>
+
+    </head>
+
+    <body onload="window.print(); setTimeout(() => window.close(), 500);">
+
+      ${content}
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 	
 	
