@@ -6192,15 +6192,6 @@ setTimeout(()=>{
 	
 }
 
-//////////////////////////////////////////////////
-// GENERATE NEXT INVOICE NUMBER
-//////////////////////////////////////////////////		
-
-function getNextInvoiceNumber(){
-  let last = localStorage.getItem("lastInvoiceNumber") || 0;
-  let next = parseInt(last) + 1;
-  return "ZHR-" + String(next).padStart(4, '0');
-}
 
 //////////////////////////////////////////////////
 // GENERATE INVOICE AUTO NUMBER
@@ -6279,19 +6270,7 @@ if(currency){
 }
 }
 
-//////////////////////////////////////////////////
-// GENERATE NEXT INVOICE NUMBER PREVIEW
-//////////////////////////////////////////////////
-async function getNextInvoicePreviewNumber(){
 
-  const doc = await db.collection("counters").doc("invoiceCounter").get();
-
-  let last = doc.exists ? doc.data().lastNumber : 0;
-
-  let next = last + 1;
-
-  return "ZHR-" + String(next).padStart(4, '0');
-}
 
 	
 //////////////////////////////////////////////////
@@ -6393,7 +6372,7 @@ document.getElementById("reportOutput").innerHTML = `
 
   <div style="text-align:right">
     <h2 style="color:#001d4c;margin:0">INVOICE</h2>
-    <p><b>Invoice No:</b> ${invoiceNo}</p>
+    <p><b>Invoice No:</b> <span id="invNoText">Auto-generated on save</span></p>
     <p><b>Date:</b> ${invoiceDate}</p>
     <p><b>Currency:</b> ${currency}</p>
   </div>
@@ -6567,6 +6546,7 @@ setTimeout(()=>{
 // SAVE INVOICE
 //////////////////////////////////////////////////
 	
+
 async function saveInvoice(){
 
 try{
@@ -6576,8 +6556,19 @@ try{
     return;
   }
 
-  // 🔒 FINAL NUMBER (LOCK)
+  // 🚫 Prevent double click
+  if(currentInvoiceData.isSaving){
+    showToast("⏳ Invoice is already being saved...", "warning");
+    return;
+  }
+
+  currentInvoiceData.isSaving = true;
+
+  // ✅ Generate number ONLY here
   let finalInvoiceNo = await generateInvoiceNumber();
+
+  // ✅ Store in memory
+  currentInvoiceData.invoiceNo = finalInvoiceNo;
 
   let data = currentInvoiceData;
 
@@ -6585,38 +6576,30 @@ try{
 
   let words = convertAmountToWords(total, data.currency);
 
-  await db.collection("invoices").doc(finalInvoiceNo).set({
+  const docRef = db.collection("invoices").doc(finalInvoiceNo);
 
-    invoiceNo: finalInvoiceNo,
-    invoiceDate: data.invoiceDate,
-    currency: data.currency,
+  // 🔒 Safety check (rare but correct)
+  const existing = await docRef.get();
 
-    supplier: {
-      name: data.supName,
-      address: data.supAddress,
-      gst: data.supGST,
-      state: data.supState,
-      contact: data.supContact,
-      website: data.supWebsite
-    },
+  if(existing.exists){
+    showToast("❌ Invoice already exists!", "error");
+    currentInvoiceData.isSaving = false;
+    return;
+  }
 
-    recipient: {
-      name: data.recName,
-      address: data.recAddress,
-      trn: data.recTRN,
-      state: data.recState,
-      placeOfSupply: data.place,
-      contact: data.recContact
-    },
-
-    items: data.items,
-
-    total: total,
+  // ✅ SAVE
+  await docRef.set({
+    ...data,
+    total,
     amountWords: words,
-
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-
   });
+
+  // ✅ UPDATE PREVIEW UI WITH REAL NUMBER
+  let el = document.getElementById("invNoText");
+  if(el){
+    el.innerText = finalInvoiceNo;
+  }
 
   // ✅ POPUP
   openPopup(`
@@ -6650,14 +6633,17 @@ try{
   `);
 
   // ✅ TOAST
-  showToast("✅ Invoice saved successfully", "success");
+  showToast(`✅ Invoice ${finalInvoiceNo} saved`, "success");
 
-  // ✅ ICON RENDER
+  // ✅ ICONS
   requestAnimationFrame(() => lucide.createIcons());
 
+  currentInvoiceData.isSaving = false;
+
 }catch(err){
-  console.error("FULL ERROR:", err);
-  showToast("❌ " + err.message, "error");
+  console.error(err);
+  showToast(err.message || "Error saving invoice", "error");
+  currentInvoiceData.isSaving = false;
 }
 
 }
