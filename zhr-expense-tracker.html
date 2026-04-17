@@ -6568,28 +6568,41 @@ async function updateInvoice(id){
 	
 function openInvoicePrintPopup(invoiceNo){
 
-  // ✅ ADD THIS
   currentInvoiceNo = invoiceNo;
-	
+
   db.collection("invoices").doc(invoiceNo).get().then(doc => {
 
     let data = doc.data();
 
     openPopup(`
-    <div style="text-align:center">
+    <div style="text-align:center;max-height:90vh;overflow:auto;">
 
-      <div id="invoicePDFContainer">
-        ${buildInvoiceHTML(data)}
+      <div style="display:flex;justify-content:center;">
+
+        <div id="invoicePDFContainer" 
+             style="
+               width:210mm;
+               min-height:297mm;
+               background:#fff;
+               padding:15mm;
+               box-shadow:0 0 10px rgba(0,0,0,0.1);
+               box-sizing:border-box;
+               transform:scale(0.8);
+               transform-origin:top center;
+             ">
+
+          ${buildInvoiceHTML(data)}
+
+        </div>
+
       </div>
 
       <br>
 
       <div style="display:flex;justify-content:center">
-
         <button onclick="printInvoicePDF()">
           <i data-lucide="printer"></i> Print
         </button>
-
       </div>
 
     </div>
@@ -6599,8 +6612,7 @@ function openInvoicePrintPopup(invoiceNo){
 
   });
 
-}	
-
+}
 	
 //////////////////////////////////////////////////
 // BUILD INVOICE
