@@ -6360,10 +6360,10 @@ document.getElementById("reportOutput").innerHTML = `
 
   <div>
     <img 
-  src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
-  width="140"
-  crossorigin="anonymous"
-  style="display:block"
+src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRaF-5RQv1C9csPnJWp0JJcsbqy0ObJXxM9LxU6jkvB1g3sLW0NeKYoIcBCEKPYbdlFTzr626nvB17hyT4qthj8BncBMEK4si3vLLZU85SBR0YkNX1ZSIk6ZxVhC4jTBF3CXdSHQzhg9-hhUqH1yCYUCjbhyAbl2sBX455XHgZYTFMGgmt9PMZ1tb5yKM/s768/20250111_153051%20(2).jpg"
+width="140"
+crossorigin="anonymous"
+referrerpolicy="no-referrer"
 />
 </div>
 
@@ -6559,46 +6559,89 @@ try{
     return;
   }
 
-  currentInvoiceData.isSaving = true;
-
-  // ✅ Generate number ONLY here
-  let finalInvoiceNo = await generateInvoiceNumber();
-
-  // ✅ Store in memory
-  currentInvoiceData.invoiceNo = finalInvoiceNo;
-
   let data = currentInvoiceData;
 
-  let total = data.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
+  // ================= VALIDATION =================
 
-  let words = convertAmountToWords(total, data.currency);
-
-  const docRef = db.collection("invoices").doc(finalInvoiceNo);
-
-  // 🔒 Safety check (rare but correct)
-  const existing = await docRef.get();
-
-  if(existing.exists){
-    showToast("❌ Invoice already exists!", "error");
-    currentInvoiceData.isSaving = false;
+  if(!data.supAddress || !data.supGST || !data.supState){
+    showToast("❌ Fill all supplier details", "error");
     return;
   }
 
-  // ✅ SAVE
-  await docRef.set({
-    ...data,
-    total,
-    amountWords: words,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  if(!data.recName || !data.recAddress || !data.recState || !data.place){
+    showToast("❌ Fill all recipient details", "error");
+    return;
+  }
 
-  // ✅ UPDATE PREVIEW UI WITH REAL NUMBER
+  if(!data.currency){
+    showToast("❌ Select currency", "error");
+    return;
+  }
+
+  if(!data.items || data.items.length === 0){
+    showToast("❌ Add at least one service", "error");
+    return;
+  }
+
+  for(let i of data.items){
+    if(!i.desc || !i.amt){
+      showToast("❌ Service description & amount required", "error");
+      return;
+    }
+  }
+
+  currentInvoiceData.isSaving = true;
+
+  // ================= CALCULATIONS =================
+
+  let total = data.items.reduce((sum, i)=> sum + Number(i.amt || 0), 0);
+  let words = convertAmountToWords(total, data.currency);
+
+  let finalInvoiceNo = currentInvoiceData.invoiceNo;
+  let docRef;
+
+  // ================= CREATE OR UPDATE =================
+
+  if(finalInvoiceNo){
+    // ✅ UPDATE EXISTING
+    docRef = db.collection("invoices").doc(finalInvoiceNo);
+
+    await docRef.update({
+      ...data,
+      total,
+      amountWords: words,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast(`✏️ Invoice ${finalInvoiceNo} updated`, "success");
+
+  }else{
+    // ✅ CREATE NEW
+    finalInvoiceNo = await generateInvoiceNumber();
+
+    currentInvoiceData.invoiceNo = finalInvoiceNo;
+
+    docRef = db.collection("invoices").doc(finalInvoiceNo);
+
+    await docRef.set({
+      ...data,
+      invoiceNo: finalInvoiceNo,
+      total,
+      amountWords: words,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast(`✅ Invoice ${finalInvoiceNo} saved`, "success");
+  }
+
+  // ================= UI UPDATE =================
+
   let el = document.getElementById("invNoText");
   if(el){
     el.innerText = finalInvoiceNo;
   }
 
-  // ✅ POPUP
+  // ✅ SUCCESS POPUP (KEEP YOUR UI)
   openPopup(`
   <div style="text-align:center;padding:10px">
 
@@ -6629,10 +6672,6 @@ try{
   </div>
   `);
 
-  // ✅ TOAST
-  showToast(`✅ Invoice ${finalInvoiceNo} saved`, "success");
-
-  // ✅ ICONS
   requestAnimationFrame(() => lucide.createIcons());
 
   currentInvoiceData.isSaving = false;
@@ -6691,34 +6730,35 @@ function downloadInvoice(){
     return;
   }
 
-  // ❌ Hide buttons instead of removing
   let btns = element.querySelectorAll("button");
   btns.forEach(b => b.style.display = "none");
 
-  // ⏳ Wait for DOM render (important)
+  // wait for layout + image load
   setTimeout(() => {
 
-    html2pdf().set({
-      margin: 10,
-      filename: `${currentInvoiceData.invoiceNo || "Invoice"}.pdf`,
-      html2canvas: { 
-        scale: 2,
-        useCORS: true   // ✅ IMPORTANT (for images)
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait' 
-      }
-    }).from(element).save().then(() => {
+    html2canvas(element, {
+      scale: 2,
+      useCORS: true
+    }).then(canvas => {
 
-      // ✅ Restore buttons after download
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const imgWidth = 210;
+      const pageHeight = 295;
+
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+      pdf.save(`${currentInvoiceData.invoiceNo || "Invoice"}.pdf`);
+
       btns.forEach(b => b.style.display = "flex");
 
     });
 
-  }, 300);
-
+  }, 500);
 }
 	
 	
