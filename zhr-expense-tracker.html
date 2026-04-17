@@ -6342,7 +6342,7 @@ currentInvoiceData = {
   recContact,
 
   currency,
-  invoiceNo,
+  invoiceNo: null, // ✅ IMPORTANT FIX
   invoiceDate,
 
   items: Array.from(items).map(row => ({
@@ -6593,11 +6593,15 @@ try{
   let words = convertAmountToWords(total, data.currency);
 
   let finalInvoiceNo = currentInvoiceData.invoiceNo;
+
+if(finalInvoiceNo === "Auto-generated on save"){
+  finalInvoiceNo = null;
+}
   let docRef;
 
   // ================= CREATE OR UPDATE =================
 
-  if(finalInvoiceNo){
+  if(finalInvoiceNo && finalInvoiceNo.startsWith("ZHR-")){
     // ✅ UPDATE EXISTING
     docRef = db.collection("invoices").doc(finalInvoiceNo);
 
