@@ -6917,9 +6917,82 @@ function viewInvoice(id){
 
   db.collection("invoices").doc(id).get().then(doc=>{
 
-    openInvoicePrintPopup(id); // same popup preview only
+    let d = doc.data();
+
+    openInvoicePopup();
+
+    setTimeout(()=>{
+
+      // ---------------- SUPPLIER ----------------
+      document.getElementById("supName").value = d.supplier.name || "";
+      document.getElementById("supAddress").value = d.supplier.address || "";
+      document.getElementById("supGST").value = d.supplier.gst || "";
+      document.getElementById("supContact").value = d.supplier.contact || "";
+      document.getElementById("supState").value = d.supplier.state || "";
+      document.getElementById("supWebsite").value = d.supplier.website || "";
+
+      // ---------------- RECIPIENT ----------------
+      document.getElementById("recName").value = d.recipient.name || "";
+      document.getElementById("recAddress").value = d.recipient.address || "";
+      document.getElementById("recTRN").value = d.recipient.trn || "";
+      document.getElementById("recContact").value = d.recipient.contact || "";
+      document.getElementById("recState").value = d.recipient.state || "";
+      document.getElementById("placeSupply").value = d.recipient.placeOfSupply || "";
+
+      // ---------------- OTHER ----------------
+      document.getElementById("currency").value = d.currency || "";
+      document.getElementById("invoiceDate").value = d.invoiceDate || "";
+
+      // ---------------- ITEMS ----------------
+      document.getElementById("items").innerHTML = "";
+
+      d.items.forEach(i=>{
+
+        addItemRow();
+
+        let rows = document.querySelectorAll("#items div");
+        let last = rows[rows.length - 1];
+
+        last.children[0].value = i.desc || "";
+        last.children[1].value = i.amt || "";
+
+      });
+
+      calculateInvoiceTotal();
+
+      // ===================================================
+      // LOCK ALL INPUTS / SELECTS / TEXTBOXES
+      // ===================================================
+
+      document.querySelectorAll("#popup input, #popup select").forEach(el=>{
+
+        el.setAttribute("readonly", true);
+        el.setAttribute("disabled", true);
+        el.style.background = "#f5f5f5";
+
+      });
+
+      // Unlock close button if any
+      document.querySelectorAll("#popup button").forEach(btn=>{
+
+        if(
+          btn.innerText.includes("Add Service") ||
+          btn.innerText.includes("Save") ||
+          btn.innerText.includes("Update")
+        ){
+          btn.style.display = "none";
+        }
+
+      });
+
+      // Change title
+      let h3 = document.querySelector("#popup h3");
+      if(h3) h3.innerText = "View Invoice";
+
+    },100);
 
   });
+
 }
 
 //////////////////////////////////////////////////
