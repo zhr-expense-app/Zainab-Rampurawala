@@ -825,9 +825,7 @@ let currentReportCategory = null;
 let currentFromDate = null;
 let currentToDate = null;
 let expenseChart = null;
-let personalExpenseChart = null;
-let accountsList = [];
-let activeAccounts = []; 		 	
+let personalExpenseChart = null;		 	
 let currentUserRole = "viewer";
 let ledgerList = [];
 let invoiceItems = [];
@@ -859,8 +857,6 @@ function checkPermission(action){
 
   return true;
 }
-
-
 	
 //////////////////////////////////////////////////
 // LOAD USER
@@ -883,165 +879,7 @@ async function loadUserRole(){
   console.log("User Role:", currentUserRole); // for testing
 
 }
-	
-
-//////////////////////////////////////////////////
-// LOAD ACCOUNTS FROM FIREBASE 	
-//////////////////////////////////////////////////
-
-function loadAccounts() {
-
-  db.collection("accounts").onSnapshot(snapshot => {
-
-    accountsList = [];
-    activeAccounts = [];
-
-    if (snapshot.empty) {
-      console.log("❌ No accounts found in Firebase");
-      return;
-    }
-
-    snapshot.forEach(doc => {
-
-      let data = doc.data();
-
-      console.log("Account Doc:", data);
-
-      if (data.name) {
-        accountsList.push(data.name);
-      }
-
-      if (data.active !== false && data.name) {
-        activeAccounts.push(data.name);
-      }
-
-    });
-
-    console.log("✅ Accounts Loaded:", accountsList);
-
-    // ✅ ONLY PLACE where dashboard should run
-    setTimeout(() => {
-      refreshDashboardUI();
-    }, 100);
-
-  });
-
-}	
-
-//////////////////////////////////////////////////
-// MANAGE ACCOUNTS
-//////////////////////////////////////////////////
-
-function manageAccounts(){
-
-  if(!checkPermission("admin")) return;
-
-  showAccountManager();
-}
-	
-
-
-//////////////////////////////////////////////////
-// ACCOUNT MANAGER UI
-//////////////////////////////////////////////////	
-
-function showAccountManager(){
-
-let html = `<h3>Manage Accounts</h3>`;
-
-accountsList.forEach(acc=>{
-
-let isActive = activeAccounts.includes(acc);
-
-html += `
-<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-  <span>${acc}</span>
-
-  <button onclick="toggleAccount('${acc}', ${isActive})">
-    ${isActive ? "Deactivate" : "Activate"}
-  </button>
-</div>
-`;
-
-});
-
-html += `
-<hr>
-
-<label>Add New Account</label>
-<input type="text" id="newAccount" placeholder="Enter account name">
-
-<button onclick="addAccount()">Add Account</button>
-`;
-
-openPopup(html);
-
-}
-	
-
-//////////////////////////////////////////////////
-// ADD ACCOUNT FUNCTION
-//////////////////////////////////////////////////
-
-async function addAccount(){
-
-	if(!checkPermission("admin")) return;
-
-let name = document.getElementById("newAccount").value.trim();
-
-if(!name){
-  showToast("Enter account name","error");
-  return;
-}
-
-showLoader();
-
-await db.collection("accounts").add({
-  name: name,
-  active: true
-});
-
-hideLoader();
-showToast("Account Added ✅");
-
-closePopup();
-}	
-
-
-//////////////////////////////////////////////////////////
-// ACTIVATE / DEACTIVATE
-//////////////////////////////////////////////////////////
-
-	
-async function toggleAccount(name, isActive){
-
-	if(!checkPermission("admin")) return;
-
-showLoader();
-
-let snapshot = await db.collection("accounts")
-.where("name","==",name).get();
-
-let updates = [];
-
-snapshot.forEach(doc=>{
-  updates.push(
-    db.collection("accounts").doc(doc.id).update({
-      active: !isActive
-    })
-  );
-});
-
-await Promise.all(updates);
-
-hideLoader();
-showToast("Account Updated ✅");
-
-showAccountManager();
-}
-	
-	
-	
+		
 //////////////////////////////////////////////////////////
 // AUTO FORMAT AMOUNTS (INDIAN + DECIMAL + RIGHT ALIGN)
 //////////////////////////////////////////////////////////
@@ -1096,33 +934,15 @@ function getMonthName(monthIndex){
   return months[monthIndex];
 }
 
-	
-//////////////////////////////////////////////////
-// DYNAMIC DROPDOWNS (SAFE REPLACEMENT)
-//////////////////////////////////////////////////
-
-function getAccountOptions(selected=""){
-
-  return activeAccounts.map(acc =>
-    `<option ${acc===selected?"selected":""}>${acc}</option>`
-  ).join("");
-
-}
-
-	
-
 //////////////////////////////////////////////////
 // ADMIN
 //////////////////////////////////////////////////
 
-
-let openingBalances = {};
 let transactionsCache = [];
 
 //////////////////////////////////////////////////
 // SESSION LOGIN SYSTEM
 //////////////////////////////////////////////////
-
 
 async function login(){
 
@@ -1163,10 +983,7 @@ async function showDashboard() {
   document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
 	await loadUserRole(); // ✅ VERY IMPORTANT
-
-  loadOpeningBalance();
   loadTransactions();
-loadAccounts();
 loadLedgers(); // ✅ ADD THIS
 loadInvoices();
 
@@ -1186,11 +1003,7 @@ login();
 resetInactivityTimer();
 }
 
-});
-
-
-
-	
+});	
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
@@ -1260,9 +1073,7 @@ if(savedReport === "ledgerStatement"){
   if(ledgerId && fromDate && toDate){
     renderLedgerStatement();
   }
-
 		  }
-
 	  
   }, 600);
 
@@ -1287,11 +1098,9 @@ setTimeout(()=>{
   },100);
 }
 	
-
 //////////////////////////////////////////////////
-// LOAD DATA
+// LOAD TRANSACTIONS
 //////////////////////////////////////////////////
-
 
 function loadTransactions() {
 
@@ -1349,7 +1158,6 @@ function loadTransactions() {
         refreshContraReport();
       }
 
-
 	if (currentReport === "ledgerStatement") {
   		renderLedgerStatement();
 }
@@ -1357,8 +1165,7 @@ function loadTransactions() {
 	if (currentReport === "invoice") {
   refreshInvoiceReport();
 	}
-		
-		
+			
     });
 }
 
@@ -1448,131 +1255,6 @@ if (currentReport === "ledgerStatement") {
 }
 	
 }
-
-	
-//////////////////////////////////////////////////
-// LOAD OPENING BALANCE (REAL TIME)
-//////////////////////////////////////////////////
-
-function loadOpeningBalance() {
-  db.collection("settings").doc("openingBalance")
-    .onSnapshot(doc => {
-
-      if (doc.exists) {
-        openingBalances = doc.data();
-      } else {
-        openingBalances = {};
-      }
-
-      
-
-    });
-}
-
-//////////////////////////////////////////////////
-// SHOW OPENING BALANCE
-//////////////////////////////////////////////////
-
-function showOpening() {
-
-  // First Time Entry
-  if (!openingBalances.openingDate) {
-
-    let html = `<h3>Opening Balance</h3>
-
-<label>Date</label>
-<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
-`;
-
-    accountsList.forEach(acc => {
-
-      html += `
-        <label>${acc}</label>
-        <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-      `;
-
-    });
-
-    html += `<button onclick="saveOpening()">Save</button>`;
-
-    openPopup(html);
-
-  } else {
-
-    let html = `<h3>Opening Balance</h3>
-
-<p><b>Date:</b> ${openingBalances.openingDate}</p>
-`;
-
-    accountsList.forEach(acc => {
-      html += `<p>${acc}: ${openingBalances[acc] || 0}</p>`;
-    });
-
-    html += `<button onclick="editOpening()">Modify</button>`;
-
-    openPopup(html);
-
-  }
-}
-
-	
-//////////////////////////////////////////////////
-// SAVE OPENING BALANCE
-//////////////////////////////////////////////////
-
-async function saveOpening(){
-
-if(!checkPermission("admin")) return;						
-
-showLoader();
-
-let data = {
-  openingDate: document.getElementById("openingDate").value
-};
-
-accountsList.forEach(acc=>{
-  data[acc] = Number(document.getElementById(acc).value) || 0;
-});
-
-await db.collection("settings").doc("openingBalance").set(data);
-
-hideLoader();
-showToast("Opening Balance Saved ✅");
-
-closePopup();
-}
-
-//////////////////////////////////////////////////
-// EDIT OPENING (ADMIN LOGIN)
-//////////////////////////////////////////////////
-
-function editOpening(){
-
-  // 🔐 Only admin allowed
-  if(!checkPermission("admin")) return;
-
-  let html = `<h3>Modify Opening Balance</h3>
-
-<label>Date</label>
-<input type="date" id="openingDate" value="${openingBalances.openingDate || ''}">
-`;
-
-  accountsList.forEach(acc => {
-
-    html += `
-      <label>${acc}</label>
-      <input type="number" id="${acc}" value="${openingBalances[acc] || 0}">
-    `;
-
-  });
-
-  html += `<button onclick="saveOpening()">Update</button>`;
-
-  openPopup(html);
-
-}
-
-
 
 //////////////////////////////////////////////////
 // Current Month Button
@@ -2115,12 +1797,6 @@ hideLoader();
 showToast("Dashboard Exported 📊");
 
 }
-
-
-
-
-
-
 
 //////////////////////////////////////////////////
 // ✅ GET LEDGER BALANCE (FULLY FIXED - ID BASED)
@@ -2783,8 +2459,6 @@ if(ledgerList.length === 0){
   }
 }
 	
-
-
 //////////////////////////////////////////////////
 // SAVE PAYMENT
 //////////////////////////////////////////////////
@@ -2882,7 +2556,6 @@ if(isCashBankLedger(creditLedger)){
   }
 }
 	
-
 //////////////////////////////////////////////////
 // SAVE JOURNAL (REPLACES CONTRA)
 //////////////////////////////////////////////////
@@ -3696,8 +3369,6 @@ function refreshJournalReport(){
 }
 
 	
-
-
 //////////////////////////////////////////////////
 // EDIT RECEIPT (NEW SYSTEM)
 //////////////////////////////////////////////////
@@ -4894,248 +4565,6 @@ txns.forEach(t => {
 }
 
 
-	
-	
-//////////////////////////////////////////////////
-// Full Mini Statement Export Function
-//////////////////////////////////////////////////
-
-async function exportMiniStatement(){
-
-  let fromDate = document.getElementById("miniFrom").value;
-  let toDate = document.getElementById("miniTo").value;
-
-  // ✅ VALIDATE FIRST
-  if(!validateDateRange(fromDate,toDate)){
-    return;
-  }
-
-  // ✅ THEN show loader
-  showLoader();
-
-  closePopup();
-
-  const workbook = new ExcelJS.Workbook();
-
-  //////////////////////////////////////////////////
-  // CALCULATE EXPENSE SUMMARY
-  //////////////////////////////////////////////////
-
-  let expenses = {
-    Personal: 0,
-    Home: 0,
-    "Office Reimbursement": 0,
-    "Qardan Given": 0
-  };
-
-  transactionsCache.forEach(t=>{
-
-    if(t.type==="payment" && t.date>=fromDate && t.date<=toDate){
-
-      if(!expenses[t.category]){
-        expenses[t.category] = 0;
-      }
-
-      expenses[t.category] += Number(t.amount);
-
-    }
-
-  });
-
-	
-//////////////////////////////////////////////////
-// SHEET 1 : SUMMARY
-//////////////////////////////////////////////////
-
-const summarySheet = workbook.addWorksheet("Summary");
-
-summarySheet.addRow(["Expense Summary"]);
-summarySheet.addRow([]);
-
-summarySheet.addRow(["Category","Amount"]);
-summarySheet.addRow(["Personal",expenses.Personal]);
-summarySheet.addRow(["Home",expenses.Home]);
-summarySheet.addRow(["Office Reimbursement",expenses["Office Reimbursement"]]);
-summarySheet.addRow(["Qardan Given",expenses["Qardan Given"]]); // ✅ ADD THIS
-
-//////////////////////////////////////////////////
-// PIE CHART IMAGE
-//////////////////////////////////////////////////
-
-let pieCanvas = document.getElementById("expensePieChart");
-let pieImage = pieCanvas.toDataURL("image/png");
-
-const pieId = workbook.addImage({
-base64: pieImage,
-extension:'png'
-});
-
-summarySheet.addImage(pieId,{
-tl:{col:4,row:1},
-ext:{width:400,height:300}
-});
-
-//////////////////////////////////////////////////
-// FUNCTION TO CREATE ACCOUNT STATEMENT
-//////////////////////////////////////////////////
-
-function createAccountSheet(name){
-
-let sheet = workbook.addWorksheet(name);
-
-sheet.addRow(["Serial No","Date","Type","Category","Particular","Amount","Balance"]);
-
-//////////////////////////////////////////////////
-// CALCULATE OPENING BALANCE AS ON FROM DATE
-//////////////////////////////////////////////////
-
-let runningBalance = Number(openingBalances[name] || 0);
-
-transactionsCache.forEach(t=>{
-
-if(t.date < fromDate){
-
-if(t.type === "receipt" && t.account === name){
-runningBalance += Number(t.amount);
-}
-
-if(t.type === "payment" && t.account === name){
-runningBalance -= Number(t.amount);
-}
-
-if(t.type === "contra"){
-
-if(t.from === name){
-runningBalance -= Number(t.amount);
-}
-
-if(t.to === name){
-runningBalance += Number(t.amount);
-}
-
-}
-
-}
-
-});
-
-sheet.addRow(["","", "", "", "Opening Balance","",runningBalance]);
-
-let serial = 1;
-
-transactionsCache
-.filter(t=>t.date>=fromDate && t.date<=toDate)
-.sort((a,b)=> new Date(a.date) - new Date(b.date))
-.forEach(t=>{
-
-let type="";
-let category="";
-let amount=0;
-
-if(t.type==="receipt" && t.account===name){
-
-type="Inflow";
-category = t.category || "";
-amount=Number(t.amount);
-runningBalance+=amount;
-
-}
-
-if(t.type==="payment" && t.account===name){
-
-type="Outflow";
-category=t.category;
-amount=Number(t.amount);
-runningBalance-=amount;
-
-}
-
-if(t.type==="contra"){
-
-if(t.from===name){
-type="Contra";
-amount=Number(t.amount);
-runningBalance-=amount;
-}
-
-if(t.to===name){
-type="Contra";
-amount=Number(t.amount);
-runningBalance+=amount;
-}
-
-}
-
-if(type!==""){
-
-let row = sheet.addRow([
-serial,
-t.date,
-type,
-category,
-t.narration,
-amount,
-runningBalance
-]);
-
-// Format Amount & Balance Columns
-
-row.getCell(6).numFmt = '#,##0.00';
-row.getCell(7).numFmt = '#,##0.00';
-
-row.getCell(6).alignment = { horizontal: "right" };
-row.getCell(7).alignment = { horizontal: "right" };
-
-//////////////////////////////////////////////////
-// COLOR TEXT
-//////////////////////////////////////////////////
-
-if(type==="Inflow"){
-row.getCell(6).font={color:{argb:"FF008000"}};
-}
-
-if(type==="Outflow"){
-row.getCell(6).font={color:{argb:"FFFF0000"}};
-}
-
-if(type==="Contra"){
-row.getCell(6).font={color:{argb:"FF000000"}};
-}
-
-serial++;
-
-}
-
-});
-
-sheet.addRow(["","","","","Closing Balance","",runningBalance]);
-
-}
-
-//////////////////////////////////////////////////
-// CREATE SHEETS FOR ALL ACCOUNTS
-//////////////////////////////////////////////////
-
-accountsList.forEach(acc=>{
-  createAccountSheet(acc);
-});
-
-//////////////////////////////////////////////////
-// EXPORT FILE
-//////////////////////////////////////////////////
-
-let fileName = `Mini_Statement_${fromDate}_to_${toDate}.xlsx`;
-
-const buffer = await workbook.xlsx.writeBuffer();
-
-saveAs(new Blob([buffer]),fileName);
-
-hideLoader(); // ADD
-showToast("Report Exported 📊");	
-
-}
-
-
 //////////////////////////////////////////////////
 // LOGOUT
 //////////////////////////////////////////////////
@@ -5194,7 +4623,7 @@ setTimeout(()=>{
   },1000);
     
 
-  }, 2 * 60 * 1000); // 2 minutes
+  }, 3 * 60 * 1000); // 3 minutes
 	
 }	
 
@@ -5217,56 +4646,6 @@ function stopInactivityTracking() {
     document.removeEventListener(event, resetInactivityTimer);
   });
 }	
-	
-
-//////////////////////////////////////////////////
-// BUTTON SOUND EFFECT
-//////////////////////////////////////////////////
-	
-document.addEventListener("click", function(e){
-
-  if(e.target.closest("button")){
-
-    let sound = document.getElementById("clickSound");
-
-    if(sound){
-
-      sound.pause();
-      sound.currentTime = 0;
-
-      let playPromise = sound.play();
-
-      if(playPromise !== undefined){
-        playPromise.catch(() => {
-          // 🔇 Ignore autoplay error (mobile restriction)
-        });
-      }
-
-    }
-
-  }
-
-});
-
-//////////////////////////////////////////////////
-// SOUND
-//////////////////////////////////////////////////
-
-document.addEventListener("touchstart", function initSound(){
-
-  let sound = document.getElementById("clickSound");
-
-  if(sound){
-    sound.play().then(()=>{
-      sound.pause();
-      sound.currentTime = 0;
-    }).catch(()=>{});
-  }
-
-  document.removeEventListener("touchstart", initSound);
-
-});
-
 	
 //////////////////////////////////////////////////
 // ON LOAD
@@ -5358,246 +4737,6 @@ function validateDateRange(fromDate, toDate){
   return true;
 }
 
-//////////////////////////////////////////////////
-// SHOW TRIALBALANCE
-//////////////////////////////////////////////////
-
-function showTrialBalance(){
-
-openPopup(`
-<h3>Trial Balance</h3>
-
-<label>From Date</label>
-<input type="date" id="tbFrom">
-
-<label>To Date</label>
-<input type="date" id="tbTo">
-
-<button onclick="runTrialBalance()">Run</button>
-`);
-
-}
-
-	
-//////////////////////////////////////////////////
-// RUN TRIALBALANCE
-//////////////////////////////////////////////////
-
-function runTrialBalance(){
-
-let fromDate = document.getElementById("tbFrom").value;
-let toDate = document.getElementById("tbTo").value;
-
-if(!validateDateRange(fromDate,toDate)) return;
-
-closePopup();
-
-//////////////////////////////////////////////////
-// LEDGER STRUCTURE
-//////////////////////////////////////////////////
-
-let ledger = {
-  Cash:0,
-  Bank:0,
-
-  Personal:0,
-  Home:0,
-  "Office Reimbursement":0,
-  "Qardan Given":0,
-
-  Capital:0,
-  Income:0,
-  "Qardan Taken":0
-};
-
-
-	
-//////////////////////////////////////////////////
-// OPENING BALANCE
-//////////////////////////////////////////////////
-
-// Cash/Bank
-accountsList.forEach(acc=>{
-  ledger[acc] = Number(openingBalances[acc] || 0);
-});
-
-// Balance Sheet Items
-let bsItems = [
-  "Capital",
-  "Home",
-  "Qardan Given",
-  "Qardan Taken",
-  "Office Reimbursement"
-];
-
-bsItems.forEach(item=>{
-  ledger[item] = Number(openingBalances[item] || 0);
-});
-
-//////////////////////////////////////////////////
-// PROCESS TRANSACTIONS (CORRECT LOGIC)
-//////////////////////////////////////////////////
-
-transactionsCache.forEach(t=>{
-
-// ❌ skip only beyond To Date
-if(t.date > toDate) return;
-
-//////////////////////////////////////////////////
-// RECEIPTS
-//////////////////////////////////////////////////
-
-if(t.type === "receipt"){
-
-// ✅ ALWAYS update account (BS)
-ledger[t.account] += Number(t.amount);
-
-// ensure category exists
-if(!ledger[t.category]) ledger[t.category] = 0;
-
-// ✅ CAPITAL / LIABILITY → FULL
-if(
-  t.category === "Capital" ||
-  t.category === "Qardan Taken"
-){
-  ledger[t.category] -= Number(t.amount);
-}
-
-// ✅ INCOME → ONLY PERIOD
-else if(t.category === "Income"){
-  if(t.date >= fromDate){
-    ledger[t.category] -= Number(t.amount);
-  }
-}
-
-}
-
-//////////////////////////////////////////////////
-// PAYMENTS
-//////////////////////////////////////////////////
-
-if(t.type === "payment"){
-
-// ✅ ALWAYS update account
-ledger[t.account] -= Number(t.amount);
-
-// ensure category exists
-if(!ledger[t.category]) ledger[t.category] = 0;
-
-// ✅ BALANCE SHEET → FULL
-if(
-  t.category === "Home" ||
-  t.category === "Qardan Given" ||
-  t.category === "Office Reimbursement"
-){
-  ledger[t.category] += Number(t.amount);
-}
-
-// ✅ PERSONAL EXPENSE → PERIOD ONLY
-else if(t.category === "Personal"){
-  if(t.date >= fromDate){
-    ledger[t.category] += Number(t.amount);
-  }
-}
-
-}
-
-});
-
-//////////////////////////////////////////////////
-// RETAINED EARNINGS (BEFORE FROM DATE)
-//////////////////////////////////////////////////
-
-let retained = 0;
-
-transactionsCache.forEach(t=>{
-
-if(t.date >= fromDate) return;
-
-// Income increases profit
-if(t.type === "receipt" && t.category === "Income"){
-  retained += Number(t.amount);
-}
-
-// Personal expense reduces profit
-if(t.type === "payment" && t.category === "Personal"){
-  retained -= Number(t.amount);
-}
-
-});
-
-// ✅ Add to ledger only if exists
-if(retained !== 0){
-  ledger["Retained Earnings"] = -retained;
-}
-
-	
-//////////////////////////////////////////////////
-// PREPARE TB
-//////////////////////////////////////////////////
-
-let rows = `
-<h3>Trial Balance (${fromDate} to ${toDate})</h3>
-<table class="report-table">
-<tr>
-<th>Ledger</th>
-<th>Debit</th>
-<th>Credit</th>
-</tr>
-`;
-
-let totalDr = 0;
-let totalCr = 0;
-
-Object.keys(ledger).forEach(name=>{
-
-let value = ledger[name];
-
-if(value === 0) return;
-
-// ✅ ONLY DISPLAY CHANGE
-let displayName = (name === "Home") ? "Drawings" : name;
-
-let dr = "";
-let cr = "";
-
-if(value > 0){
-  dr = value;
-  totalDr += value;
-}else{
-  cr = Math.abs(value);
-  totalCr += Math.abs(value);
-}
-
-rows += `
-<tr>
-<td>${displayName}</td>
-<td>${dr}</td>
-<td>${cr}</td>
-</tr>
-`;
-
-});
-
-//////////////////////////////////////////////////
-// TOTAL
-//////////////////////////////////////////////////
-
-rows += `
-<tr>
-<td><b>Total</b></td>
-<td><b>${totalDr}</b></td>
-<td><b>${totalCr}</b></td>
-</tr>
-`;
-
-rows += `</table>`;
-
-document.getElementById("reportOutput").innerHTML = rows;
-
-formatAllAmounts();
-
-}
 
 //////////////////////////////////////////////////
 // MANAGE LEDGERS
@@ -7035,10 +6174,6 @@ function refreshInvoiceReport(){
 
 }
 	
-
-
-	
-	
 </script>
 <script src="layout.js"></script>
 
@@ -7056,4 +6191,3 @@ function refreshInvoiceReport(){
 </body>
 
 </html>
-
