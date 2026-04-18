@@ -6609,9 +6609,9 @@ function openInvoicePrintPopup(invoiceNo){
         <style>
           body{
             margin:0;
-            padding:15px;
-            font-family:Segoe UI, Arial, sans-serif;
+            padding:0;
             background:#fff;
+            font-family:Segoe UI, Arial, sans-serif;
           }
         </style>
       </head>
@@ -6623,20 +6623,40 @@ function openInvoicePrintPopup(invoiceNo){
 
     openPopup(`
 
-      <div style="width:100%;text-align:center;">
+      <div style="text-align:center;">
 
-        <iframe
-          id="invoiceFrame"
-          style="
-            width:100%;
-            height:72vh;
+        <!-- Preview Box -->
+        <div style="
+          width:100%;
+          display:flex;
+          justify-content:center;
+          margin-bottom:15px;
+        ">
+
+          <div style="
+            width:320px;
+            height:540px;
             border:1px solid #ddd;
             border-radius:8px;
+            overflow:hidden;
             background:#fff;
+            box-shadow:0 4px 12px rgba(0,0,0,.10);
           ">
-        </iframe>
 
-        <br><br>
+            <iframe
+              id="invoiceFrame"
+              style="
+                width:840px;
+                height:1188px;
+                border:none;
+                transform:scale(0.38);
+                transform-origin:top left;
+              ">
+            </iframe>
+
+          </div>
+
+        </div>
 
         <button onclick="printInvoicePDF()">
           <i data-lucide='printer'></i> Print
@@ -6650,8 +6670,7 @@ function openInvoicePrintPopup(invoiceNo){
 
       let frame = document.getElementById("invoiceFrame");
 
-      let docFrame =
-        frame.contentWindow.document;
+      let docFrame = frame.contentWindow.document;
 
       docFrame.open();
       docFrame.write(html);
