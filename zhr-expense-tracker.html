@@ -1164,7 +1164,7 @@ async function showDashboard() {
   loadTransactions();
 loadAccounts();
 loadLedgers(); // ✅ ADD THIS
-
+loadInvoices();
 
 //////////////////////////////////////////////////
 // ENTER KEY LOGIN
@@ -1346,14 +1346,33 @@ function loadTransactions() {
       }
 
 
-if (currentReport === "ledgerStatement") {
-  renderLedgerStatement();
+	if (currentReport === "ledgerStatement") {
+  		renderLedgerStatement();
 }
 
+	
 		
     });
 }
 
+//////////////////////////////////////////////////
+// LOAD INVOICES
+//////////////////////////////////////////////////
+	
+function loadInvoices(){
+
+  db.collection("invoices")
+    .onSnapshot(()=>{
+
+      let currentReport = sessionStorage.getItem("currentReport");
+
+      if(currentReport === "invoice"){
+        refreshInvoiceReport();
+      }
+
+    });
+
+}	
 
 //////////////////////////////////////////////////
 // REFRESH DASHBOARD UI
@@ -1417,6 +1436,9 @@ if (currentReport === "ledgerStatement") {
   renderLedgerStatement();
 }
 
+	if(currentReport === "invoice"){
+  refreshInvoiceReport();
+}
 	
 }
 
@@ -6739,7 +6761,6 @@ ${rows}
 }
 
 	
-	
 //////////////////////////////////////////////////
 // PRINT INVOICE
 //////////////////////////////////////////////////
@@ -6769,7 +6790,217 @@ function printInvoicePDF(){
   win.print();
 }
 
+//////////////////////////////////////////////////
+// SHOW INVOICE REPORT
+//////////////////////////////////////////////////
+	
+function showInvoiceReport(){
 
+  openPopup(`
+    <h3>Invoice Report</h3>
+
+    <label>From Date</label>
+    <input type="date" id="fromDate">
+
+    <label>To Date</label>
+    <input type="date" id="toDate">
+
+    <button onclick="runInvoiceReport()">Run</button>
+  `);
+}	
+
+
+//////////////////////////////////////////////////
+// RUN INVOICE REPORT
+//////////////////////////////////////////////////
+	
+let invoiceUnsubscribe = null;
+
+function runInvoiceReport(){
+
+  let fromDate = document.getElementById("fromDate").value;
+  let toDate = document.getElementById("toDate").value;
+
+  currentReport = "invoice";
+
+  sessionStorage.setItem("currentReport","invoice");
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  loadInvoiceLive(fromDate,toDate);
+}	
+
+
+//////////////////////////////////////////////////
+// LOAD INVOICE LIVE
+//////////////////////////////////////////////////	
+	
+function loadInvoiceLive(fromDate,toDate){
+
+  if(invoiceUnsubscribe) invoiceUnsubscribe();
+
+  invoiceUnsubscribe = db.collection("invoices")
+    .orderBy("createdAt","desc")
+    .onSnapshot(snap=>{
+
+      let html = `
+        <h3>Invoice Report</h3>
+
+        <table class="report-table">
+          <tr>
+            <th>Sr No</th>
+            <th>Invoice No</th>
+            <th>Date</th>
+            <th>Client</th>
+            <th>Services</th>
+            <th>Currency</th>
+            <th>Amount</th>
+            <th>View</th>
+            <th>Edit</th>
+            <th>Print</th>
+            <th>Delete</th>
+          </tr>
+      `;
+
+      let i = 0;
+
+      snap.forEach(doc=>{
+
+        let d = doc.data();
+
+        if(fromDate && d.invoiceDate < fromDate) return;
+        if(toDate && d.invoiceDate > toDate) return;
+
+        i++;
+
+        let services = d.items.map(x=>x.desc).join(", ");
+
+        html += `
+          <tr>
+            <td>${i}</td>
+            <td>${d.invoiceNo}</td>
+            <td>${d.invoiceDate}</td>
+            <td>${d.recipient.name}</td>
+            <td>${services}</td>
+            <td>${d.currency}</td>
+            <td>${Number(d.total).toFixed(2)}</td>
+
+            <td><button onclick="viewInvoice('${doc.id}')">View</button></td>
+
+            <td><button onclick="editInvoice('${doc.id}')">Edit</button></td>
+
+            <td><button onclick="quickPrintInvoice('${doc.id}')">Print</button></td>
+
+            <td><button onclick="askDeleteInvoice('${doc.id}')">Delete</button></td>
+          </tr>
+        `;
+      });
+
+      html += `</table>`;
+
+      document.getElementById("reportOutput").innerHTML = html;
+
+    });
+}
+	
+//////////////////////////////////////////////////
+// VIEW INVOICE
+//////////////////////////////////////////////////
+	
+function viewInvoice(id){
+
+  db.collection("invoices").doc(id).get().then(doc=>{
+
+    openInvoicePrintPopup(id); // same popup preview only
+
+  });
+}
+
+//////////////////////////////////////////////////
+// QUICK PRINT INVOICE
+//////////////////////////////////////////////////
+
+function quickPrintInvoice(id){
+
+  openInvoicePrintPopup(id);
+
+  setTimeout(()=>{
+    printInvoicePDF();
+  },700);
+}
+
+//////////////////////////////////////////////////
+// ASK DELETE INVOICE
+//////////////////////////////////////////////////
+	
+function askDeleteInvoice(id){
+
+  openPopup(`
+    <h3>Admin Authentication</h3>
+
+    <input type="password" id="adminPassword" placeholder="Enter Password">
+
+    <button onclick="deleteInvoice('${id}')">Delete</button>
+  `);
+}
+
+//////////////////////////////////////////////////
+// DELETE INVOICE
+//////////////////////////////////////////////////
+	
+async function deleteInvoice(id){
+
+  if(!checkPermission("admin")) return;
+
+  let password = document.getElementById("adminPassword").value;
+
+  let user = auth.currentUser;
+
+  try{
+
+    let credential =
+      firebase.auth.EmailAuthProvider.credential(
+        user.email,
+        password
+      );
+
+    await user.reauthenticateWithCredential(credential);
+
+    await db.collection("invoices").doc(id).delete();
+
+    closePopup();
+
+    showToast("Invoice Deleted 🗑️");
+
+  }catch(e){
+
+    showToast("Wrong Password ❌","error");
+
+  }
+}
+
+//////////////////////////////////////////////////
+// RESTORE INVOICE REPORT
+//////////////////////////////////////////////////
+	
+function restoreReports(){
+
+  let report = sessionStorage.getItem("currentReport");
+
+  if(report === "invoice"){
+
+    let fromDate = sessionStorage.getItem("currentFromDate");
+    let toDate = sessionStorage.getItem("currentToDate");
+
+    loadInvoiceLive(fromDate,toDate);
+  }
+}
+	
+
+
+	
 	
 </script>
 <script src="layout.js"></script>
