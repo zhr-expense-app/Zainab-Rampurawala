@@ -6607,6 +6607,10 @@ function openInvoicePrintPopup(invoiceNo){
       <html>
       <head>
         <style>
+		@page{
+  size:A4;
+  margin:10mm;
+}
           body{
             margin:0;
             padding:0;
@@ -6829,27 +6833,16 @@ ${rows}
 
 function printInvoicePDF(){
 
-  let content = document.getElementById("invoicePDFContainer").innerHTML;
+  let frame = document.getElementById("invoiceFrame");
 
-  let win = window.open('', '', 'width=900,height=700');
+  if(!frame){
+    showToast("Invoice not ready","error");
+    return;
+  }
 
-  win.document.write(`
-    <html>
-    <head>
-      <title>${currentInvoiceNo}</title>
-      <style>
-        body{ font-family:Segoe UI; padding:20px; }
-        table{ width:100%; border-collapse:collapse; }
-        th, td{ border:1px solid #ddd; padding:10px; }
-        th{ background:#001d4c; color:white; }
-      </style>
-    </head>
-    <body>${content}</body>
-    </html>
-  `);
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
 
-  win.document.close();
-  win.print();
 }
 
 //////////////////////////////////////////////////
