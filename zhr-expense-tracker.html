@@ -817,136 +817,32 @@ let currentInvoiceNo = "";
 
 
 //////////////////////////////////////////////////
-// DASHBOARD FILTER POPUP (MODERN RADIAL STYLE)
+// DASHBOARD FILTER POPUP
 //////////////////////////////////////////////////
 
 function openDashboardFilterPopup(){
 
   openPopup(`
 
-    <div style="
-      text-align:center;
-      padding:10px 5px 20px;
-    ">
+    <h3 style="margin-bottom:15px;">Filter Dashboard</h3>
 
-      <!-- Title -->
-      <div style="
-        font-size:28px;
-        font-weight:700;
-        color:#001d4c;
-        margin-bottom:6px;
-      ">
-        Dashboard Filters
-      </div>
+    <div style="display:flex;gap:10px;">
 
-      <div style="
-        font-size:13px;
-        color:#777;
-        margin-bottom:28px;
-      ">
-        Choose report period
-      </div>
+      <button onclick="closePopup();showCurrentMonth();">
+        <i data-lucide="calendar"></i> Current Month
+      </button>
 
-      <!-- Half Circle Layout -->
-      <div style="
-        position:relative;
-        width:280px;
-        height:220px;
-        margin:auto;
-      ">
+      <button onclick="closePopup();showLastMonth();">
+        <i data-lucide="calendar-days"></i> Last Month
+      </button>
 
-        <!-- Center Circle -->
-        <div style="
-          position:absolute;
-          left:50%;
-          top:95px;
-          transform:translateX(-50%);
-          width:90px;
-          height:90px;
-          border-radius:50%;
-          background:#001d4c;
-          color:#fff;
-          display:flex;
-          flex-direction:column;
-          align-items:center;
-          justify-content:center;
-          font-size:13px;
-          font-weight:700;
-          box-shadow:0 10px 20px rgba(0,0,0,.15);
-        ">
-          <i data-lucide="filter"></i>
-          Filter
-        </div>
+      <button onclick="closePopup();showFullYear();">
+        <i data-lucide="bar-chart"></i> Full Year
+      </button>
 
-        <!-- Current Month -->
-        <button onclick="closePopup();showCurrentMonth();"
-          style="
-            position:absolute;
-            left:0;
-            top:110px;
-            width:70px;
-            height:70px;
-            border-radius:50%;
-          ">
-          <i data-lucide="calendar"></i>
-        </button>
-
-        <!-- Last Month -->
-        <button onclick="closePopup();showLastMonth();"
-          style="
-            position:absolute;
-            left:40px;
-            top:30px;
-            width:70px;
-            height:70px;
-            border-radius:50%;
-          ">
-          <i data-lucide="calendar-days"></i>
-        </button>
-
-        <!-- Full Year -->
-        <button onclick="closePopup();showFullYear();"
-          style="
-            position:absolute;
-            right:40px;
-            top:30px;
-            width:70px;
-            height:70px;
-            border-radius:50%;
-          ">
-          <i data-lucide="bar-chart-3"></i>
-        </button>
-
-        <!-- Custom -->
-        <button onclick="closePopup();showCustomSummary();"
-          style="
-            position:absolute;
-            right:0;
-            top:110px;
-            width:70px;
-            height:70px;
-            border-radius:50%;
-          ">
-          <i data-lucide="sliders-horizontal"></i>
-        </button>
-
-      </div>
-
-      <!-- Labels -->
-      <div style="
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:12px;
-        margin-top:8px;
-        font-size:13px;
-        color:#001d4c;
-        font-weight:600;
-      ">
-        <div>Current Month</div>
-        <div>Last Month</div>
-        <div>Full Year</div>
-        <div>Custom Filter</div>
-      </div>
+      <button onclick="closePopup();showCustomSummary();">
+        <i data-lucide="filter"></i> Custom Filter
+      </button>
 
     </div>
 
@@ -955,8 +851,6 @@ function openDashboardFilterPopup(){
   requestAnimationFrame(()=> lucide.createIcons());
 
 }
-
-
 	
 //////////////////////////////////////////////////
 // CHECK PERMISSION
