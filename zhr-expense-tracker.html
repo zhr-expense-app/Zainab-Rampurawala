@@ -3400,26 +3400,20 @@ async function updateJournal(id){
     return;
   }
 
-    if(isCashBankLedger(creditLedger)){
+    let creditLedgerId = creditLedger;
+let creditLedgerName = getLedgerNameById(creditLedgerId);
 
-  let balance = getBalanceExcludingTransaction(
-    creditLedgerId,
-    id
-  );
+if(isCashBankLedger(creditLedgerName)){
+
+  let balance = getBalanceExcludingTransaction(creditLedgerId, id);
 
   let projected = balance - amount;
 
   if(projected < 0){
-
-    showToast(
-      creditLedger +
-      " has insufficient funds ❌",
-      "error"
-    );
-
+    showToast(creditLedgerName + " cannot go negative ❌","error");
     return;
   }
-  }
+}
 
   try{
 
@@ -3837,7 +3831,7 @@ function refreshCurrentReport(){
 // ✅ GET BALANCE EXCLUDING CURRENT TRANSACTION (FIXED - ID BASED)
 //////////////////////////////////////////////////
 
-function getBalanceExcludingTransaction(
+
 function getBalanceExcludingTransaction(ledgerId, transactionId){
 
   let balances = {};
