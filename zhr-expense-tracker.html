@@ -777,6 +777,10 @@ text-align:right;
   <i data-lucide="book-open"></i> Mini Statement
 </button>
 
+<button onclick="showFinancialStatementPopup()">
+   <i data-lucide="file-spreadsheet"></i> Financial Statements
+</button>
+	
 <button onclick="showInvoiceReport()">
   <i data-lucide="file-text"></i> Invoice List
 </button>
@@ -6193,6 +6197,310 @@ function refreshInvoiceReport(){
   loadInvoiceLive(fromDate,toDate);
 
 }
+
+//////////////////////////////////////////////////
+// FINANCIAL STATEMENT POPUP
+//////////////////////////////////////////////////
+
+function showFinancialStatementPopup(){
+
+  openPopup(`
+
+    <h3>Financial Statements</h3>
+
+    <label>From Date</label>
+    <input type="date" id="fsFromDate">
+
+    <label>To Date</label>
+    <input type="date" id="fsToDate">
+
+    <button onclick="runTrialBalance()">
+      <i data-lucide="file-spreadsheet"></i> Trial Balance
+    </button>
+
+  `);
+
+  requestAnimationFrame(()=> lucide.createIcons());
+}
+
+
+
+//////////////////////////////////////////////////
+// RUN TRIAL BALANCE
+//////////////////////////////////////////////////
+
+function runTrialBalance(){
+
+  let fromDate = document.getElementById("fsFromDate").value;
+  let toDate   = document.getElementById("fsToDate").value;
+
+  if(!validateDateRange(fromDate,toDate)) return;
+
+  currentReport = "trialBalance";
+
+  sessionStorage.setItem("currentReport","trialBalance");
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  renderTrialBalance();
+}
+
+
+
+//////////////////////////////////////////////////
+// RENDER TRIAL BALANCE
+//////////////////////////////////////////////////
+
+function renderTrialBalance(){
+
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate   = sessionStorage.getItem("currentToDate");
+
+  //////////////////////////////////////////////////
+  // GROUP ORDER
+  //////////////////////////////////////////////////
+
+  let groupOrder = [
+    "Capital",
+    "Drawings",
+    "Liability",
+    "Asset",
+    "Cash & Bank",
+    "Income",
+    "Expense"
+  ];
+
+  //////////////////////////////////////////////////
+  // MAP BALANCES
+  //////////////////////////////////////////////////
+
+  let rows = [];
+
+  let totalDebit = 0;
+  let totalCredit = 0;
+
+  //////////////////////////////////////////////////
+  // EACH LEDGER
+  //////////////////////////////////////////////////
+
+  groupOrder.forEach(groupName=>{
+
+    let groupLedgers = ledgerList.filter(l => l.group === groupName);
+
+    groupLedgers.forEach(ledger=>{
+
+      let balance = 0;
+
+      //////////////////////////////////////////////
+      // BALANCE SHEET GROUPS
+      //////////////////////////////////////////////
+
+      if(
+        ["Capital","Drawings","Liability","Asset","Cash & Bank"]
+        .includes(groupName)
+      ){
+
+        balance = Number(ledger.openingBalance || 0);
+
+        if(ledger.openingType === "credit"){
+          balance = -balance;
+        }
+
+        transactionsCache.forEach(t=>{
+
+          if(t.date > toDate) return;
+
+          let amount = Number(t.amount);
+
+          let debitKey  = t.debitLedgerId  || t.debitLedger;
+          let creditKey = t.creditLedgerId || t.creditLedger;
+
+          if(debitKey === ledger.id) balance += amount;
+          if(creditKey === ledger.id) balance -= amount;
+
+        });
+
+      }
+
+      //////////////////////////////////////////////
+      // P&L GROUPS
+      //////////////////////////////////////////////
+
+      else if(groupName === "Income" || groupName === "Expense"){
+
+        balance = 0;
+
+        transactionsCache.forEach(t=>{
+
+          if(t.date < fromDate || t.date > toDate) return;
+
+          let amount = Number(t.amount);
+
+          let debitKey  = t.debitLedgerId  || t.debitLedger;
+          let creditKey = t.creditLedgerId || t.creditLedger;
+
+          if(debitKey === ledger.id) balance += amount;
+          if(creditKey === ledger.id) balance -= amount;
+
+        });
+
+      }
+
+      //////////////////////////////////////////////
+      // SKIP ZERO
+      //////////////////////////////////////////////
+
+      if(balance === 0) return;
+
+      let debit = "";
+      let credit = "";
+
+      if(balance > 0){
+        debit = balance;
+        totalDebit += balance;
+      }else{
+        credit = Math.abs(balance);
+        totalCredit += Math.abs(balance);
+      }
+
+      rows.push(`
+        <tr>
+          <td>${ledger.name}</td>
+          <td>${groupName}</td>
+          <td>${debit}</td>
+          <td>${credit}</td>
+        </tr>
+      `);
+
+    });
+
+  });
+
+
+  //////////////////////////////////////////////////
+  // PROFIT & LOSS FINAL ROW
+  //////////////////////////////////////////////////
+
+  let pnlLedger = ledgerList.find(l => l.group === "Profit & Loss");
+
+  let pnlBalance = 0;
+
+  ////////////////////////////////////////////////
+  // OPENING P&L BALANCE
+  ////////////////////////////////////////////////
+
+  if(pnlLedger){
+
+    pnlBalance = Number(pnlLedger.openingBalance || 0);
+
+    if(pnlLedger.openingType === "debit"){
+      pnlBalance = pnlBalance;
+    }else{
+      pnlBalance = -pnlBalance;
+    }
+
+  }
+
+  ////////////////////////////////////////////////
+  // ADD HISTORICAL PROFITS BEFORE FROM DATE
+  ////////////////////////////////////////////////
+
+  transactionsCache.forEach(t=>{
+
+    if(t.date >= fromDate) return;
+
+    let amount = Number(t.amount);
+
+    let debitKey  = t.debitLedgerId  || t.debitLedger;
+    let creditKey = t.creditLedgerId || t.creditLedger;
+
+    let debitLedger = ledgerList.find(x=>x.id===debitKey);
+    let creditLedger = ledgerList.find(x=>x.id===creditKey);
+
+    if(debitLedger && debitLedger.group === "Expense"){
+      pnlBalance -= amount;
+    }
+
+    if(creditLedger && creditLedger.group === "Income"){
+      pnlBalance -= amount;
+    }
+
+    if(debitLedger && debitLedger.group === "Income"){
+      pnlBalance += amount;
+    }
+
+    if(creditLedger && creditLedger.group === "Expense"){
+      pnlBalance += amount;
+    }
+
+  });
+
+  ////////////////////////////////////////////////
+  // BALANCE TB DIFFERENCE
+  ////////////////////////////////////////////////
+
+  let diff = totalDebit - totalCredit;
+
+  pnlBalance += diff;
+
+  let pnlDebit = "";
+  let pnlCredit = "";
+
+  if(pnlBalance > 0){
+    pnlDebit = pnlBalance;
+    totalDebit += pnlBalance;
+  }else if(pnlBalance < 0){
+    pnlCredit = Math.abs(pnlBalance);
+    totalCredit += Math.abs(pnlBalance);
+  }
+
+  rows.push(`
+    <tr>
+      <td>Profit & Loss</td>
+      <td>Profit & Loss</td>
+      <td>${pnlDebit}</td>
+      <td>${pnlCredit}</td>
+    </tr>
+  `);
+
+
+  //////////////////////////////////////////////////
+  // FINAL HTML
+  //////////////////////////////////////////////////
+
+  let html = `
+
+    <h3>Trial Balance</h3>
+    <p>From ${fromDate} To ${toDate}</p>
+
+    <table class="report-table">
+
+      <tr>
+        <th>Particulars</th>
+        <th>Group</th>
+        <th>Debit</th>
+        <th>Credit</th>
+      </tr>
+
+      ${rows.join("")}
+
+      <tr>
+        <td colspan="2"><b>Total</b></td>
+        <td><b>${totalDebit}</b></td>
+        <td><b>${totalCredit}</b></td>
+      </tr>
+
+    </table>
+  `;
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
+}
+
+
 	
 </script>
 <script src="layout.js"></script>
