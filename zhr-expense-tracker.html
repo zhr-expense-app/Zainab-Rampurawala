@@ -8351,9 +8351,8 @@ function exportProfitLossExcelV2(
 
 
 //////////////////////////////////////////////////
-// FINAL EXPORT V2 - PART 4
-// BALANCE SHEET EXPORT
-// Paste below Part 3
+// FINAL BS EXPORT PATCH
+// REPLACE ONLY exportBalanceSheetExcelV2()
 //////////////////////////////////////////////////
 
 function exportBalanceSheetExcelV2(
@@ -8396,417 +8395,92 @@ function exportBalanceSheetExcelV2(
   rowNo++;
 
   //////////////////////////////////////////////////
-  // HELPERS
+  // READ EXACT SCREEN TABLE
   //////////////////////////////////////////////////
 
-  function getClosingBalance(ledger){
-
-    let bal =
-      Number(
-        ledger.openingBalance || 0
-      );
-
-    if(
-      ledger.openingType ===
-      "credit"
-    ){
-      bal = -bal;
-    }
-
-    transactionsCache.forEach(t=>{
-
-      if(t.date > toDate)
-        return;
-
-      let amt =
-        Number(t.amount);
-
-      let d =
-        t.debitLedgerId ||
-        t.debitLedger;
-
-      let c =
-        t.creditLedgerId ||
-        t.creditLedger;
-
-      if(d === ledger.id)
-        bal += amt;
-
-      if(c === ledger.id)
-        bal -= amt;
-
-    });
-
-    return bal;
-  }
-
-  function getCurrentProfit(){
-
-    let income  = 0;
-    let expense = 0;
-
-    transactionsCache.forEach(t=>{
-
-      if(
-        t.date < fromDate ||
-        t.date > toDate
-      ) return;
-
-      let amt =
-        Number(t.amount);
-
-      let d =
-        t.debitLedgerId ||
-        t.debitLedger;
-
-      let c =
-        t.creditLedgerId ||
-        t.creditLedger;
-
-      let dl =
-        ledgerList.find(
-          x => x.id === d
-        );
-
-      let cl =
-        ledgerList.find(
-          x => x.id === c
-        );
-
-      if(
-        dl &&
-        dl.group ===
-        "Expense"
-      ) expense += amt;
-
-      if(
-        cl &&
-        cl.group ===
-        "Expense"
-      ) expense -= amt;
-
-      if(
-        cl &&
-        cl.group ===
-        "Income"
-      ) income += amt;
-
-      if(
-        dl &&
-        dl.group ===
-        "Income"
-      ) income -= amt;
-
-    });
-
-    return income - expense;
-  }
-
-  //////////////////////////////////////////////////
-  // LEFT SIDE
-  //////////////////////////////////////////////////
-
-  let left = [];
-  let right = [];
-
-  let leftTotal  = 0;
-  let rightTotal = 0;
-
-  //////////////////////////////////////////////////
-  // CAPITAL
-  //////////////////////////////////////////////////
-
-  left.push([
-    "CAPITAL",""
-  ]);
-
-  let capitalTotal = 0;
-
-  ledgerList
-  .filter(l =>
-    l.group === "Capital"
-  )
-  .forEach(l=>{
-
-    let bal =
-      Math.abs(
-        getClosingBalance(l)
-      );
-
-    if(!bal) return;
-
-    capitalTotal += bal;
-
-    left.push([
-      l.name,
-      bal
-    ]);
-  });
-
-  //////////////////////////////////////////////////
-  // OPENING P&L
-  //////////////////////////////////////////////////
-
-  let pnlLedger =
-    ledgerList.find(
-      l =>
-      l.group ===
-      "Profit & Loss"
-    );
-
-  let openingPL = 0;
-
-  if(pnlLedger){
-
-    openingPL =
-      Number(
-        pnlLedger
-        .openingBalance || 0
-      );
-
-    if(
-      pnlLedger.openingType
-      === "credit"
-    ){
-      openingPL =
-      -openingPL;
-    }
-  }
-
-  if(openingPL !== 0){
-
-    capitalTotal +=
-    Math.abs(openingPL);
-
-    left.push([
-      "Add: Opening P&L",
-      Math.abs(openingPL)
-    ]);
-  }
-
-  //////////////////////////////////////////////////
-  // CURRENT PROFIT / LOSS
-  //////////////////////////////////////////////////
-
-  let currentPL =
-    getCurrentProfit();
-
-  if(currentPL > 0){
-
-    capitalTotal +=
-    currentPL;
-
-    left.push([
-      "Add: Current Profit",
-      currentPL
-    ]);
-  }
-
-  if(currentPL < 0){
-
-    capitalTotal -=
-    Math.abs(currentPL);
-
-    left.push([
-      "Less: Current Loss",
-      Math.abs(currentPL)
-    ]);
-  }
-
-  //////////////////////////////////////////////////
-  // DRAWINGS
-  //////////////////////////////////////////////////
-
-  let drawings = 0;
-
-  ledgerList
-  .filter(l =>
-    l.group ===
-    "Drawings"
-  )
-  .forEach(l=>{
-
-    drawings +=
-    Math.abs(
-      getClosingBalance(l)
-    );
-
-  });
-
-  if(drawings){
-
-    capitalTotal -=
-    drawings;
-
-    left.push([
-      "Less: Drawings",
-      drawings
-    ]);
-  }
-
-  left.push([
-    "Closing Capital",
-    capitalTotal
-  ]);
-
-  leftTotal += capitalTotal;
-
-  //////////////////////////////////////////////////
-  // LIABILITIES
-  //////////////////////////////////////////////////
-
-  left.push([
-    "LIABILITIES",""
-  ]);
-
-  ledgerList
-  .filter(l =>
-    l.group ===
-    "Liability"
-  )
-  .forEach(l=>{
-
-    let bal =
-      getClosingBalance(l);
-
-    if(bal >= 0)
-      return;
-
-    bal =
-    Math.abs(bal);
-
-    leftTotal += bal;
-
-    left.push([
-      l.name,
-      bal
-    ]);
-  });
-
-  //////////////////////////////////////////////////
-  // ASSETS
-  //////////////////////////////////////////////////
-
-  right.push([
-    "ASSETS",""
-  ]);
-
-  ledgerList
-  .filter(l =>
-    l.group ===
-    "Asset"
-  )
-  .forEach(l=>{
-
-    let bal =
-      getClosingBalance(l);
-
-    if(bal <= 0)
-      return;
-
-    rightTotal += bal;
-
-    right.push([
-      l.name,
-      bal
-    ]);
-  });
-
-  //////////////////////////////////////////////////
-  // CASH & BANK
-  //////////////////////////////////////////////////
-
-  right.push([
-    "CASH & BANK",""
-  ]);
-
-  ledgerList
-  .filter(l =>
-    l.group ===
-    "Cash & Bank"
-  )
-  .forEach(l=>{
-
-    let bal =
-      getClosingBalance(l);
-
-    if(bal <= 0)
-      return;
-
-    rightTotal += bal;
-
-    right.push([
-      l.name,
-      bal
-    ]);
-  });
-
-  //////////////////////////////////////////////////
-  // MATCH ROWS
-  //////////////////////////////////////////////////
-
-  let maxRows =
-  Math.max(
-    left.length,
-    right.length
+  let rows = document.querySelectorAll(
+    ".balance-sheet-table tr"
   );
 
-  while(left.length < maxRows)
-    left.push(["",""]);
+  for(let i=1;i<rows.length;i++){
 
-  while(right.length < maxRows)
-    right.push(["",""]);
+    let cells =
+      rows[i].querySelectorAll(
+        "td,th"
+      );
 
-  //////////////////////////////////////////////////
-  // BODY
-  //////////////////////////////////////////////////
+    if(cells.length===0)
+      continue;
 
-  for(let i=0;i<maxRows;i++){
+    //////////////////////////////////////////////////
+    // FORCE 4 COLUMNS
+    //////////////////////////////////////////////////
 
-    let row =
-    sheet.addRow([
-      left[i][0],
-      left[i][1],
-      right[i][0],
-      right[i][1]
+    let col1 = "";
+    let col2 = "";
+    let col3 = "";
+    let col4 = "";
+
+    if(cells[0]) col1 =
+      cells[0].innerText.trim();
+
+    if(cells[1]) col2 =
+      cells[1].innerText.trim();
+
+    if(cells[2]) col3 =
+      cells[2].innerText.trim();
+
+    if(cells[3]) col4 =
+      cells[3].innerText.trim();
+
+    //////////////////////////////////////////////////
+    // ADD ROW
+    //////////////////////////////////////////////////
+
+    let r = sheet.addRow([
+
+      col1,
+      safeAmount(col2),
+
+      col3,
+      safeAmount(col4)
+
     ]);
 
-    fsRow(row);
+    fsRow(r);
+
+    //////////////////////////////////////////////////
+    // HEADINGS ONLY BOLD
+    //////////////////////////////////////////////////
 
     if(
-      left[i][1] === "" ||
-      right[i][1] === ""
+      col1 === "Capital" ||
+      col1 === "Liabilities" ||
+      col3 === "Assets" ||
+      col3 === "Cash & Bank"
     ){
-      row.font = {
-        bold:true
-      };
+      r.font = {bold:true};
+    }
+
+    //////////////////////////////////////////////////
+    // TOTAL ROW BOLD
+    //////////////////////////////////////////////////
+
+    if(
+      col1 === "Total" ||
+      col3 === "Total"
+    ){
+      r.font = {bold:true};
     }
 
     rowNo++;
   }
 
-  //////////////////////////////////////////////////
-  // TOTAL
-  //////////////////////////////////////////////////
-
-  let totalRow =
-  sheet.addRow([
-    "Total",
-    leftTotal,
-    "Total",
-    rightTotal
-  ]);
-
-  totalRow.font = {
-    bold:true
-  };
-
-  fsRow(totalRow);
-
-  rowNo++;
-
   return rowNo;
-	}
+	  }
+
+
+    
 	
 //////////////////////////////////////////////////
 // FINAL EXPORT V2 - PART 5
