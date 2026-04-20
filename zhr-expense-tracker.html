@@ -757,6 +757,25 @@ text-align:right;
   background:#f9f9f9;
 }
 
+
+/* Balance Sheet Section Headings */
+
+.balance-sheet-table th[colspan="2"]{
+  background:none !important;
+  color:#000 !important;
+  font-weight:700 !important;
+  text-align:left !important;
+}
+
+/* Profit & Loss Section Headings */
+
+.profit-loss-table th[colspan="2"]{
+  background:none !important;
+  color:#000 !important;
+  font-weight:700 !important;
+  text-align:left !important;
+}
+
 	  
 </style>
 
@@ -7053,7 +7072,7 @@ function renderBalanceSheet(){
 
   leftRows += `
     <tr>
-      <th colspan="2" style="text-align:left;">CAPITAL</th>
+      <th colspan="2" style="text-align:left;">Capital</th>
     </tr>
   `;
 
@@ -7223,7 +7242,7 @@ function renderBalanceSheet(){
 
   leftRows += `
     <tr>
-      <th colspan="2" style="text-align:left;">LIABILITIES</th>
+      <th colspan="2" style="text-align:left;">Liabilities</th>
     </tr>
   `;
 
@@ -7265,7 +7284,7 @@ function renderBalanceSheet(){
 
   rightRows += `
     <tr>
-      <th colspan="2" style="text-align:left;">ASSETS</th>
+      <th colspan="2" style="text-align:left;">Assets</th>
     </tr>
   `;
 
@@ -7295,7 +7314,7 @@ function renderBalanceSheet(){
 
   rightRows += `
     <tr>
-      <th colspan="2" style="text-align:left;">CASH & BANK</th>
+      <th colspan="2" style="text-align:left;">Cash & Bank</th>
     </tr>
   `;
 
@@ -7365,7 +7384,7 @@ function renderBalanceSheet(){
 
   let html = `
 
-    <h3 style="text-align:center;">BALANCE SHEET</h3>
+    <h3 style="text-align:center;">Balance Sheet</h3>
     <p style="text-align:center;">As on ${toDate}</p>
 
     <table class="report-table balance-sheet-table">
