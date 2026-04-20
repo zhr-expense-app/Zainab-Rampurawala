@@ -3400,20 +3400,26 @@ async function updateJournal(id){
     return;
   }
 
-  let creditLedgerId = creditLedger;
-let creditLedgerName = getLedgerNameById(creditLedgerId);
+    if(isCashBankLedger(creditLedger)){
 
-if(isCashBankLedger(creditLedgerName)){
-
-  let balance = getBalanceExcludingTransaction(creditLedgerId, id);
+  let balance = getBalanceExcludingTransaction(
+    creditLedgerId,
+    id
+  );
 
   let projected = balance - amount;
 
   if(projected < 0){
-    showToast(creditLedgerName + " cannot go negative ❌","error");
+
+    showToast(
+      creditLedger +
+      " has insufficient funds ❌",
+      "error"
+    );
+
     return;
   }
-}
+  }
 
   try{
 
