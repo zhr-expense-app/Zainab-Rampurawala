@@ -3143,15 +3143,24 @@ async function updatePayment(id){
 
   if(isCashBankLedger(creditLedger)){
 
-  let balance = getBalanceExcludingTransaction(creditLedger, id);
+  let balance = getBalanceExcludingTransaction(
+    creditLedgerId,
+    id
+  );
 
   let projected = balance - amount;
 
   if(projected < 0){
-    showToast(creditLedger + " cannot go negative ❌","error");
+
+    showToast(
+      creditLedger +
+      " has insufficient funds ❌",
+      "error"
+    );
+
     return;
   }
-}
+  }
 
   try{
 
@@ -3391,18 +3400,20 @@ async function updateJournal(id){
     return;
   }
 
-  if(isCashBankLedger(creditLedger)){
+  let creditLedgerId = creditLedger;
+let creditLedgerName = getLedgerNameById(creditLedgerId);
 
-  let balance = getBalanceExcludingTransaction(creditLedger, id);
+if(isCashBankLedger(creditLedgerName)){
+
+  let balance = getBalanceExcludingTransaction(creditLedgerId, id);
 
   let projected = balance - amount;
 
   if(projected < 0){
-    showToast(creditLedger + " cannot go negative ❌","error");
+    showToast(creditLedgerName + " cannot go negative ❌","error");
     return;
   }
 }
-
 
   try{
 
@@ -3820,31 +3831,27 @@ function refreshCurrentReport(){
 // ✅ GET BALANCE EXCLUDING CURRENT TRANSACTION (FIXED - ID BASED)
 //////////////////////////////////////////////////
 
+function getBalanceExcludingTransaction(
 function getBalanceExcludingTransaction(ledgerId, transactionId){
 
   let balances = {};
 
-  // Opening balances (ID based)
+  // Opening balances
   ledgerList.forEach(l=>{
-    let value = Number(l.openingBalance || 0);
-
-    if(l.openingType === "credit"){
-      value = -value;
-    }
-
-    balances[l.id] = value;
+    let val = Number(l.openingBalance || 0);
+    if(l.openingType === "credit") val = -val;
+    balances[l.id] = val;
   });
 
-  // Apply transactions (excluding current)
+  // Transactions excluding current edit transaction
   transactionsCache.forEach(t=>{
 
     if(t.id === transactionId) return;
 
     let amount = Number(t.amount);
 
-    // ✅ USE ID FIRST, FALLBACK TO NAME
-    let debitKey = t.debitLedgerId || t.debitLedger;
-    let creditKey = t.creditLedgerId || t.creditLedger;
+    let debitKey = t.debitLedgerId || getLedgerIdByName(t.debitLedger);
+    let creditKey = t.creditLedgerId || getLedgerIdByName(t.creditLedger);
 
     if(debitKey){
       balances[debitKey] = (balances[debitKey] || 0) + amount;
@@ -3857,6 +3864,11 @@ function getBalanceExcludingTransaction(ledgerId, transactionId){
   });
 
   return balances[ledgerId] || 0;
+}
+
+function getLedgerIdByName(name){
+  let l = ledgerList.find(x => x.name === name);
+  return l ? l.id : null;
 }
 
 //////////////////////////////////////////////////
