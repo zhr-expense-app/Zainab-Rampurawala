@@ -649,7 +649,9 @@ text-align:right;
 }
 
 
-/* Trial Balance Only Alignment */
+/* =======================================
+   TRIAL BALANCE
+======================================= */
 
 .trial-balance-table th:nth-child(1),
 .trial-balance-table td:nth-child(1),
@@ -663,18 +665,60 @@ text-align:right;
 .trial-balance-table th:nth-child(4),
 .trial-balance-table td:nth-child(4){
   text-align:right;
-}	  
-	  
-/* Financial Statement Alignment */
+}
+
+
+
+/* =======================================
+   PROFIT & LOSS + BALANCE SHEET
+   (4 COLUMN STRUCTURE)
+======================================= */
 
 .financial-table th:nth-child(1),
-.financial-table td:nth-child(1){
+.financial-table td:nth-child(1),
+.financial-table th:nth-child(3),
+.financial-table td:nth-child(3){
   text-align:left;
 }
 
 .financial-table th:nth-child(2),
-.financial-table td:nth-child(2){
+.financial-table td:nth-child(2),
+.financial-table th:nth-child(4),
+.financial-table td:nth-child(4){
   text-align:right;
+}
+
+
+
+/* =======================================
+   HEADER CENTER
+======================================= */
+
+.financial-table tr:first-child th{
+  text-align:center !important;
+}
+
+
+
+/* =======================================
+   SECTION HEADINGS
+======================================= */
+
+.financial-table th[colspan="2"]{
+  text-align:left !important;
+  background:#f5f7fa;
+  font-weight:700;
+}
+
+
+
+/* =======================================
+   TOTAL ROW
+======================================= */
+
+.financial-table tr:last-child td{
+  font-weight:700;
+  background:#f9f9f9;
 }
 
 	  
@@ -6225,14 +6269,24 @@ function refreshInvoiceReport(){
 }
 
 //////////////////////////////////////////////////
-// FINANCIAL STATEMENT POPUP (UPGRADE)
+// FINANCIAL STATEMENT POPUP (DROPDOWN)
 //////////////////////////////////////////////////
 
-function showFinancialStatementPopup(){
+function showFinancialStatement(){
 
   openPopup(`
 
     <h3>Financial Statements</h3>
+
+    <label>Select Report</label>
+    <select id="fsReportType">
+
+      <option value="all">Financial Statements</option>
+      <option value="trialBalance">Trial Balance</option>
+      <option value="profitLoss">Profit & Loss</option>
+      <option value="balanceSheet">Balance Sheet</option>
+
+    </select>
 
     <label>From Date</label>
     <input type="date" id="fsFromDate">
@@ -6240,27 +6294,70 @@ function showFinancialStatementPopup(){
     <label>To Date</label>
     <input type="date" id="fsToDate">
 
-    <div style="display:grid;gap:10px;">
-
-      <button onclick="runTrialBalance()">
-        <i data-lucide="file-spreadsheet"></i> Trial Balance
-      </button>
-
-      <button onclick="runProfitLoss()">
-        <i data-lucide="bar-chart-3"></i> Profit & Loss
-      </button>
-
-      <button onclick="runBalanceSheet()">
-        <i data-lucide="wallet"></i> Balance Sheet
-      </button>
-
-    </div>
+    <button onclick="runFinancialStatementReport()">
+      Run Report
+    </button>
 
   `);
 
-  requestAnimationFrame(()=> lucide.createIcons());
 }
 
+//////////////////////////////////////////////////
+// RUN SELECTED REPORT
+//////////////////////////////////////////////////
+
+function runFinancialStatementReport(){
+
+  let reportType = document.getElementById("fsReportType").value;
+
+  let fromDate = document.getElementById("fsFromDate").value;
+  let toDate   = document.getElementById("fsToDate").value;
+
+  if(!validateDateRange(fromDate,toDate)) return;
+
+  currentReport = reportType;
+
+  sessionStorage.setItem("currentReport",reportType);
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  //////////////////////////////////////////////////
+  // ALL REPORTS
+  //////////////////////////////////////////////////
+
+  if(reportType === "all"){
+
+    document.getElementById("reportOutput").innerHTML = "";
+
+    renderTrialBalance();
+    renderProfitLoss();
+    renderBalanceSheet();
+
+    return;
+  }
+
+  //////////////////////////////////////////////////
+  // INDIVIDUAL REPORTS
+  //////////////////////////////////////////////////
+
+  if(reportType === "trialBalance"){
+    renderTrialBalance();
+    return;
+  }
+
+  if(reportType === "profitLoss"){
+    renderProfitLoss();
+    return;
+  }
+
+  if(reportType === "balanceSheet"){
+    renderBalanceSheet();
+    return;
+  }
+
+}
 
 
 //////////////////////////////////////////////////
@@ -6794,7 +6891,7 @@ function runBalanceSheet(){
 
 
 //////////////////////////////////////////////////
-// BALANCE SHEET
+// RENDER BALANCE SHEET
 //////////////////////////////////////////////////
 
 function renderBalanceSheet(){
@@ -6802,60 +6899,11 @@ function renderBalanceSheet(){
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate   = sessionStorage.getItem("currentToDate");
 
-  let assetRows = "";
-  let liabilityRows = "";
-
-  let totalAssets = 0;
-  let totalLiab = 0;
-
   //////////////////////////////////////////////////
-  // CURRENT YEAR PROFIT
+  // HELPERS
   //////////////////////////////////////////////////
 
-  let totalIncome = 0;
-  let totalExpense = 0;
-
-  ledgerList.forEach(ledger=>{
-
-    if(!["Income","Expense"].includes(ledger.group)) return;
-
-    let bal = 0;
-
-    transactionsCache.forEach(t=>{
-
-      if(t.date < fromDate || t.date > toDate) return;
-
-      let amt = Number(t.amount);
-
-      let debitKey  = t.debitLedgerId  || t.debitLedger;
-      let creditKey = t.creditLedgerId || t.creditLedger;
-
-      if(debitKey === ledger.id) bal += amt;
-      if(creditKey === ledger.id) bal -= amt;
-
-    });
-
-    if(ledger.group === "Income") totalIncome += Math.abs(bal);
-    if(ledger.group === "Expense") totalExpense += Math.abs(bal);
-
-  });
-
-  let currentProfit = totalIncome - totalExpense;
-
-  //////////////////////////////////////////////////
-  // BALANCE SHEET GROUPS
-  //////////////////////////////////////////////////
-
-  ledgerList.forEach(ledger=>{
-
-    if(![
-      "Capital",
-      "Drawings",
-      "Liability",
-      "Asset",
-      "Cash & Bank",
-      "Profit & Loss"
-    ].includes(ledger.group)) return;
+  function getClosingBalance(ledger){
 
     let bal = Number(ledger.openingBalance || 0);
 
@@ -6867,71 +6915,379 @@ function renderBalanceSheet(){
 
       if(t.date > toDate) return;
 
-      let amt = Number(t.amount);
+      let amount = Number(t.amount);
 
       let debitKey  = t.debitLedgerId  || t.debitLedger;
       let creditKey = t.creditLedgerId || t.creditLedger;
 
-      if(debitKey === ledger.id) bal += amt;
-      if(creditKey === ledger.id) bal -= amt;
+      if(debitKey === ledger.id) bal += amount;
+      if(creditKey === ledger.id) bal -= amount;
 
     });
 
-    if(bal === 0) return;
+    return bal;
+  }
 
-    //////////////////////////////////////////////////
-    // ASSET SIDE
-    //////////////////////////////////////////////////
 
-    if(["Asset","Cash & Bank"].includes(ledger.group)){
+  function getPeriodProfitLoss(){
 
-      let val = Math.abs(bal);
+    let income = 0;
+    let expense = 0;
 
-      totalAssets += val;
+    transactionsCache.forEach(t=>{
 
-      assetRows += `
-        <tr>
-          <td>${ledger.name}</td>
-          <td>${val}</td>
-        </tr>
-      `;
-    }
+      if(t.date < fromDate || t.date > toDate) return;
 
-    //////////////////////////////////////////////////
-    // LIABILITY SIDE
-    //////////////////////////////////////////////////
+      let amount = Number(t.amount);
 
-    else{
+      let debitKey  = t.debitLedgerId  || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
 
-      let val = Math.abs(bal);
+      let debitLedger  = ledgerList.find(x=>x.id===debitKey);
+      let creditLedger = ledgerList.find(x=>x.id===creditKey);
 
-      totalLiab += val;
+      if(debitLedger && debitLedger.group === "Expense"){
+        expense += amount;
+      }
 
-      liabilityRows += `
-        <tr>
-          <td>${ledger.name}</td>
-          <td>${val}</td>
-        </tr>
-      `;
-    }
+      if(creditLedger && creditLedger.group === "Expense"){
+        expense -= amount;
+      }
 
-  });
+      if(creditLedger && creditLedger.group === "Income"){
+        income += amount;
+      }
+
+      if(debitLedger && debitLedger.group === "Income"){
+        income -= amount;
+      }
+
+    });
+
+    return income - expense; // profit + / loss -
+  }
+
+
 
   //////////////////////////////////////////////////
-  // ADD CURRENT PROFIT
+  // LEFT SIDE (CAPITAL + LIABILITY)
   //////////////////////////////////////////////////
 
-  if(currentProfit !== 0){
+  let leftRows = "";
 
-    totalLiab += Math.abs(currentProfit);
+  let leftTotal = 0;
 
-    liabilityRows += `
+  //////////////////////////////////////////////////
+  // CAPITAL
+  //////////////////////////////////////////////////
+
+  leftRows += `
+    <tr>
+      <th colspan="2" style="text-align:left;">CAPITAL</th>
+    </tr>
+  `;
+
+  let capitalTotal = 0;
+
+  ledgerList
+    .filter(l => l.group === "Capital")
+    .forEach(l=>{
+
+      let bal = getClosingBalance(l);
+
+      if(bal === 0) return;
+
+      let amt = Math.abs(bal);
+
+      capitalTotal += amt;
+
+      leftRows += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${amt}</td>
+        </tr>
+      `;
+    });
+
+
+  //////////////////////////////////////////////////
+  // OPENING P&L
+  //////////////////////////////////////////////////
+
+  let pnlLedger = ledgerList.find(l => l.group === "Profit & Loss");
+
+  let openingPL = 0;
+
+  if(pnlLedger){
+
+    openingPL = Number(pnlLedger.openingBalance || 0);
+
+    if(pnlLedger.openingType === "credit"){
+      openingPL = -openingPL;
+    }
+
+    transactionsCache.forEach(t=>{
+
+      if(t.date >= fromDate) return;
+
+      let amount = Number(t.amount);
+
+      let debitKey  = t.debitLedgerId  || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+
+      let debitLedger  = ledgerList.find(x=>x.id===debitKey);
+      let creditLedger = ledgerList.find(x=>x.id===creditKey);
+
+      if(debitLedger && debitLedger.group === "Expense"){
+        openingPL += amount;
+      }
+
+      if(creditLedger && creditLedger.group === "Expense"){
+        openingPL -= amount;
+      }
+
+      if(creditLedger && creditLedger.group === "Income"){
+        openingPL -= amount;
+      }
+
+      if(debitLedger && debitLedger.group === "Income"){
+        openingPL += amount;
+      }
+
+    });
+
+  }
+
+  if(openingPL !== 0){
+
+    let amt = Math.abs(openingPL);
+
+    capitalTotal += amt;
+
+    leftRows += `
       <tr>
-        <td>${currentProfit >= 0 ? "Current Year Profit" : "Current Year Loss"}</td>
-        <td>${Math.abs(currentProfit)}</td>
+        <td>Add: Opening P&L</td>
+        <td>${amt}</td>
       </tr>
     `;
   }
+
+
+
+  //////////////////////////////////////////////////
+  // CURRENT PROFIT / LOSS
+  //////////////////////////////////////////////////
+
+  let currentPL = getPeriodProfitLoss();
+
+  if(currentPL > 0){
+
+    capitalTotal += currentPL;
+
+    leftRows += `
+      <tr>
+        <td>Add: Current Profit</td>
+        <td>${currentPL}</td>
+      </tr>
+    `;
+  }
+
+  if(currentPL < 0){
+
+    capitalTotal -= Math.abs(currentPL);
+
+    leftRows += `
+      <tr>
+        <td>Less: Current Loss</td>
+        <td>${Math.abs(currentPL)}</td>
+      </tr>
+    `;
+  }
+
+
+
+  //////////////////////////////////////////////////
+  // DRAWINGS
+  //////////////////////////////////////////////////
+
+  let drawings = 0;
+
+  ledgerList
+    .filter(l => l.group === "Drawings")
+    .forEach(l=>{
+      drawings += Math.abs(getClosingBalance(l));
+    });
+
+  if(drawings !== 0){
+
+    capitalTotal -= drawings;
+
+    leftRows += `
+      <tr>
+        <td>Less: Drawings</td>
+        <td>${drawings}</td>
+      </tr>
+    `;
+  }
+
+
+
+  //////////////////////////////////////////////////
+  // CLOSING CAPITAL
+  //////////////////////////////////////////////////
+
+  leftRows += `
+    <tr>
+      <td><b>Closing Capital</b></td>
+      <td><b>${capitalTotal}</b></td>
+    </tr>
+  `;
+
+  leftTotal += capitalTotal;
+
+
+
+  //////////////////////////////////////////////////
+  // LIABILITIES
+  //////////////////////////////////////////////////
+
+  leftRows += `
+    <tr>
+      <th colspan="2" style="text-align:left;">LIABILITIES</th>
+    </tr>
+  `;
+
+  ledgerList
+    .filter(l => l.group === "Liability")
+    .forEach(l=>{
+
+      let bal = getClosingBalance(l);
+
+      if(bal >= 0) return;
+
+      let amt = Math.abs(bal);
+
+      leftTotal += amt;
+
+      leftRows += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${amt}</td>
+        </tr>
+      `;
+    });
+
+
+
+  //////////////////////////////////////////////////
+  // RIGHT SIDE (ASSET + CASH & BANK)
+  //////////////////////////////////////////////////
+
+  let rightRows = "";
+
+  let rightTotal = 0;
+
+
+
+  //////////////////////////////////////////////////
+  // ASSETS
+  //////////////////////////////////////////////////
+
+  rightRows += `
+    <tr>
+      <th colspan="2" style="text-align:left;">ASSETS</th>
+    </tr>
+  `;
+
+  ledgerList
+    .filter(l => l.group === "Asset")
+    .forEach(l=>{
+
+      let bal = getClosingBalance(l);
+
+      if(bal <= 0) return;
+
+      rightTotal += bal;
+
+      rightRows += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${bal}</td>
+        </tr>
+      `;
+    });
+
+
+
+  //////////////////////////////////////////////////
+  // CASH & BANK
+  //////////////////////////////////////////////////
+
+  rightRows += `
+    <tr>
+      <th colspan="2" style="text-align:left;">CASH & BANK</th>
+    </tr>
+  `;
+
+  ledgerList
+    .filter(l => l.group === "Cash & Bank")
+    .forEach(l=>{
+
+      let bal = getClosingBalance(l);
+
+      if(bal <= 0) return;
+
+      rightTotal += bal;
+
+      rightRows += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${bal}</td>
+        </tr>
+      `;
+    });
+
+
+
+  //////////////////////////////////////////////////
+  // EQUALIZE ROW HEIGHTS
+  //////////////////////////////////////////////////
+
+  let leftCount  = (leftRows.match(/<tr>/g) || []).length;
+  let rightCount = (rightRows.match(/<tr>/g) || []).length;
+
+  while(leftCount < rightCount){
+    leftRows += `<tr><td>&nbsp;</td><td></td></tr>`;
+    leftCount++;
+  }
+
+  while(rightCount < leftCount){
+    rightRows += `<tr><td>&nbsp;</td><td></td></tr>`;
+    rightCount++;
+  }
+
+
+
+  //////////////////////////////////////////////////
+  // BUILD FINAL TABLE
+  //////////////////////////////////////////////////
+
+  let leftArr  = leftRows.split("</tr>");
+  let rightArr = rightRows.split("</tr>");
+
+  let bodyRows = "";
+
+  for(let i=0;i<leftArr.length-1;i++){
+
+    bodyRows += `
+      <tr>
+        ${leftArr[i].replace("<tr>","")}
+        ${rightArr[i].replace("<tr>","")}
+      </tr>
+    `;
+  }
+
+
 
   //////////////////////////////////////////////////
   // HTML
@@ -6939,59 +7295,36 @@ function renderBalanceSheet(){
 
   let html = `
 
-    <h3>Balance Sheet</h3>
-    <p>As on ${toDate}</p>
+    <h3 style="text-align:center;">BALANCE SHEET</h3>
+    <p style="text-align:center;">As on ${toDate}</p>
 
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <table class="report-table balance-sheet-table">
 
-      <div style="flex:1;min-width:320px;">
-        <table class="report-table financial-table">
-          <tr>
-            <th colspan="2">Assets</th>
-          </tr>
+      <tr>
+        <th>Particulars</th>
+        <th>Amount</th>
+        <th>Particulars</th>
+        <th>Amount</th>
+      </tr>
 
-          <tr>
-            <th>Particulars</th>
-            <th>Amount</th>
-          </tr>
+      ${bodyRows}
 
-          ${assetRows}
+      <tr>
+        <td><b>Total</b></td>
+        <td><b>${leftTotal}</b></td>
+        <td><b>Total</b></td>
+        <td><b>${rightTotal}</b></td>
+      </tr>
 
-          <tr>
-            <td><b>Total Assets</b></td>
-            <td><b>${totalAssets}</b></td>
-          </tr>
-        </table>
-      </div>
-
-      <div style="flex:1;min-width:320px;">
-        <table class="report-table financial-table">
-          <tr>
-            <th colspan="2">Capital & Liabilities</th>
-          </tr>
-
-          <tr>
-            <th>Particulars</th>
-            <th>Amount</th>
-          </tr>
-
-          ${liabilityRows}
-
-          <tr>
-            <td><b>Total Capital & Liabilities</b></td>
-            <td><b>${totalLiab}</b></td>
-          </tr>
-        </table>
-      </div>
-
-    </div>
+    </table>
 
   `;
 
   document.getElementById("reportOutput").innerHTML = html;
 
   formatAllAmounts();
-			}
+}
+
 	
 	
 </script>
