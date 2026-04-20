@@ -649,10 +649,16 @@ text-align:right;
 }
 
 
-/* =======================================
-   TRIAL BALANCE
-======================================= */
+/* =====================================================
+   1. TRIAL BALANCE
+===================================================== */
 
+/* Main Header Row Center */
+.trial-balance-table tr:first-child th{
+  text-align:center !important;
+}
+
+/* Particulars + Group Left */
 .trial-balance-table th:nth-child(1),
 .trial-balance-table td:nth-child(1),
 .trial-balance-table th:nth-child(2),
@@ -660,6 +666,7 @@ text-align:right;
   text-align:left;
 }
 
+/* Debit + Credit Right */
 .trial-balance-table th:nth-child(3),
 .trial-balance-table td:nth-child(3),
 .trial-balance-table th:nth-child(4),
@@ -667,56 +674,85 @@ text-align:right;
   text-align:right;
 }
 
-
-
-/* =======================================
-   PROFIT & LOSS + BALANCE SHEET
-   (4 COLUMN STRUCTURE)
-======================================= */
-
-.financial-table th:nth-child(1),
-.financial-table td:nth-child(1),
-.financial-table th:nth-child(3),
-.financial-table td:nth-child(3){
-  text-align:left;
-}
-
-.financial-table th:nth-child(2),
-.financial-table td:nth-child(2),
-.financial-table th:nth-child(4),
-.financial-table td:nth-child(4){
-  text-align:right;
+.trial-balance-table tr:last-child td{
+  font-weight:700;
+  background:#f9f9f9;
 }
 
 
 
-/* =======================================
-   HEADER CENTER
-======================================= */
+/* =====================================================
+   2. PROFIT & LOSS
+===================================================== */
 
-.financial-table tr:first-child th{
+/* Header Row Center */
+.profit-loss-table tr:first-child th{
   text-align:center !important;
 }
 
+/* Particulars Columns Left */
+.profit-loss-table th:nth-child(1),
+.profit-loss-table td:nth-child(1),
+.profit-loss-table th:nth-child(3),
+.profit-loss-table td:nth-child(3){
+  text-align:left;
+}
 
+/* Amount Columns Right */
+.profit-loss-table th:nth-child(2),
+.profit-loss-table td:nth-child(2),
+.profit-loss-table th:nth-child(4),
+.profit-loss-table td:nth-child(4){
+  text-align:right;
+}
 
-/* =======================================
-   SECTION HEADINGS
-======================================= */
-
-.financial-table th[colspan="2"]{
+/* Section Headings */
+.profit-loss-table th[colspan="2"]{
   text-align:left !important;
-  background:#f5f7fa;
+  background:none !important;
   font-weight:700;
+}
+
+.profit-loss-table tr:last-child td{
+  font-weight:700;
+  background:#f9f9f9;
 }
 
 
 
-/* =======================================
-   TOTAL ROW
-======================================= */
+/* =====================================================
+   3. BALANCE SHEET
+===================================================== */
 
-.financial-table tr:last-child td{
+/* Header Row Center */
+.balance-sheet-table tr:first-child th{
+  text-align:center !important;
+}
+
+/* Particulars Left */
+.balance-sheet-table th:nth-child(1),
+.balance-sheet-table td:nth-child(1),
+.balance-sheet-table th:nth-child(3),
+.balance-sheet-table td:nth-child(3){
+  text-align:left;
+}
+
+/* Amount Right */
+.balance-sheet-table th:nth-child(2),
+.balance-sheet-table td:nth-child(2),
+.balance-sheet-table th:nth-child(4),
+.balance-sheet-table td:nth-child(4){
+  text-align:right;
+}
+
+/* CAPITAL / LIABILITY / ASSET / CASH & BANK */
+.balance-sheet-table th[colspan="2"]{
+  text-align:left !important;
+  background:none !important;
+  font-weight:700;
+}
+
+.balance-sheet-table tr:last-child td{
   font-weight:700;
   background:#f9f9f9;
 }
@@ -6270,7 +6306,7 @@ function refreshInvoiceReport(){
 }
 
 //////////////////////////////////////////////////
-// FINANCIAL STATEMENT POPUP (DROPDOWN)
+// OPEN FINANCIAL STATEMENT POPUP
 //////////////////////////////////////////////////
 
 function showFinancialStatement(){
@@ -6280,13 +6316,11 @@ function showFinancialStatement(){
     <h3>Financial Statements</h3>
 
     <label>Select Report</label>
-    <select id="fsReportType">
-
-      <option value="all">Financial Statements</option>
+    <select id="fsType">
+      <option value="all">Financial Statement (All)</option>
       <option value="trialBalance">Trial Balance</option>
       <option value="profitLoss">Profit & Loss</option>
       <option value="balanceSheet">Balance Sheet</option>
-
     </select>
 
     <label>From Date</label>
@@ -6295,71 +6329,107 @@ function showFinancialStatement(){
     <label>To Date</label>
     <input type="date" id="fsToDate">
 
-    <button onclick="runFinancialStatementReport()">
+    <button onclick="runFinancialStatement()">
+      <i data-lucide="file-spreadsheet"></i>
       Run Report
     </button>
 
   `);
 
+  setTimeout(()=>lucide.createIcons(),100);
 }
 
+
+
 //////////////////////////////////////////////////
-// RUN SELECTED REPORT
+// RUN REPORT
 //////////////////////////////////////////////////
 
-function runFinancialStatementReport(){
+function runFinancialStatement(){
 
-  let reportType = document.getElementById("fsReportType").value;
-
+  let type     = document.getElementById("fsType").value;
   let fromDate = document.getElementById("fsFromDate").value;
   let toDate   = document.getElementById("fsToDate").value;
 
   if(!validateDateRange(fromDate,toDate)) return;
 
-  currentReport = reportType;
-
-  sessionStorage.setItem("currentReport",reportType);
   sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
 
   closePopup();
 
   //////////////////////////////////////////////////
-  // ALL REPORTS
+  // OPEN ONLY ONE REPORT AT A TIME
   //////////////////////////////////////////////////
 
-  if(reportType === "all"){
-
-    document.getElementById("reportOutput").innerHTML = "";
-
-    renderTrialBalance();
-    renderProfitLoss();
-    renderBalanceSheet();
-
-    return;
-  }
-
-  //////////////////////////////////////////////////
-  // INDIVIDUAL REPORTS
-  //////////////////////////////////////////////////
-
-  if(reportType === "trialBalance"){
+  if(type === "trialBalance"){
+    currentReport = "trialBalance";
+    sessionStorage.setItem("currentReport","trialBalance");
     renderTrialBalance();
     return;
   }
 
-  if(reportType === "profitLoss"){
+  if(type === "profitLoss"){
+    currentReport = "profitLoss";
+    sessionStorage.setItem("currentReport","profitLoss");
     renderProfitLoss();
     return;
   }
 
-  if(reportType === "balanceSheet"){
+  if(type === "balanceSheet"){
+    currentReport = "balanceSheet";
+    sessionStorage.setItem("currentReport","balanceSheet");
     renderBalanceSheet();
     return;
   }
+
+  //////////////////////////////////////////////////
+  // ALL THREE REPORTS
+  //////////////////////////////////////////////////
+
+  currentReport = "financialStatement";
+  sessionStorage.setItem("currentReport","financialStatement");
+
+  renderAllFinancialStatements();
 
 }
 
+
+//////////////////////////////////////////////////
+// RENDER ALL REPORTS
+//////////////////////////////////////////////////
+
+function renderAllFinancialStatements(){
+
+  let finalHTML = "";
+
+  //////////////////////////////////////////////////
+  // TB
+  //////////////////////////////////////////////////
+
+  let tb = getTrialBalanceHTML();
+  finalHTML += tb + "<br><br>";
+
+  //////////////////////////////////////////////////
+  // PL
+  //////////////////////////////////////////////////
+
+  let pl = getProfitLossHTML();
+  finalHTML += pl + "<br><br>";
+
+  //////////////////////////////////////////////////
+  // BS
+  //////////////////////////////////////////////////
+
+  let bs = getBalanceSheetHTML();
+  finalHTML += bs;
+
+  document.getElementById("reportOutput").innerHTML = finalHTML;
+
+  formatAllAmounts();
+}
+
+	
 
 //////////////////////////////////////////////////
 // RUN TRIAL BALANCE
@@ -6624,8 +6694,8 @@ rows.push(`
   `;
 
   document.getElementById("reportOutput").innerHTML = html;
-
-  formatAllAmounts();
+formatAllAmounts();
+return html;
 }
 
 
@@ -6859,10 +6929,9 @@ function renderProfitLoss(){
   // APPEND BELOW TRIAL BALANCE
   //////////////////////////////////////////////////
 
-  document.getElementById("reportOutput").innerHTML +=
-    `<br><br>${html}`;
-
-  formatAllAmounts();
+  document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+return html;
 }
 
 
@@ -7322,8 +7391,25 @@ function renderBalanceSheet(){
   `;
 
   document.getElementById("reportOutput").innerHTML = html;
+formatAllAmounts();
+return html;
+}
 
-  formatAllAmounts();
+  //////////////////////////////////////////////////
+  // Wrapper Functions
+  //////////////////////////////////////////////////
+	
+
+function getTrialBalanceHTML(){
+  return renderTrialBalance();
+}
+
+function getProfitLossHTML(){
+  return renderProfitLoss();
+}
+
+function getBalanceSheetHTML(){
+  return renderBalanceSheet();
 }
 
 	
