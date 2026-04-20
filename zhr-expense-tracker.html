@@ -6380,90 +6380,82 @@ function renderTrialBalance(){
 
 
   //////////////////////////////////////////////////
-  // PROFIT & LOSS FINAL ROW
-  //////////////////////////////////////////////////
+// PROFIT & LOSS FINAL ROW (CORRECTED)
+//////////////////////////////////////////////////
 
-  let pnlLedger = ledgerList.find(l => l.group === "Profit & Loss");
+let pnlLedger = ledgerList.find(l => l.group === "Profit & Loss");
 
-  let pnlBalance = 0;
+let pnlBalance = 0;
 
-  ////////////////////////////////////////////////
-  // OPENING P&L BALANCE
-  ////////////////////////////////////////////////
+if(pnlLedger){
 
-  if(pnlLedger){
+  pnlBalance = Number(pnlLedger.openingBalance || 0);
 
-    pnlBalance = Number(pnlLedger.openingBalance || 0);
-
-    if(pnlLedger.openingType === "debit"){
-      pnlBalance = pnlBalance;
-    }else{
-      pnlBalance = -pnlBalance;
-    }
-
+  // credit = profit reserve
+  if(pnlLedger.openingType === "credit"){
+    pnlBalance = -pnlBalance;
   }
 
-  ////////////////////////////////////////////////
-  // ADD HISTORICAL PROFITS BEFORE FROM DATE
-  ////////////////////////////////////////////////
+}
 
-  transactionsCache.forEach(t=>{
+//////////////////////////////////////////////////
+// ADD NET RESULT FROM OPENING DATE TILL BEFORE FROM
+//////////////////////////////////////////////////
 
-    if(t.date >= fromDate) return;
+transactionsCache.forEach(t=>{
 
-    let amount = Number(t.amount);
+  if(t.date >= fromDate) return;
 
-    let debitKey  = t.debitLedgerId  || t.debitLedger;
-    let creditKey = t.creditLedgerId || t.creditLedger;
+  let amount = Number(t.amount);
 
-    let debitLedger = ledgerList.find(x=>x.id===debitKey);
-    let creditLedger = ledgerList.find(x=>x.id===creditKey);
+  let debitKey  = t.debitLedgerId  || t.debitLedger;
+  let creditKey = t.creditLedgerId || t.creditLedger;
 
-    if(debitLedger && debitLedger.group === "Expense"){
-      pnlBalance -= amount;
-    }
+  let debitLedger  = ledgerList.find(x => x.id === debitKey);
+  let creditLedger = ledgerList.find(x => x.id === creditKey);
 
-    if(creditLedger && creditLedger.group === "Income"){
-      pnlBalance -= amount;
-    }
-
-    if(debitLedger && debitLedger.group === "Income"){
-      pnlBalance += amount;
-    }
-
-    if(creditLedger && creditLedger.group === "Expense"){
-      pnlBalance += amount;
-    }
-
-  });
-
-  ////////////////////////////////////////////////
-  // BALANCE TB DIFFERENCE
-  ////////////////////////////////////////////////
-
-  let diff = totalDebit - totalCredit;
-
-  pnlBalance += diff;
-
-  let pnlDebit = "";
-  let pnlCredit = "";
-
-  if(pnlBalance > 0){
-    pnlDebit = pnlBalance;
-    totalDebit += pnlBalance;
-  }else if(pnlBalance < 0){
-    pnlCredit = Math.abs(pnlBalance);
-    totalCredit += Math.abs(pnlBalance);
+  // Expense debit = reduces profit
+  if(debitLedger && debitLedger.group === "Expense"){
+    pnlBalance += amount;
   }
 
-  rows.push(`
-    <tr>
-      <td>Profit & Loss</td>
-      <td>Profit & Loss</td>
-      <td>${pnlDebit}</td>
-      <td>${pnlCredit}</td>
-    </tr>
-  `);
+  // Expense credit = increases profit
+  if(creditLedger && creditLedger.group === "Expense"){
+    pnlBalance -= amount;
+  }
+
+  // Income credit = increases profit
+  if(creditLedger && creditLedger.group === "Income"){
+    pnlBalance -= amount;
+  }
+
+  // Income debit = reduces profit
+  if(debitLedger && debitLedger.group === "Income"){
+    pnlBalance += amount;
+  }
+
+});
+
+let pnlDebit = "";
+let pnlCredit = "";
+
+if(pnlBalance > 0){
+  pnlDebit = pnlBalance;
+  totalDebit += pnlBalance;
+}
+else if(pnlBalance < 0){
+  pnlCredit = Math.abs(pnlBalance);
+  totalCredit += Math.abs(pnlBalance);
+}
+
+rows.push(`
+<tr>
+  <td>${pnlLedger ? pnlLedger.name : "Profit & Loss"}</td>
+  <td>Profit & Loss</td>
+  <td>${pnlDebit}</td>
+  <td>${pnlCredit}</td>
+</tr>
+`);
 
 
   //////////////////////////////////////////////////
