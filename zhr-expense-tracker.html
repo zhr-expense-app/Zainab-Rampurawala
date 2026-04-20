@@ -649,9 +649,35 @@ text-align:right;
 }
 
 
-	  
-	  
+/* Trial Balance Only Alignment */
 
+.trial-balance-table th:nth-child(1),
+.trial-balance-table td:nth-child(1),
+.trial-balance-table th:nth-child(2),
+.trial-balance-table td:nth-child(2){
+  text-align:left;
+}
+
+.trial-balance-table th:nth-child(3),
+.trial-balance-table td:nth-child(3),
+.trial-balance-table th:nth-child(4),
+.trial-balance-table td:nth-child(4){
+  text-align:right;
+}	  
+	  
+/* Financial Statement Alignment */
+
+.financial-table th:nth-child(1),
+.financial-table td:nth-child(1){
+  text-align:left;
+}
+
+.financial-table th:nth-child(2),
+.financial-table td:nth-child(2){
+  text-align:right;
+}
+
+	  
 </style>
 
 </head>
@@ -6199,7 +6225,7 @@ function refreshInvoiceReport(){
 }
 
 //////////////////////////////////////////////////
-// FINANCIAL STATEMENT POPUP
+// FINANCIAL STATEMENT POPUP (UPGRADE)
 //////////////////////////////////////////////////
 
 function showFinancialStatementPopup(){
@@ -6214,9 +6240,21 @@ function showFinancialStatementPopup(){
     <label>To Date</label>
     <input type="date" id="fsToDate">
 
-    <button onclick="runTrialBalance()">
-      <i data-lucide="file-spreadsheet"></i> Trial Balance
-    </button>
+    <div style="display:grid;gap:10px;">
+
+      <button onclick="runTrialBalance()">
+        <i data-lucide="file-spreadsheet"></i> Trial Balance
+      </button>
+
+      <button onclick="runProfitLoss()">
+        <i data-lucide="bar-chart-3"></i> Profit & Loss
+      </button>
+
+      <button onclick="runBalanceSheet()">
+        <i data-lucide="wallet"></i> Balance Sheet
+      </button>
+
+    </div>
 
   `);
 
@@ -6467,7 +6505,7 @@ rows.push(`
     <h3>Trial Balance</h3>
     <p>From ${fromDate} To ${toDate}</p>
 
-    <table class="report-table">
+    <table class="report-table trial-balance-table">
 
       <tr>
         <th>Particulars</th>
@@ -6493,6 +6531,415 @@ rows.push(`
 }
 
 
+
+//////////////////////////////////////////////////
+// RUN PROFIT & LOSS
+//////////////////////////////////////////////////
+
+function runProfitLoss(){
+
+  let fromDate = document.getElementById("fsFromDate").value;
+  let toDate   = document.getElementById("fsToDate").value;
+
+  if(!validateDateRange(fromDate,toDate)) return;
+
+  currentReport = "profitLoss";
+
+  sessionStorage.setItem("currentReport","profitLoss");
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  renderProfitLoss();
+}
+
+
+
+//////////////////////////////////////////////////
+// PROFIT & LOSS REPORT
+//////////////////////////////////////////////////
+
+function renderProfitLoss(){
+
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate   = sessionStorage.getItem("currentToDate");
+
+  let incomeRows = "";
+  let expenseRows = "";
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  //////////////////////////////////////////////////
+  // EACH LEDGER
+  //////////////////////////////////////////////////
+
+  ledgerList.forEach(ledger=>{
+
+    if(!["Income","Expense"].includes(ledger.group)) return;
+
+    let balance = 0;
+
+    transactionsCache.forEach(t=>{
+
+      if(t.date < fromDate || t.date > toDate) return;
+
+      let amount = Number(t.amount);
+
+      let debitKey  = t.debitLedgerId  || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+
+      if(debitKey === ledger.id) balance += amount;
+      if(creditKey === ledger.id) balance -= amount;
+
+    });
+
+    if(balance === 0) return;
+
+    //////////////////////////////////////////////////
+    // INCOME
+    //////////////////////////////////////////////////
+
+    if(ledger.group === "Income"){
+
+      let val = Math.abs(balance);
+
+      totalIncome += val;
+
+      incomeRows += `
+        <tr>
+          <td>${ledger.name}</td>
+          <td>${val}</td>
+        </tr>
+      `;
+    }
+
+    //////////////////////////////////////////////////
+    // EXPENSE
+    //////////////////////////////////////////////////
+
+    if(ledger.group === "Expense"){
+
+      let val = Math.abs(balance);
+
+      totalExpense += val;
+
+      expenseRows += `
+        <tr>
+          <td>${ledger.name}</td>
+          <td>${val}</td>
+        </tr>
+      `;
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // NET RESULT
+  //////////////////////////////////////////////////
+
+  let net = totalIncome - totalExpense;
+
+  let netText = net >= 0 ? "Net Profit" : "Net Loss";
+
+  //////////////////////////////////////////////////
+  // HTML
+  //////////////////////////////////////////////////
+
+  let html = `
+
+    <h3>Profit & Loss Statement</h3>
+    <p>From ${fromDate} To ${toDate}</p>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+
+      <!-- EXPENSE SIDE -->
+      <div style="flex:1;min-width:320px;">
+        <table class="report-table financial-table">
+          <tr>
+            <th colspan="2">Expenses</th>
+          </tr>
+
+          <tr>
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+
+          ${expenseRows}
+
+          <tr>
+            <td><b>Total Expenses</b></td>
+            <td><b>${totalExpense}</b></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- INCOME SIDE -->
+      <div style="flex:1;min-width:320px;">
+        <table class="report-table financial-table">
+          <tr>
+            <th colspan="2">Income</th>
+          </tr>
+
+          <tr>
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+
+          ${incomeRows}
+
+          <tr>
+            <td><b>Total Income</b></td>
+            <td><b>${totalIncome}</b></td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+    <br>
+
+    <table class="report-table financial-table">
+      <tr>
+        <td><b>${netText}</b></td>
+        <td><b>${Math.abs(net)}</b></td>
+      </tr>
+    </table>
+
+  `;
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
+}
+
+
+
+//////////////////////////////////////////////////
+// RUN BALANCE SHEET
+//////////////////////////////////////////////////
+
+function runBalanceSheet(){
+
+  let fromDate = document.getElementById("fsFromDate").value;
+  let toDate   = document.getElementById("fsToDate").value;
+
+  if(!validateDateRange(fromDate,toDate)) return;
+
+  currentReport = "balanceSheet";
+
+  sessionStorage.setItem("currentReport","balanceSheet");
+  sessionStorage.setItem("currentFromDate",fromDate);
+  sessionStorage.setItem("currentToDate",toDate);
+
+  closePopup();
+
+  renderBalanceSheet();
+}
+
+
+
+//////////////////////////////////////////////////
+// BALANCE SHEET
+//////////////////////////////////////////////////
+
+function renderBalanceSheet(){
+
+  let fromDate = sessionStorage.getItem("currentFromDate");
+  let toDate   = sessionStorage.getItem("currentToDate");
+
+  let assetRows = "";
+  let liabilityRows = "";
+
+  let totalAssets = 0;
+  let totalLiab = 0;
+
+  //////////////////////////////////////////////////
+  // CURRENT YEAR PROFIT
+  //////////////////////////////////////////////////
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  ledgerList.forEach(ledger=>{
+
+    if(!["Income","Expense"].includes(ledger.group)) return;
+
+    let bal = 0;
+
+    transactionsCache.forEach(t=>{
+
+      if(t.date < fromDate || t.date > toDate) return;
+
+      let amt = Number(t.amount);
+
+      let debitKey  = t.debitLedgerId  || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+
+      if(debitKey === ledger.id) bal += amt;
+      if(creditKey === ledger.id) bal -= amt;
+
+    });
+
+    if(ledger.group === "Income") totalIncome += Math.abs(bal);
+    if(ledger.group === "Expense") totalExpense += Math.abs(bal);
+
+  });
+
+  let currentProfit = totalIncome - totalExpense;
+
+  //////////////////////////////////////////////////
+  // BALANCE SHEET GROUPS
+  //////////////////////////////////////////////////
+
+  ledgerList.forEach(ledger=>{
+
+    if(![
+      "Capital",
+      "Drawings",
+      "Liability",
+      "Asset",
+      "Cash & Bank",
+      "Profit & Loss"
+    ].includes(ledger.group)) return;
+
+    let bal = Number(ledger.openingBalance || 0);
+
+    if(ledger.openingType === "credit"){
+      bal = -bal;
+    }
+
+    transactionsCache.forEach(t=>{
+
+      if(t.date > toDate) return;
+
+      let amt = Number(t.amount);
+
+      let debitKey  = t.debitLedgerId  || t.debitLedger;
+      let creditKey = t.creditLedgerId || t.creditLedger;
+
+      if(debitKey === ledger.id) bal += amt;
+      if(creditKey === ledger.id) bal -= amt;
+
+    });
+
+    if(bal === 0) return;
+
+    //////////////////////////////////////////////////
+    // ASSET SIDE
+    //////////////////////////////////////////////////
+
+    if(["Asset","Cash & Bank"].includes(ledger.group)){
+
+      let val = Math.abs(bal);
+
+      totalAssets += val;
+
+      assetRows += `
+        <tr>
+          <td>${ledger.name}</td>
+          <td>${val}</td>
+        </tr>
+      `;
+    }
+
+    //////////////////////////////////////////////////
+    // LIABILITY SIDE
+    //////////////////////////////////////////////////
+
+    else{
+
+      let val = Math.abs(bal);
+
+      totalLiab += val;
+
+      liabilityRows += `
+        <tr>
+          <td>${ledger.name}</td>
+          <td>${val}</td>
+        </tr>
+      `;
+    }
+
+  });
+
+  //////////////////////////////////////////////////
+  // ADD CURRENT PROFIT
+  //////////////////////////////////////////////////
+
+  if(currentProfit !== 0){
+
+    totalLiab += Math.abs(currentProfit);
+
+    liabilityRows += `
+      <tr>
+        <td>${currentProfit >= 0 ? "Current Year Profit" : "Current Year Loss"}</td>
+        <td>${Math.abs(currentProfit)}</td>
+      </tr>
+    `;
+  }
+
+  //////////////////////////////////////////////////
+  // HTML
+  //////////////////////////////////////////////////
+
+  let html = `
+
+    <h3>Balance Sheet</h3>
+    <p>As on ${toDate}</p>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+
+      <div style="flex:1;min-width:320px;">
+        <table class="report-table financial-table">
+          <tr>
+            <th colspan="2">Assets</th>
+          </tr>
+
+          <tr>
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+
+          ${assetRows}
+
+          <tr>
+            <td><b>Total Assets</b></td>
+            <td><b>${totalAssets}</b></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="flex:1;min-width:320px;">
+        <table class="report-table financial-table">
+          <tr>
+            <th colspan="2">Capital & Liabilities</th>
+          </tr>
+
+          <tr>
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+
+          ${liabilityRows}
+
+          <tr>
+            <td><b>Total Capital & Liabilities</b></td>
+            <td><b>${totalLiab}</b></td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+  `;
+
+  document.getElementById("reportOutput").innerHTML = html;
+
+  formatAllAmounts();
+			}
+	
 	
 </script>
 <script src="layout.js"></script>
