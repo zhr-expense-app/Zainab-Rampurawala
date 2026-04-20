@@ -6378,41 +6378,57 @@ function runFinancialStatement(){
   closePopup();
 
   //////////////////////////////////////////////////
-  // OPEN ONLY ONE REPORT AT A TIME
+  // TRIAL BALANCE
   //////////////////////////////////////////////////
 
   if(type === "trialBalance"){
+
     currentReport = "trialBalance";
     sessionStorage.setItem("currentReport","trialBalance");
+
     renderTrialBalance();
-    return;
-  }
-
-  if(type === "profitLoss"){
-    currentReport = "profitLoss";
-    sessionStorage.setItem("currentReport","profitLoss");
-    renderProfitLoss();
-    return;
-  }
-
-  if(type === "balanceSheet"){
-    currentReport = "balanceSheet";
-    sessionStorage.setItem("currentReport","balanceSheet");
-    renderBalanceSheet();
+    showFinancialExportButton();
     return;
   }
 
   //////////////////////////////////////////////////
-  // ALL THREE REPORTS
+  // PROFIT & LOSS
+  //////////////////////////////////////////////////
+
+  if(type === "profitLoss"){
+
+    currentReport = "profitLoss";
+    sessionStorage.setItem("currentReport","profitLoss");
+
+    renderProfitLoss();
+    showFinancialExportButton();
+    return;
+  }
+
+  //////////////////////////////////////////////////
+  // BALANCE SHEET
+  //////////////////////////////////////////////////
+
+  if(type === "balanceSheet"){
+
+    currentReport = "balanceSheet";
+    sessionStorage.setItem("currentReport","balanceSheet");
+
+    renderBalanceSheet();
+    showFinancialExportButton();
+    return;
+  }
+
+  //////////////////////////////////////////////////
+  // ALL REPORTS
   //////////////////////////////////////////////////
 
   currentReport = "financialStatement";
   sessionStorage.setItem("currentReport","financialStatement");
 
   renderAllFinancialStatements();
-
+  showFinancialExportButton();
 }
-
 
 //////////////////////////////////////////////////
 // RENDER ALL REPORTS
@@ -7431,6 +7447,590 @@ function getBalanceSheetHTML(){
   return renderBalanceSheet();
 }
 
+
+//////////////////////////////////////////////////
+// SHOW EXPORT BUTTON
+//////////////////////////////////////////////////
+
+function showFinancialExportButton(){
+
+  let html = `
+    <div style="margin-top:20px;text-align:center;">
+
+      <button onclick="exportFinancialStatement()" 
+      style="
+        background:#001d4c;
+        color:#fff;
+        border:none;
+        padding:12px 22px;
+        border-radius:8px;
+        font-weight:600;
+        cursor:pointer;
+      ">
+        <i data-lucide="download"></i>
+        Export Excel
+      </button>
+
+    </div>
+  `;
+
+  document.getElementById("reportOutput").innerHTML += html;
+
+  setTimeout(()=>lucide.createIcons(),100);
+}
+
+
+//////////////////////////////////////////////////
+// EXPORT FINANCIAL REPORT
+//////////////////////////////////////////////////
+
+async function exportFinancialStatement(){
+
+  try{
+
+    showLoader();
+
+    let reportType = sessionStorage.getItem("currentReport");
+    let fromDate   = sessionStorage.getItem("currentFromDate");
+    let toDate     = sessionStorage.getItem("currentToDate");
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Report");
+
+    //////////////////////////////////////////////////
+    // COMMON WIDTHS
+    //////////////////////////////////////////////////
+
+    sheet.columns = [
+      {width:30},
+      {width:18},
+      {width:30},
+      {width:18}
+    ];
+
+    let rowNo = 1;
+
+    //////////////////////////////////////////////////
+    // EXPORT BASED ON TYPE
+    //////////////////////////////////////////////////
+
+    if(reportType === "trialBalance"){
+      rowNo = await exportTrialBalanceExcel(sheet,rowNo,fromDate,toDate);
+    }
+
+    else if(reportType === "profitLoss"){
+      rowNo = await exportProfitLossExcel(sheet,rowNo,fromDate,toDate);
+    }
+
+    else if(reportType === "balanceSheet"){
+      rowNo = await exportBalanceSheetExcel(sheet,rowNo,toDate);
+    }
+
+    else if(reportType === "financialStatement"){
+
+      rowNo = await exportTrialBalanceExcel(sheet,rowNo,fromDate,toDate);
+
+      rowNo += 3;
+
+      rowNo = await exportProfitLossExcel(sheet,rowNo,fromDate,toDate);
+
+      rowNo += 3;
+
+      rowNo = await exportBalanceSheetExcel(sheet,rowNo,toDate);
+    }
+
+    //////////////////////////////////////////////////
+    // FILE NAME
+    //////////////////////////////////////////////////
+
+    let fileName = "Report.xlsx";
+
+    if(reportType === "trialBalance"){
+      fileName =
+      `Trial_Balance_${fromDate}_to_${toDate}.xlsx`;
+    }
+
+    if(reportType === "profitLoss"){
+      fileName =
+      `Profit_Loss_${fromDate}_to_${toDate}.xlsx`;
+    }
+
+    if(reportType === "balanceSheet"){
+      fileName =
+      `Balance_Sheet_As_on_${toDate}.xlsx`;
+    }
+
+    if(reportType === "financialStatement"){
+      fileName =
+      `Financial_Statement_${fromDate}_to_${toDate}.xlsx`;
+    }
+
+    //////////////////////////////////////////////////
+    // DOWNLOAD
+    //////////////////////////////////////////////////
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    saveAs(
+      new Blob([buffer]),
+      fileName
+    );
+
+    hideLoader();
+
+    showToast("Report Exported 📊");
+
+  }catch(e){
+
+    hideLoader();
+
+    console.error(e);
+
+    showToast("Export failed ❌","error");
+  }
+
+  }
+
+	
+//////////////////////////////////////////////////
+// PART 3 - TRIAL BALANCE EXCEL EXPORT
+//////////////////////////////////////////////////
+
+async function exportTrialBalanceExcel(sheet,rowNo,fromDate,toDate){
+
+  //////////////////////////////////////////////////
+  // TITLE
+  //////////////////////////////////////////////////
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value = "Trial Balance";
+  sheet.getCell(`A${rowNo}`).font = {
+    bold:true,
+    size:16
+  };
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo++;
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value =
+    `From ${fromDate} To ${toDate}`;
+
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo += 2;
+
+  //////////////////////////////////////////////////
+  // HEADER
+  //////////////////////////////////////////////////
+
+  let header = sheet.addRow([
+    "Particulars",
+    "Group",
+    "Debit",
+    "Credit"
+  ]);
+
+  header.eachCell(cell=>{
+    cell.font = {bold:true,color:{argb:"FFFFFFFF"}};
+    cell.fill = {
+      type:"pattern",
+      pattern:"solid",
+      fgColor:{argb:"FF001D4C"}
+    };
+    cell.alignment = {horizontal:"center"};
+    cell.border = {
+      top:{style:"thin"},
+      left:{style:"thin"},
+      right:{style:"thin"},
+      bottom:{style:"thin"}
+    };
+  });
+
+  rowNo++;
+
+  //////////////////////////////////////////////////
+  // TABLE DATA FROM SCREEN
+  //////////////////////////////////////////////////
+
+  let rows = document.querySelectorAll(
+    ".trial-balance-table tr"
+  );
+
+  for(let i=1;i<rows.length;i++){
+
+    let cells = rows[i].querySelectorAll("td");
+
+    if(cells.length===0) continue;
+
+    let r = sheet.addRow([
+      cells[0].innerText,
+      cells[1].innerText,
+      Number(cells[2].innerText.replace(/,/g,"")) || "",
+      Number(cells[3].innerText.replace(/,/g,"")) || ""
+    ]);
+
+    //////////////////////////////////////////////////
+    // STYLE
+    //////////////////////////////////////////////////
+
+    r.eachCell((cell,col)=>{
+
+      cell.border = {
+        top:{style:"thin"},
+        left:{style:"thin"},
+        right:{style:"thin"},
+        bottom:{style:"thin"}
+      };
+
+      if(col<=2){
+        cell.alignment = {horizontal:"left"};
+      }else{
+        cell.alignment = {horizontal:"right"};
+        cell.numFmt = '#,##0.00';
+      }
+
+    });
+
+    rowNo++;
+  }
+
+  //////////////////////////////////////////////////
+  // RETURN NEXT ROW
+  //////////////////////////////////////////////////
+
+  return rowNo;
+}
+
+
+//////////////////////////////////////////////////
+// PART 4 - PROFIT & LOSS EXCEL EXPORT
+//////////////////////////////////////////////////
+
+async function exportProfitLossExcel(sheet,rowNo,fromDate,toDate){
+
+  //////////////////////////////////////////////////
+  // TITLE
+  //////////////////////////////////////////////////
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value = "Profit & Loss Account";
+  sheet.getCell(`A${rowNo}`).font = {
+    bold:true,
+    size:16
+  };
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo++;
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value =
+    `From ${fromDate} To ${toDate}`;
+
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo += 2;
+
+  //////////////////////////////////////////////////
+  // HEADER
+  //////////////////////////////////////////////////
+
+  let header = sheet.addRow([
+    "Particulars",
+    "Amount",
+    "Particulars",
+    "Amount"
+  ]);
+
+  header.eachCell(cell=>{
+
+    cell.font = {
+      bold:true,
+      color:{argb:"FFFFFFFF"}
+    };
+
+    cell.fill = {
+      type:"pattern",
+      pattern:"solid",
+      fgColor:{argb:"FF001D4C"}
+    };
+
+    cell.alignment = {
+      horizontal:"center"
+    };
+
+    cell.border = {
+      top:{style:"thin"},
+      left:{style:"thin"},
+      right:{style:"thin"},
+      bottom:{style:"thin"}
+    };
+
+  });
+
+  rowNo++;
+
+  //////////////////////////////////////////////////
+  // DATA FROM SCREEN TABLE
+  //////////////////////////////////////////////////
+
+  let rows = document.querySelectorAll(
+    ".profit-loss-table tr"
+  );
+
+  for(let i=1;i<rows.length;i++){
+
+    let cells = rows[i].querySelectorAll("td,th");
+
+    if(cells.length===0) continue;
+
+    //////////////////////////////////////////////////
+    // SECTION ROW (Expense / Income)
+    //////////////////////////////////////////////////
+
+    if(cells.length === 2){
+
+      let r = sheet.addRow([
+        cells[0].innerText,
+        "",
+        cells[1].innerText,
+        ""
+      ]);
+
+      r.eachCell(cell=>{
+        cell.font = {bold:true};
+
+        cell.border = {
+          top:{style:"thin"},
+          left:{style:"thin"},
+          right:{style:"thin"},
+          bottom:{style:"thin"}
+        };
+      });
+
+      rowNo++;
+      continue;
+    }
+
+    //////////////////////////////////////////////////
+    // NORMAL ROW
+    //////////////////////////////////////////////////
+
+    let r = sheet.addRow([
+
+      cells[0].innerText,
+
+      Number(cells[1].innerText.replace(/,/g,"")) || "",
+
+      cells[2].innerText,
+
+      Number(cells[3].innerText.replace(/,/g,"")) || ""
+
+    ]);
+
+    r.eachCell((cell,col)=>{
+
+      cell.border = {
+        top:{style:"thin"},
+        left:{style:"thin"},
+        right:{style:"thin"},
+        bottom:{style:"thin"}
+      };
+
+      if(col===1 || col===3){
+        cell.alignment = {horizontal:"left"};
+      }
+
+      if(col===2 || col===4){
+        cell.alignment = {horizontal:"right"};
+        cell.numFmt = '#,##0.00';
+      }
+
+    });
+
+    rowNo++;
+  }
+
+  //////////////////////////////////////////////////
+  // RETURN NEXT ROW
+  //////////////////////////////////////////////////
+
+  return rowNo;
+}
+
+//////////////////////////////////////////////////
+// PART 5 - BALANCE SHEET EXCEL EXPORT
+//////////////////////////////////////////////////
+
+async function exportBalanceSheetExcel(sheet,rowNo,toDate){
+
+  //////////////////////////////////////////////////
+  // TITLE
+  //////////////////////////////////////////////////
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value = "Balance Sheet";
+  sheet.getCell(`A${rowNo}`).font = {
+    bold:true,
+    size:16
+  };
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo++;
+
+  sheet.mergeCells(`A${rowNo}:D${rowNo}`);
+  sheet.getCell(`A${rowNo}`).value =
+    `As on ${toDate}`;
+
+  sheet.getCell(`A${rowNo}`).alignment = {
+    horizontal:"center"
+  };
+
+  rowNo += 2;
+
+  //////////////////////////////////////////////////
+  // HEADER
+  //////////////////////////////////////////////////
+
+  let header = sheet.addRow([
+    "Particulars",
+    "Amount",
+    "Particulars",
+    "Amount"
+  ]);
+
+  header.eachCell(cell=>{
+
+    cell.font = {
+      bold:true,
+      color:{argb:"FFFFFFFF"}
+    };
+
+    cell.fill = {
+      type:"pattern",
+      pattern:"solid",
+      fgColor:{argb:"FF001D4C"}
+    };
+
+    cell.alignment = {
+      horizontal:"center"
+    };
+
+    cell.border = {
+      top:{style:"thin"},
+      left:{style:"thin"},
+      right:{style:"thin"},
+      bottom:{style:"thin"}
+    };
+
+  });
+
+  rowNo++;
+
+  //////////////////////////////////////////////////
+  // TABLE DATA FROM SCREEN
+  //////////////////////////////////////////////////
+
+  let rows = document.querySelectorAll(
+    ".balance-sheet-table tr"
+  );
+
+  for(let i=1;i<rows.length;i++){
+
+    let cells = rows[i].querySelectorAll("td,th");
+
+    if(cells.length===0) continue;
+
+    //////////////////////////////////////////////////
+    // SECTION ROWS
+    //////////////////////////////////////////////////
+
+    if(cells.length===2){
+
+      let r = sheet.addRow([
+        cells[0].innerText,
+        "",
+        cells[1].innerText,
+        ""
+      ]);
+
+      r.eachCell(cell=>{
+
+        cell.font = {bold:true};
+
+        cell.border = {
+          top:{style:"thin"},
+          left:{style:"thin"},
+          right:{style:"thin"},
+          bottom:{style:"thin"}
+        };
+
+      });
+
+      rowNo++;
+      continue;
+    }
+
+    //////////////////////////////////////////////////
+    // NORMAL ROW
+    //////////////////////////////////////////////////
+
+    let r = sheet.addRow([
+
+      cells[0].innerText,
+
+      Number(cells[1].innerText.replace(/,/g,"")) || "",
+
+      cells[2].innerText,
+
+      Number(cells[3].innerText.replace(/,/g,"")) || ""
+
+    ]);
+
+    r.eachCell((cell,col)=>{
+
+      cell.border = {
+        top:{style:"thin"},
+        left:{style:"thin"},
+        right:{style:"thin"},
+        bottom:{style:"thin"}
+      };
+
+      if(col===1 || col===3){
+        cell.alignment = {horizontal:"left"};
+      }
+
+      if(col===2 || col===4){
+        cell.alignment = {horizontal:"right"};
+        cell.numFmt = '#,##0.00';
+      }
+
+    });
+
+    rowNo++;
+  }
+
+  //////////////////////////////////////////////////
+  // RETURN NEXT ROW
+  //////////////////////////////////////////////////
+
+  return rowNo;
+				}
+
+
+	
+	
+	
 	
 	
 </script>
