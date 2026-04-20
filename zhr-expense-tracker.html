@@ -6557,7 +6557,8 @@ function runProfitLoss(){
 
 
 //////////////////////////////////////////////////
-// PROFIT & LOSS REPORT
+// RENDER PROFIT & LOSS ACCOUNT
+// (USE AFTER renderTrialBalance())
 //////////////////////////////////////////////////
 
 function renderProfitLoss(){
@@ -6565,151 +6566,203 @@ function renderProfitLoss(){
   let fromDate = sessionStorage.getItem("currentFromDate");
   let toDate   = sessionStorage.getItem("currentToDate");
 
-  let incomeRows = "";
-  let expenseRows = "";
+  //////////////////////////////////////////////////
+  // COLLECT EXPENSE + INCOME LEDGERS
+  //////////////////////////////////////////////////
 
-  let totalIncome = 0;
+  let expenseRows = [];
+  let incomeRows  = [];
+
   let totalExpense = 0;
+  let totalIncome  = 0;
 
   //////////////////////////////////////////////////
-  // EACH LEDGER
+  // EXPENSE GROUP (PERIOD ONLY)
   //////////////////////////////////////////////////
 
-  ledgerList.forEach(ledger=>{
+  ledgerList
+    .filter(l => l.group === "Expense")
+    .forEach(ledger=>{
 
-    if(!["Income","Expense"].includes(ledger.group)) return;
+      let balance = 0;
 
-    let balance = 0;
+      transactionsCache.forEach(t=>{
 
-    transactionsCache.forEach(t=>{
+        if(t.date < fromDate || t.date > toDate) return;
 
-      if(t.date < fromDate || t.date > toDate) return;
+        let amount = Number(t.amount);
 
-      let amount = Number(t.amount);
+        let debitKey  = t.debitLedgerId  || t.debitLedger;
+        let creditKey = t.creditLedgerId || t.creditLedger;
 
-      let debitKey  = t.debitLedgerId  || t.debitLedger;
-      let creditKey = t.creditLedgerId || t.creditLedger;
+        if(debitKey === ledger.id)  balance += amount;
+        if(creditKey === ledger.id) balance -= amount;
 
-      if(debitKey === ledger.id) balance += amount;
-      if(creditKey === ledger.id) balance -= amount;
+      });
+
+      let value = Math.abs(balance);
+
+      if(value === 0) return;
+
+      totalExpense += value;
+
+      expenseRows.push({
+        name: ledger.name,
+        amount: value
+      });
 
     });
 
-    if(balance === 0) return;
+  //////////////////////////////////////////////////
+  // INCOME GROUP (PERIOD ONLY)
+  //////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////
-    // INCOME
-    //////////////////////////////////////////////////
+  ledgerList
+    .filter(l => l.group === "Income")
+    .forEach(ledger=>{
 
-    if(ledger.group === "Income"){
+      let balance = 0;
 
-      let val = Math.abs(balance);
+      transactionsCache.forEach(t=>{
 
-      totalIncome += val;
+        if(t.date < fromDate || t.date > toDate) return;
 
-      incomeRows += `
-        <tr>
-          <td>${ledger.name}</td>
-          <td>${val}</td>
-        </tr>
-      `;
-    }
+        let amount = Number(t.amount);
 
-    //////////////////////////////////////////////////
-    // EXPENSE
-    //////////////////////////////////////////////////
+        let debitKey  = t.debitLedgerId  || t.debitLedger;
+        let creditKey = t.creditLedgerId || t.creditLedger;
 
-    if(ledger.group === "Expense"){
+        if(debitKey === ledger.id)  balance += amount;
+        if(creditKey === ledger.id) balance -= amount;
 
-      let val = Math.abs(balance);
+      });
 
-      totalExpense += val;
+      let value = Math.abs(balance);
 
-      expenseRows += `
-        <tr>
-          <td>${ledger.name}</td>
-          <td>${val}</td>
-        </tr>
-      `;
-    }
+      if(value === 0) return;
 
-  });
+      totalIncome += value;
+
+      incomeRows.push({
+        name: ledger.name,
+        amount: value
+      });
+
+    });
 
   //////////////////////////////////////////////////
   // NET RESULT
   //////////////////////////////////////////////////
 
-  let net = totalIncome - totalExpense;
+  let netProfit = 0;
+  let netLoss   = 0;
 
-  let netText = net >= 0 ? "Net Profit" : "Net Loss";
+  if(totalIncome > totalExpense){
+    netProfit = totalIncome - totalExpense;
+  }
+  else if(totalExpense > totalIncome){
+    netLoss = totalExpense - totalIncome;
+  }
 
   //////////////////////////////////////////////////
-  // HTML
+  // MAX ROWS
+  //////////////////////////////////////////////////
+
+  let leftCount  = expenseRows.length + (netProfit ? 1 : 0);
+  let rightCount = incomeRows.length + (netLoss ? 1 : 0);
+
+  let maxRows = Math.max(leftCount,rightCount);
+
+  //////////////////////////////////////////////////
+  // BUILD HTML
   //////////////////////////////////////////////////
 
   let html = `
 
-    <h3>Profit & Loss Statement</h3>
-    <p>From ${fromDate} To ${toDate}</p>
-
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-
-      <!-- EXPENSE SIDE -->
-      <div style="flex:1;min-width:320px;">
-        <table class="report-table financial-table">
-          <tr>
-            <th colspan="2">Expenses</th>
-          </tr>
-
-          <tr>
-            <th>Particulars</th>
-            <th>Amount</th>
-          </tr>
-
-          ${expenseRows}
-
-          <tr>
-            <td><b>Total Expenses</b></td>
-            <td><b>${totalExpense}</b></td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- INCOME SIDE -->
-      <div style="flex:1;min-width:320px;">
-        <table class="report-table financial-table">
-          <tr>
-            <th colspan="2">Income</th>
-          </tr>
-
-          <tr>
-            <th>Particulars</th>
-            <th>Amount</th>
-          </tr>
-
-          ${incomeRows}
-
-          <tr>
-            <td><b>Total Income</b></td>
-            <td><b>${totalIncome}</b></td>
-          </tr>
-        </table>
-      </div>
-
-    </div>
-
-    <br>
+    <h3 style="text-align:center;">Profit & Loss Account</h3>
+    <p style="text-align:center;">From ${fromDate} To ${toDate}</p>
 
     <table class="report-table financial-table">
-      <tr>
-        <td><b>${netText}</b></td>
-        <td><b>${Math.abs(net)}</b></td>
-      </tr>
-    </table>
 
+      <tr>
+        <th>Particulars</th>
+        <th>Amount</th>
+        <th>Particulars</th>
+        <th>Amount</th>
+      </tr>
   `;
 
-  document.getElementById("reportOutput").innerHTML = html;
+  for(let i=0;i<maxRows;i++){
+
+    let leftName = "";
+    let leftAmt  = "";
+
+    let rightName = "";
+    let rightAmt  = "";
+
+    ////////////////////////////////////////////////
+    // LEFT SIDE = EXPENSE
+    ////////////////////////////////////////////////
+
+    if(i < expenseRows.length){
+
+      leftName = expenseRows[i].name;
+      leftAmt  = expenseRows[i].amount;
+
+    }else if(i === expenseRows.length && netProfit){
+
+      leftName = "<b>Net Profit</b>";
+      leftAmt  = `<b>${netProfit}</b>`;
+    }
+
+    ////////////////////////////////////////////////
+    // RIGHT SIDE = INCOME
+    ////////////////////////////////////////////////
+
+    if(i < incomeRows.length){
+
+      rightName = incomeRows[i].name;
+      rightAmt  = incomeRows[i].amount;
+
+    }else if(i === incomeRows.length && netLoss){
+
+      rightName = "<b>Net Loss</b>";
+      rightAmt  = `<b>${netLoss}</b>`;
+    }
+
+    html += `
+      <tr>
+        <td style="text-align:left;">${leftName}</td>
+        <td>${leftAmt}</td>
+        <td style="text-align:left;">${rightName}</td>
+        <td>${rightAmt}</td>
+      </tr>
+    `;
+  }
+
+  //////////////////////////////////////////////////
+  // TOTAL ROW
+  //////////////////////////////////////////////////
+
+  let grandTotal = Math.max(totalExpense,totalIncome);
+
+  html += `
+      <tr>
+        <td><b>Total</b></td>
+        <td><b>${grandTotal}</b></td>
+        <td><b>Total</b></td>
+        <td><b>${grandTotal}</b></td>
+      </tr>
+
+    </table>
+  `;
+
+  //////////////////////////////////////////////////
+  // APPEND BELOW TRIAL BALANCE
+  //////////////////////////////////////////////////
+
+  document.getElementById("reportOutput").innerHTML +=
+    `<br><br>${html}`;
 
   formatAllAmounts();
 }
