@@ -7479,7 +7479,24 @@ function showFinancialExportButton(){
   setTimeout(()=>lucide.createIcons(),100);
 }
 
+//////////////////////////////////////////////////
+// SAFE AMOUNT
+//////////////////////////////////////////////////
 
+function safeAmount(val){
+
+  if(!val) return "";
+
+  let num = Number(
+    val.toString().replace(/,/g,"").trim()
+  );
+
+  if(isNaN(num)) return "";
+
+  return num;
+}
+
+	
 //////////////////////////////////////////////////
 // EXPORT FINANCIAL REPORT
 //////////////////////////////////////////////////
@@ -7581,13 +7598,10 @@ async function exportFinancialStatement(){
     showToast("Report Exported 📊");
 
   }catch(e){
-
-    hideLoader();
-
-    console.error(e);
-
-    showToast("Export failed ❌","error");
-  }
+console.error("EXPORT ERROR =",e);
+hideLoader();
+showToast(e.message,"error");
+}
 
   }
 
@@ -7670,8 +7684,8 @@ async function exportTrialBalanceExcel(sheet,rowNo,fromDate,toDate){
     let r = sheet.addRow([
       cells[0].innerText,
       cells[1].innerText,
-      Number(cells[2].innerText.replace(/,/g,"")) || "",
-      Number(cells[3].innerText.replace(/,/g,"")) || ""
+      safeAmount(cells[2]?.innerText),
+safeAmount(cells[3]?.innerText)
     ]);
 
     //////////////////////////////////////////////////
@@ -7796,7 +7810,7 @@ async function exportProfitLossExcel(sheet,rowNo,fromDate,toDate){
     // SECTION ROW (Expense / Income)
     //////////////////////////////////////////////////
 
-    if(cells.length === 2){
+    if(cells.length <= 2){
 
       let r = sheet.addRow([
         cells[0].innerText,
@@ -7826,15 +7840,15 @@ async function exportProfitLossExcel(sheet,rowNo,fromDate,toDate){
 
     let r = sheet.addRow([
 
-      cells[0].innerText,
+  cells[0]?.innerText || "",
 
-      Number(cells[1].innerText.replace(/,/g,"")) || "",
+  safeAmount(cells[1]?.innerText),
 
-      cells[2].innerText,
+  cells[2]?.innerText || "",
 
-      Number(cells[3].innerText.replace(/,/g,"")) || ""
+  safeAmount(cells[3]?.innerText)
 
-    ]);
+]);
 
     r.eachCell((cell,col)=>{
 
@@ -7955,7 +7969,7 @@ async function exportBalanceSheetExcel(sheet,rowNo,toDate){
     // SECTION ROWS
     //////////////////////////////////////////////////
 
-    if(cells.length===2){
+    if(cells.length <= 2){
 
       let r = sheet.addRow([
         cells[0].innerText,
@@ -7987,16 +8001,16 @@ async function exportBalanceSheetExcel(sheet,rowNo,toDate){
 
     let r = sheet.addRow([
 
-      cells[0].innerText,
+  cells[0]?.innerText || "",
 
-      Number(cells[1].innerText.replace(/,/g,"")) || "",
+  safeAmount(cells[1]?.innerText),
 
-      cells[2].innerText,
+  cells[2]?.innerText || "",
 
-      Number(cells[3].innerText.replace(/,/g,"")) || ""
+  safeAmount(cells[3]?.innerText)
 
-    ]);
-
+]);
+	  
     r.eachCell((cell,col)=>{
 
       cell.border = {
