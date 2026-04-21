@@ -6539,7 +6539,11 @@ function loadInvoiceLive(fromDate, toDate) {
 
             <td>${Number(d.paidAmount || 0).toFixed(2)}</td>
 
-            <td>${Number(d.balanceAmount || d.total || 0).toFixed(2)}</td>
+              ${(
+    Number(d.total || 0) -
+    Number(d.paidAmount || 0)
+  ).toFixed(2)}
+</td>
 
             <td>${statusHTML}</td>
 
@@ -6637,7 +6641,8 @@ function getInvoiceStatus(total,paid){
 //////////////////////////////////////////////////
 
 //////////////////////////////////////////////////
-// OPEN RECEIVE PAYMENT POPUP
+// REPLACE FULL openReceivePayment(id)
+// SAFE UPDATED VERSION
 //////////////////////////////////////////////////
 
 function openReceivePayment(id) {
@@ -6648,51 +6653,143 @@ function openReceivePayment(id) {
 
     if (!d) return;
 
+    //////////////////////////////////////////////////
+    // CANCELLED BLOCK
+    //////////////////////////////////////////////////
+
     if (d.status === "cancelled") {
       showToast("Cancelled invoice", "error");
       return;
     }
 
+    //////////////////////////////////////////////////
+    // FULLY PAID = ADMIN AUTHENTICATION
+    //////////////////////////////////////////////////
+
     if (d.status === "paid") {
-      showToast("Already fully paid");
+
+      openPopup(`
+
+        <h3>Admin Authentication</h3>
+
+        <input type="password"
+        id="adminPassword"
+        placeholder="Enter Password">
+
+        <button onclick="verifyPaidInvoiceAccess('${id}')">
+          Continue
+        </button>
+
+      `);
+
       return;
     }
 
-    openPopup(`
+    //////////////////////////////////////////////////
+    // NORMAL RECEIVE PAYMENT POPUP
+    //////////////////////////////////////////////////
 
-      <h3>Receive Payment</h3>
-
-      <p><b>Invoice:</b> ${d.invoiceNo}</p>
-      <p><b>Client:</b> ${d.recipient.name}</p>
-      <p><b>Total:</b> ${Number(d.total).toFixed(2)}</p>
-      <p><b>Paid:</b> ${Number(d.paidAmount || 0).toFixed(2)}</p>
-      <p><b>Balance:</b> ${Number(d.balanceAmount || d.total).toFixed(2)}</p>
-
-      <label>Received Amount</label>
-      <input type="number" id="payAmount">
-
-      <label>Payment Date</label>
-      <input type="date" id="payDate"
-      value="${new Date().toISOString().split("T")[0]}">
-
-      <label>Mode</label>
-      <select id="payMode">
-        <option value="Cash">Cash</option>
-        <option value="Bank">Bank</option>
-        <option value="Card">Card</option>
-        <option value="Transfer">Transfer</option>
-      </select>
-
-      <label>Note</label>
-      <input type="text" id="payNote">
-
-      <button onclick="saveReceivedPayment('${id}')">
-        Save Payment
-      </button>
-
-    `);
+    showReceivePaymentPopup(id, d);
 
   });
+
+}
+
+
+
+//////////////////////////////////////////////////
+// NEW FUNCTION
+// VERIFY ADMIN PASSWORD
+//////////////////////////////////////////////////
+
+async function verifyPaidInvoiceAccess(id) {
+
+  try {
+
+    let password =
+      document.getElementById("adminPassword").value;
+
+    let user = auth.currentUser;
+
+    let credential =
+      firebase.auth.EmailAuthProvider.credential(
+        user.email,
+        password
+      );
+
+    await user.reauthenticateWithCredential(
+      credential
+    );
+
+    let doc = await db
+      .collection("invoices")
+      .doc(id)
+      .get();
+
+    closePopup();
+
+    showReceivePaymentPopup(id, doc.data());
+
+  }
+  catch (e) {
+
+    showToast("Wrong Password ❌", "error");
+
+  }
+
+}
+
+
+
+//////////////////////////////////////////////////
+// NEW FUNCTION
+// COMMON PAYMENT POPUP
+//////////////////////////////////////////////////
+
+function showReceivePaymentPopup(id, d) {
+
+  let balance =
+    Number(d.total || 0) -
+    Number(d.paidAmount || 0);
+
+  openPopup(`
+
+    <h3>Receive Payment</h3>
+
+    <p><b>Invoice:</b> ${d.invoiceNo}</p>
+
+    <p><b>Client:</b> ${d.recipient.name}</p>
+
+    <p><b>Total:</b> ${Number(d.total).toFixed(2)}</p>
+
+    <p><b>Paid:</b> ${Number(d.paidAmount || 0).toFixed(2)}</p>
+
+    <p><b>Balance:</b> ${balance.toFixed(2)}</p>
+
+    <label>Received Amount</label>
+    <input type="number" id="payAmount">
+
+    <label>Payment Date</label>
+    <input type="date"
+    id="payDate"
+    value="${new Date().toISOString().split("T")[0]}">
+
+    <label>Mode</label>
+    <select id="payMode">
+      <option value="Cash">Cash</option>
+      <option value="Bank">Bank</option>
+      <option value="Card">Card</option>
+      <option value="Transfer">Transfer</option>
+    </select>
+
+    <label>Note</label>
+    <input type="text" id="payNote">
+
+    <button onclick="saveReceivedPayment('${id}')">
+      Save Payment
+    </button>
+
+  `);
 
 }
 
