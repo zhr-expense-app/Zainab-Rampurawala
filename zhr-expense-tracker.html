@@ -3953,16 +3953,53 @@ function refreshCurrentReport(){
 
   if(currentReport === "receipts"){
     refreshReceiptsReport();
+	  return;
   }
 
-  else if(currentReport === "payments"){
+  if(currentReport === "payments"){
     refreshPaymentReport();
+	  return;
   }
 
-  else if(currentReport === "journal"){
+  if(currentReport === "journal"){
     refreshJournalReport();
+	  return;
   }
 
+  if(currentReport === "ledgerStatement"){
+    renderLedgerStatement();
+    return;
+  }
+
+  if(currentReport === "invoice"){
+    refreshInvoiceReport();
+    return;
+  }
+
+  if(currentReport === "trialBalance"){
+    renderTrialBalance();
+    showFinancialExportButton();
+    return;
+  }
+
+  if(currentReport === "profitLoss"){
+    renderProfitLoss();
+    showFinancialExportButton();
+    return;
+  }
+
+  if(currentReport === "balanceSheet"){
+    renderBalanceSheet();
+    showFinancialExportButton();
+    return;
+  }
+
+  if(currentReport === "financialStatement"){
+    renderAllFinancialStatements();
+    showFinancialExportButton();
+    return;
+  }
+	
 }
 
 
@@ -4323,6 +4360,10 @@ saveAs(new Blob([buffer]), fileName);
 hideLoader();
 showToast("Ledger Statement Exported 📊");
 
+setTimeout(() => {
+  refreshCurrentReport();
+}, 500);
+	
 return;
 
 
@@ -4617,6 +4658,10 @@ XLSX.writeFile(workbook,fileName);
 hideLoader();
 showToast("Report Exported 📊");
 
+setTimeout(() => {
+  refreshCurrentReport();
+}, 500);
+	
 }
 
 
