@@ -2922,6 +2922,7 @@ function runReceiptsReport() {
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+	showReceiptExportButton();
 }
 
 
@@ -3049,6 +3050,7 @@ let ledgerName = getLedgerNameById(ledger);
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+	showPaymentExportButton();
 }
 
 //////////////////////////////////////////////////
@@ -3280,6 +3282,7 @@ let ledgerName = getLedgerNameById(ledger);
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+	showPaymentExportButton();
 }
 
 
@@ -3527,6 +3530,7 @@ function refreshJournalReport(){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+	showJournalExportButton();
 }
 
 	
@@ -3738,6 +3742,7 @@ function refreshReceiptsReport(){
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
+	showReceiptExportButton();
 }
 
 
@@ -3871,6 +3876,96 @@ function getLedgerIdByName(name){
   return l ? l.id : null;
 }
 
+
+	
+	
+//////////////////////////////////////////////////
+// REPORT-WISE EXPORT BUTTON LINKING CODE
+// KEEP YOUR exportCurrentReport() SAME
+// Only use below helper functions
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// COMMON EXPORT BUTTON UI
+//////////////////////////////////////////////////
+
+function appendReportExportButton(label="Export Excel"){
+
+  let html = `
+    <div style="
+      margin-top:18px;
+      text-align:center;
+    ">
+      <button onclick="exportCurrentReport()"
+      style="
+        background:#001d4c;
+        color:#fff;
+        border:none;
+        padding:10px 18px;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:600;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+      ">
+        <i data-lucide="download"></i>
+        ${label}
+      </button>
+    </div>
+  `;
+
+  document.getElementById("reportOutput").innerHTML += html;
+
+  setTimeout(()=>{
+    lucide.createIcons();
+  },100);
+}
+
+//////////////////////////////////////////////////
+// RECEIPT REPORT LINK
+//////////////////////////////////////////////////
+
+function showReceiptExportButton(){
+  appendReportExportButton(
+    "Export Receipts"
+  );
+}
+
+//////////////////////////////////////////////////
+// PAYMENT REPORT LINK
+//////////////////////////////////////////////////
+
+function showPaymentExportButton(){
+  appendReportExportButton(
+    "Export Payments"
+  );
+}
+
+//////////////////////////////////////////////////
+// JOURNAL REPORT LINK
+//////////////////////////////////////////////////
+
+function showJournalExportButton(){
+  appendReportExportButton(
+    "Export Journal"
+  );
+}
+
+//////////////////////////////////////////////////
+// MINI STATEMENT LINK
+//////////////////////////////////////////////////
+
+function showMiniStatementExportButton(){
+  appendReportExportButton(
+    "Export Statement"
+  );
+}	
+	
+	
+	
+
+	
 //////////////////////////////////////////////////
 // EXPORT REPORTS (HEADER MATCH FIXED)
 //////////////////////////////////////////////////
