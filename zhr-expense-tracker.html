@@ -2826,7 +2826,8 @@ function showReceiptsReport() {
 
 	
 //////////////////////////////////////////////////
-// RUN RECEIPTS REPORT (NEW SYSTEM)
+// UPDATED runReceiptsReport()
+// WITH TOTAL + EXPORT BUTTON
 //////////////////////////////////////////////////
 
 function runReceiptsReport() {
@@ -2838,37 +2839,62 @@ function runReceiptsReport() {
   if(!validateDateRange(fromDate,toDate)) return;
 
   currentReport = "receipts";
+
   sessionStorage.setItem("currentReport","receipts");
   sessionStorage.setItem("currentFromDate",fromDate);
   sessionStorage.setItem("currentToDate",toDate);
-  sessionStorage.setItem("receiptLedger", ledger);
+  sessionStorage.setItem("receiptLedger",ledger);
 
   closePopup();
 
-  // ✅ GET LEDGER NAME FOR TITLE
-  let ledgerObj = ledgerList.find(l => l.id === ledger);
-  let ledgerName = ledgerObj ? ledgerObj.name : ledger;
+  //////////////////////////////////////////////////
+  // LEDGER NAME
+  //////////////////////////////////////////////////
+
+  let ledgerObj =
+    ledgerList.find(l => l.id === ledger);
+
+  let ledgerName =
+    ledgerObj ? ledgerObj.name : ledger;
+
+  //////////////////////////////////////////////////
+  // FILTER DATA
+  //////////////////////////////////////////////////
 
   let receipts = transactionsCache
-    .filter(t => {
+    .filter(t=>{
 
-      let isReceipt = t.type === "receipt";
+      let isReceipt =
+        t.type === "receipt";
 
       let isInRange = true;
 
       if(fromDate)
-        isInRange = t.date >= fromDate;
+        isInRange =
+          t.date >= fromDate;
 
       if(toDate)
-        isInRange = isInRange && t.date <= toDate;
+        isInRange =
+          isInRange &&
+          t.date <= toDate;
 
       let isLedger = true;
 
       if(ledger){
-        isLedger = (t.creditLedgerId === ledger || t.creditLedger === ledger);
+
+        isLedger =
+        (
+          t.creditLedgerId === ledger ||
+          t.creditLedger === ledger
+        );
+
       }
 
-      return isReceipt && isLedger && isInRange;
+      return (
+        isReceipt &&
+        isLedger &&
+        isInRange
+      );
 
     })
     .sort((a,b)=>{
@@ -2877,13 +2903,23 @@ function runReceiptsReport() {
         return a.id.localeCompare(b.id);
       }
 
-      return new Date(a.date) - new Date(b.date);
+      return new Date(a.date) -
+             new Date(b.date);
 
     });
 
+  //////////////////////////////////////////////////
+  // BUILD HTML
+  //////////////////////////////////////////////////
+
   let html = `
-    <h3>${ledger ? ledgerName + " " : ""}Receipts Report</h3>
+    <h3>
+      ${ledger ? ledgerName + " " : ""}
+      Receipts Report
+    </h3>
+
     <table class="report-table">
+
       <tr>
         <th>Serial No</th>
         <th>Date</th>
@@ -2898,7 +2934,15 @@ function runReceiptsReport() {
       </tr>
   `;
 
-  receipts.forEach((r, index) => {
+  //////////////////////////////////////////////////
+  // ROWS
+  //////////////////////////////////////////////////
+
+  let total = 0;
+
+  receipts.forEach((r,index)=>{
+
+    total += Number(r.amount);
 
     html += `
       <tr>
@@ -2909,19 +2953,62 @@ function runReceiptsReport() {
         <td>${getLedgerDisplayName(r,"debit")}</td>
         <td>${getLedgerDisplayName(r,"credit")}</td>
         <td>${r.narration}</td>
-        <td class="amount">${Number(r.amount).toFixed(2)}</td>
-        <td><button onclick="editTransaction('${r.id}')">Edit</button></td>
-        <td><button onclick="deleteTransaction('${r.id}')">Delete</button></td>
+        <td class="amount">
+          ${Number(r.amount).toFixed(2)}
+        </td>
+        <td>
+          <button onclick="editTransaction('${r.id}')">
+            Edit
+          </button>
+        </td>
+        <td>
+          <button onclick="deleteTransaction('${r.id}')">
+            Delete
+          </button>
+        </td>
       </tr>
     `;
   });
 
-  html += "</table>";
+  //////////////////////////////////////////////////
+  // TOTAL ROW
+  //////////////////////////////////////////////////
 
-  document.getElementById("reportOutput").innerHTML = html;
-	showReceiptExportButton();
+  html += `
+    <tr>
+      <td colspan="7"
+      style="
+        text-align:right;
+        font-weight:700;
+      ">
+        Total
+      </td>
+
+      <td class="amount"
+      style="font-weight:700;">
+        ${total.toFixed(2)}
+      </td>
+
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
+  html += `</table>`;
+
+  //////////////////////////////////////////////////
+  // SHOW REPORT
+  //////////////////////////////////////////////////
+
+  document.getElementById("reportOutput").innerHTML =
+    html;
+
+  //////////////////////////////////////////////////
+  // EXPORT BUTTON
+  //////////////////////////////////////////////////
+
+  showReceiptExportButton();
 }
-
 
 //////////////////////////////////////////////////
 // PAYMENT REPORT FILTER POPUP (NEW SYSTEM)
@@ -3717,7 +3804,11 @@ function refreshReceiptsReport(){
       </tr>
   `;
 
+  let total = 0;
+
   receipts.forEach((r,index)=>{
+
+    total += Number(r.amount);
 
     html += `
       <tr>
@@ -3736,10 +3827,19 @@ function refreshReceiptsReport(){
 
   });
 
+  html += `
+    <tr>
+      <td colspan="7" style="text-align:right;font-weight:700;">Total</td>
+      <td class="amount" style="font-weight:700;">${total.toFixed(2)}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-	showReceiptExportButton();
+  showReceiptExportButton();
 }
 
 
