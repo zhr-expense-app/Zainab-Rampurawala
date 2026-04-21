@@ -940,7 +940,7 @@ let invoiceItems = [];
 let invoiceCounter = 1;
 let currentInvoiceData = {};	
 let currentInvoiceNo = "";	
-	
+let currentPaidAmount = 0;	
 
 
 //////////////////////////////////////////////////
@@ -5906,35 +5906,49 @@ currentInvoiceNo = invoiceNo;
     // 💾 SAVE
     await db.collection("invoices").doc(invoiceNo).set({
 
-      invoiceNo,
-      invoiceDate,
-      currency,
+  invoiceNo,
+  invoiceDate,
+  dueDate: getDueDate(invoiceDate),
 
-      supplier: {
-        name: supName,
-        address: supAddress,
-        gst: supGST,
-        state: supState,
-        contact: supContact,
-        website: supWebsite
-      },
+  currency,
 
-      recipient: {
-        name: recName,
-        address: recAddress,
-        trn: recTRN,
-        state: recState,
-        placeOfSupply: place,
-        contact: recContact
-      },
+  supplier:{
+    name: supName,
+    address: supAddress,
+    gst: supGST,
+    state: supState,
+    contact: supContact,
+    website: supWebsite
+  },
 
-      items: itemList,
-      total,
-      amountWords: words,
+  recipient:{
+    name: recName,
+    address: recAddress,
+    trn: recTRN,
+    state: recState,
+    placeOfSupply: place,
+    contact: recContact
+  },
 
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  items: itemList,
 
-    });
+  total,
+  amountWords: words,
+
+  //////////////////////////////////////////////////
+  // NEW RECEIVABLE FIELDS
+  //////////////////////////////////////////////////
+
+  paidAmount: 0,
+  balanceAmount: total,
+  status: "unpaid",
+  paymentHistory: [],
+
+  createdAt:
+  firebase.firestore
+  .FieldValue.serverTimestamp()
+
+});
 
     showToast(`Invoice ${invoiceNo} saved`, "success");
 
@@ -5964,6 +5978,8 @@ currentInvoiceNo = invoiceNo;
     let d = doc.data();
 
     openInvoicePopup();
+	  currentPaidAmount =
+Number(d.paidAmount || 0);
 
     setTimeout(()=>{
 
@@ -6081,34 +6097,57 @@ async function updateInvoice(id){
     // ✅ UPDATE FULL DOCUMENT
     await db.collection("invoices").doc(id).update({
 
-      invoiceDate,
-      currency,
+  invoiceDate,
+  dueDate: getDueDate(invoiceDate),
 
-      supplier: {
-        name: supName,
-        address: supAddress,
-        gst: supGST,
-        state: supState,
-        contact: supContact,
-        website: supWebsite
-      },
+  currency,
 
-      recipient: {
-        name: recName,
-        address: recAddress,
-        trn: recTRN,
-        state: recState,
-        placeOfSupply: place,
-        contact: recContact
-      },
+  supplier:{
+    name: supName,
+    address: supAddress,
+    gst: supGST,
+    state: supState,
+    contact: supContact,
+    website: supWebsite
+  },
 
-      items: itemList,
+  recipient:{
+    name: recName,
+    address: recAddress,
+    trn: recTRN,
+    state: recState,
+    placeOfSupply: place,
+    contact: recContact
+  },
+
+  items: itemList,
+
+  total,
+  amountWords: words,
+
+  //////////////////////////////////////////////////
+  // AUTO RECALCULATE IF TOTAL CHANGED
+  //////////////////////////////////////////////////
+
+  balanceAmount:
+    total -
+    Number(
+      currentPaidAmount || 0
+    ),
+
+  status:
+    getInvoiceStatus(
       total,
-      amountWords: words,
+      Number(
+        currentPaidAmount || 0
+      )
+    ),
 
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  updatedAt:
+  firebase.firestore
+  .FieldValue.serverTimestamp()
 
-    });
+});
 
     showToast("Invoice Updated ✏️", "success");
 
@@ -6421,75 +6460,168 @@ function runInvoiceReport(){
 
 
 //////////////////////////////////////////////////
-// LOAD INVOICE LIVE
-//////////////////////////////////////////////////	
-	
-function loadInvoiceLive(fromDate,toDate){
+// INVOICE PHASE 2 - PART 2
+// CLEAN FORMAT VERSION
+// REPLACE FULL loadInvoiceLive()
+//////////////////////////////////////////////////
 
-  if(invoiceUnsubscribe) invoiceUnsubscribe();
+function loadInvoiceLive(fromDate, toDate) {
+
+  if (invoiceUnsubscribe) invoiceUnsubscribe();
 
   invoiceUnsubscribe = db.collection("invoices")
-    .orderBy("createdAt","desc")
-    .onSnapshot(snap=>{
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
 
       let html = `
         <h3>Invoice Report</h3>
 
         <table class="report-table">
           <tr>
-            <th>Sr No</th>
+            <th>Sr</th>
             <th>Invoice No</th>
             <th>Date</th>
+            <th>Due Date</th>
             <th>Client</th>
-            <th>Services</th>
             <th>Currency</th>
-            <th>Amount</th>
+            <th>Total</th>
+            <th>Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
             <th>Edit</th>
             <th>Print</th>
+            <th>Share</th>
             <th>Delete</th>
           </tr>
       `;
 
       let i = 0;
 
-      snap.forEach(doc=>{
+      snapshot.forEach(doc => {
 
         let d = doc.data();
 
-        if(fromDate && d.invoiceDate < fromDate) return;
-        if(toDate && d.invoiceDate > toDate) return;
+        // Date Filter
+        if (fromDate && d.invoiceDate < fromDate) return;
+        if (toDate && d.invoiceDate > toDate) return;
 
         i++;
 
-        let services = d.items.map(x=>x.desc).join(", ");
+        let statusHTML = "";
+
+        if (d.status === "unpaid") {
+          statusHTML = `<span style="color:#e53935;font-weight:700;">Unpaid</span>`;
+        }
+
+        else if (d.status === "partial") {
+          statusHTML = `<span style="color:#fb8c00;font-weight:700;">Partial</span>`;
+        }
+
+        else if (d.status === "paid") {
+          statusHTML = `<span style="color:#43a047;font-weight:700;">Paid</span>`;
+        }
+
+        else if (d.status === "cancelled") {
+          statusHTML = `<span style="color:#666;font-weight:700;">Cancelled</span>`;
+        }
 
         html += `
           <tr>
             <td>${i}</td>
             <td>${d.invoiceNo}</td>
-            <td>${d.invoiceDate}</td>
-            <td>${d.recipient.name}</td>
-            <td>${services}</td>
-            <td>${d.currency}</td>
-            <td>${Number(d.total).toFixed(2)}</td>
+            <td>${d.invoiceDate || ""}</td>
+            <td>${d.dueDate || ""}</td>
+            <td>${d.recipient?.name || ""}</td>
+            <td>${d.currency || ""}</td>
 
+            <td>${Number(d.total || 0).toFixed(2)}</td>
 
-            <td><button onclick="editInvoice('${doc.id}')">Edit</button></td>
+            <td>${Number(d.paidAmount || 0).toFixed(2)}</td>
 
-            <td><button onclick="quickPrintInvoice('${doc.id}')">Print</button></td>
+            <td>${Number(d.balanceAmount || d.total || 0).toFixed(2)}</td>
 
-            <td><button onclick="askDeleteInvoice('${doc.id}')">Delete</button></td>
+            <td>${statusHTML}</td>
+
+            <td>
+              <button onclick="editInvoice('${doc.id}')">
+                Edit
+              </button>
+            </td>
+
+            <td>
+              <button onclick="quickPrintInvoice('${doc.id}')">
+                Print
+              </button>
+            </td>
+
+            <td>
+              <button onclick="openWhatsAppPopup('${doc.id}')">
+                Share
+              </button>
+            </td>
+
+            <td>
+              <button onclick="askDeleteInvoice('${doc.id}')">
+                Delete
+              </button>
+            </td>
           </tr>
         `;
+
       });
 
       html += `</table>`;
 
       document.getElementById("reportOutput").innerHTML = html;
 
+      formatAllAmounts();
+
     });
+
 }
-	
+
+
+//////////////////////////////////////////////////
+// INVOICE PHASE 2 - PART 1
+// SAVE / UPDATE INVOICE UPGRADE
+// Add Status + Due Date + Receivable Fields
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// HELPER : ADD 30 DAYS
+//////////////////////////////////////////////////
+
+function getDueDate(invoiceDate){
+
+  let d = new Date(invoiceDate);
+  d.setDate(d.getDate() + 30);
+
+  let y = d.getFullYear();
+  let m = String(d.getMonth()+1).padStart(2,"0");
+  let day = String(d.getDate()).padStart(2,"0");
+
+  return `${y}-${m}-${day}`;
+}
+
+//////////////////////////////////////////////////
+// STATUS CALCULATOR
+//////////////////////////////////////////////////
+
+function getInvoiceStatus(total,paid){
+
+  total = Number(total || 0);
+  paid  = Number(paid || 0);
+
+  if(paid <= 0) return "unpaid";
+
+  if(paid > 0 && paid < total)
+    return "partial";
+
+  if(paid >= total)
+    return "paid";
+
+  return "unpaid";
+}	
 
 //////////////////////////////////////////////////
 // QUICK PRINT INVOICE
