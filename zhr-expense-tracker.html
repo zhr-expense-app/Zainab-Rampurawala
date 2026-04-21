@@ -7475,22 +7475,15 @@ async function exportInvoiceReportExcel() {
 
       let services = "";
 
-      if (d.items && d.items.length > 0) {
+if (d.items && d.items.length > 0) {
 
-        services = d.items.map(x => {
+  services = d.items.map(x => {
 
-          let name =
-            x.description ||
-            x.service ||
-            "Item";
+    return `${x.desc} (${Number(x.amt).toFixed(2)})`;
 
-          let amt =
-            Number(x.amount || 0).toFixed(2);
+  }).join(", ");
 
-          return `${name} (${amt})`;
-
-        }).join(", ");
-      }
+}
 
       let row = ws.addRow([
 
