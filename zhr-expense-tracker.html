@@ -7274,6 +7274,353 @@ function refreshInvoiceReport(){
 
 }
 
+
+//////////////////////////////////////////////////
+// PART 5B
+// PROFESSIONAL INVOICE EXCEL EXPORT
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// BUTTON
+// Add below invoice report if not already present
+//////////////////////////////////////////////////
+
+function showInvoiceExportButton() {
+
+  let html = `
+    <div style="margin-top:20px;text-align:center;">
+
+      <button onclick="exportInvoiceReportExcel()"
+      class="action-btn">
+
+        <i data-lucide="download"></i>
+        Export Excel
+
+      </button>
+
+    </div>
+  `;
+
+  document.getElementById("reportOutput").innerHTML += html;
+
+  setTimeout(() => lucide.createIcons(), 100);
+}
+
+//////////////////////////////////////////////////
+// MAIN EXPORT
+//////////////////////////////////////////////////
+
+async function exportInvoiceReportExcel() {
+
+  try {
+
+    showLoader();
+
+    let fromDate = sessionStorage.getItem("invoiceFromDate") || "";
+    let toDate   = sessionStorage.getItem("invoiceToDate") || "";
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Invoices");
+
+    //////////////////////////////////////////////////
+    // COLUMN WIDTHS
+    //////////////////////////////////////////////////
+
+    ws.columns = [
+      { width: 6  },   // Sr
+      { width: 18 },   // Inv No
+      { width: 14 },   // Date
+      { width: 14 },   // Due
+      { width: 18 },   // Status
+      { width: 12 },   // Currency
+      { width: 14 },   // Total
+      { width: 14 },   // Paid
+      { width: 14 },   // Balance
+
+      { width: 24 },   // Supplier Name
+      { width: 28 },   // Supplier Address
+      { width: 18 },   // Supplier TRN
+      { width: 16 },   // Supplier Contact
+      { width: 22 },   // Supplier Website
+
+      { width: 24 },   // Client Name
+      { width: 28 },   // Client Address
+      { width: 18 },   // Client TRN
+      { width: 16 },   // Client Contact
+      { width: 18 },   // Place
+
+      { width: 35 },   // Services
+      { width: 30 },   // Amount in words
+
+      { width: 20 },   // Last Shared
+      { width: 18 }    // Last Shared No
+    ];
+
+    //////////////////////////////////////////////////
+    // TITLE
+    //////////////////////////////////////////////////
+
+    ws.mergeCells("A1:W1");
+    ws.getCell("A1").value = "Invoice Report";
+    ws.getCell("A1").font = {
+      bold: true,
+      size: 16
+    };
+    ws.getCell("A1").alignment = {
+      horizontal: "center"
+    };
+
+    ws.mergeCells("A2:W2");
+    ws.getCell("A2").value =
+      `From ${fromDate || "Beginning"} To ${toDate || "Today"}`;
+    ws.getCell("A2").alignment = {
+      horizontal: "center"
+    };
+
+    //////////////////////////////////////////////////
+    // HEADER ROW
+    //////////////////////////////////////////////////
+
+    let header = ws.addRow([
+
+      "Sr",
+      "Invoice No",
+      "Date",
+      "Due Date",
+      "Status",
+      "Currency",
+      "Total",
+      "Paid",
+      "Balance",
+
+      "Supplier Name",
+      "Supplier Address",
+      "Supplier TRN",
+      "Supplier Contact",
+      "Supplier Website",
+
+      "Client Name",
+      "Client Address",
+      "Client TRN",
+      "Client Contact",
+      "Place of Supply",
+
+      "Services",
+      "Amount in Words",
+
+      "Last Shared",
+      "Last Shared Number"
+
+    ]);
+
+    header.eachCell(cell => {
+
+      cell.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" }
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF001D4C" }
+      };
+
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true
+      };
+
+      cell.border = {
+        top:    { style: "thin" },
+        left:   { style: "thin" },
+        right:  { style: "thin" },
+        bottom: { style: "thin" }
+      };
+
+    });
+
+    //////////////////////////////////////////////////
+    // DATA
+    //////////////////////////////////////////////////
+
+    let snap = await db.collection("invoices")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    let sr = 0;
+
+    let grandTotal   = 0;
+    let totalPaid    = 0;
+    let totalBalance = 0;
+
+    snap.forEach(doc => {
+
+      let d = doc.data();
+
+      if (fromDate && d.invoiceDate < fromDate) return;
+      if (toDate && d.invoiceDate > toDate) return;
+
+      sr++;
+
+      let total   = Number(d.total || 0);
+      let paid    = Number(d.paidAmount || 0);
+      let balance = total - paid;
+
+      grandTotal   += total;
+      totalPaid    += paid;
+      totalBalance += balance;
+
+      let services = "";
+
+      if (d.items && d.items.length > 0) {
+
+        services = d.items.map(x => {
+
+          let name =
+            x.description ||
+            x.service ||
+            "Item";
+
+          let amt =
+            Number(x.amount || 0).toFixed(2);
+
+          return `${name} (${amt})`;
+
+        }).join(", ");
+      }
+
+      let row = ws.addRow([
+
+        sr,
+        d.invoiceNo || "",
+        d.invoiceDate || "",
+        d.dueDate || "",
+        d.status || "",
+        d.currency || "",
+
+        total,
+        paid,
+        balance,
+
+        d.supplier?.name || "",
+        d.supplier?.address || "",
+        d.supplier?.gst || "",
+        d.supplier?.contact || "",
+        d.supplier?.website || "",
+
+        d.recipient?.name || "",
+        d.recipient?.address || "",
+        d.recipient?.trn || "",
+        d.recipient?.contact || "",
+        d.recipient?.placeOfSupply || "",
+
+        services,
+        d.amountWords || "",
+
+        d.lastSharedAt
+          ? d.lastSharedAt.toDate().toLocaleString()
+          : "",
+
+        d.lastSharedNumber || ""
+
+      ]);
+
+      row.eachCell((cell, col) => {
+
+        cell.border = {
+          top:    { style: "thin" },
+          left:   { style: "thin" },
+          right:  { style: "thin" },
+          bottom: { style: "thin" }
+        };
+
+        cell.alignment = {
+          vertical: "top",
+          wrapText: true
+        };
+
+        if ([7,8,9].includes(col)) {
+          cell.numFmt = '#,##0.00';
+          cell.alignment.horizontal = "right";
+        } else {
+          cell.alignment.horizontal = "left";
+        }
+
+      });
+
+    });
+
+    //////////////////////////////////////////////////
+    // TOTAL ROW
+    //////////////////////////////////////////////////
+
+    let totalRow = ws.addRow([
+
+      "",
+      "",
+      "",
+      "",
+      "",
+      "TOTAL",
+
+      grandTotal,
+      totalPaid,
+      totalBalance
+
+    ]);
+
+    totalRow.eachCell((cell, col) => {
+
+      cell.font = { bold: true };
+
+      cell.border = {
+        top:    { style: "thin" },
+        left:   { style: "thin" },
+        right:  { style: "thin" },
+        bottom: { style: "thin" }
+      };
+
+      if ([7,8,9].includes(col)) {
+        cell.numFmt = '#,##0.00';
+        cell.alignment = { horizontal: "right" };
+      } else {
+        cell.alignment = { horizontal: "left" };
+      }
+
+    });
+
+    //////////////////////////////////////////////////
+    // DOWNLOAD
+    //////////////////////////////////////////////////
+
+    const buffer = await wb.xlsx.writeBuffer();
+
+    saveAs(
+      new Blob([buffer]),
+      `Invoice_Report_${new Date().toISOString().slice(0,10)}.xlsx`
+    );
+
+    hideLoader();
+
+    showToast("Invoice Report Exported 📊");
+
+  }
+  catch (e) {
+
+    console.error(e);
+
+    hideLoader();
+
+    showToast("Export failed ❌", "error");
+
+  }
+
+}
+
+
+	
 //////////////////////////////////////////////////
 // OPEN FINANCIAL STATEMENT POPUP
 //////////////////////////////////////////////////
