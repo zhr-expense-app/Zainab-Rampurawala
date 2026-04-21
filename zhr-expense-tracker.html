@@ -7035,7 +7035,23 @@ async function sendInvoiceWhatsApp(id) {
 
     let msg = "";
 
-    //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// PATCH ONLY
+// USE SUPPLIER NAME + CONTACT + WEBSITE
+//////////////////////////////////////////////////
+
+	let companyName =
+d.supplier?.name || "";
+
+let companyPhone =
+d.supplier?.contact || "";
+
+let companyWebsite =
+d.supplier?.website || "";  
+	  
+	  
+	  
+	//////////////////////////////////////////////////
     // UNPAID
     //////////////////////////////////////////////////
 
@@ -7058,8 +7074,8 @@ Status: Unpaid
 
 Kindly arrange payment.
 
-Contact: +971XXXXXXXXX
-Website: www.zhrconsultants.com
+Contact: ${companyPhone}
+Website: ${companyWebsite}
 
 Thank you.`;
     }
@@ -7087,8 +7103,8 @@ Status: Partial
 
 Kindly arrange pending balance payment.
 
-Contact: +971XXXXXXXXX
-Website: www.zhrconsultants.com
+Contact: ${companyPhone}
+Website: ${companyWebsite}
 
 Thank you.`;
     }
@@ -7111,8 +7127,8 @@ Amount: ${d.currency} ${total.toFixed(2)}
 
 Thank you for your prompt payment.
 
-Contact: +971XXXXXXXXX
-Website: www.zhrconsultants.com`;
+Contact: ${companyPhone}
+Website: ${companyWebsite}
     }
 
     //////////////////////////////////////////////////
