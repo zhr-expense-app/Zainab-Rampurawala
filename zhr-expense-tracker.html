@@ -6795,14 +6795,21 @@ function showReceivePaymentPopup(id, d) {
 }
 
 //////////////////////////////////////////////////
-// SAVE PAYMENT
+//////////////////////////////////////////////////
+// PART 3 FINAL PATCH
+// SAME POPUP - EDIT PAID AMOUNT INCLUDED
+// No extra button needed
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// REPLACE FULL saveReceivedPayment(id)
 //////////////////////////////////////////////////
 
 async function saveReceivedPayment(id) {
 
   try {
 
-    let amount = Number(
+    let enteredAmount = Number(
       document.getElementById("payAmount").value
     );
 
@@ -6810,7 +6817,7 @@ async function saveReceivedPayment(id) {
     let mode    = document.getElementById("payMode").value;
     let note    = document.getElementById("payNote").value;
 
-    if (!amount || amount <= 0) {
+    if (isNaN(enteredAmount) || enteredAmount < 0) {
       showToast("Enter valid amount", "error");
       return;
     }
@@ -6820,17 +6827,25 @@ async function saveReceivedPayment(id) {
 
     let d = doc.data();
 
-    let oldPaid = Number(d.paidAmount || 0);
-    let total   = Number(d.total || 0);
+    let total = Number(d.total || 0);
 
-    let newPaid = oldPaid + amount;
+    //////////////////////////////////////////////////
+    // SAME FIELD NOW = FINAL PAID AMOUNT
+    // NOT ADDITIONAL PAYMENT
+    //////////////////////////////////////////////////
+
+    let newPaid = enteredAmount;
 
     if (newPaid > total) {
-      showToast("Amount exceeds balance", "error");
+      showToast("Paid cannot exceed total", "error");
       return;
     }
 
     let newBalance = total - newPaid;
+
+    //////////////////////////////////////////////////
+    // STATUS AUTO LOGIC
+    //////////////////////////////////////////////////
 
     let newStatus = "unpaid";
 
@@ -6840,19 +6855,27 @@ async function saveReceivedPayment(id) {
     else if (newPaid < total) {
       newStatus = "partial";
     }
-    else if (newPaid >= total) {
+    else if (newPaid === total) {
       newStatus = "paid";
     }
+
+    //////////////////////////////////////////////////
+    // SAVE HISTORY (OPTIONAL LOG)
+    //////////////////////////////////////////////////
 
     let history = d.paymentHistory || [];
 
     history.push({
-      amount: amount,
+      correctedPaidAmount: newPaid,
       date: payDate,
       mode: mode,
       note: note,
-      createdAt: new Date().toISOString()
+      updatedAt: new Date().toISOString()
     });
+
+    //////////////////////////////////////////////////
+    // UPDATE FIRESTORE
+    //////////////////////////////////////////////////
 
     await ref.update({
 
@@ -6868,7 +6891,7 @@ async function saveReceivedPayment(id) {
 
     closePopup();
 
-    showToast("Payment Saved ✅");
+    showToast("Payment Updated ✅");
 
     refreshInvoiceReport();
 
@@ -6877,7 +6900,7 @@ async function saveReceivedPayment(id) {
 
     console.error(e);
 
-    showToast("Payment failed ❌", "error");
+    showToast("Update failed ❌", "error");
 
   }
 
