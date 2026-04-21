@@ -6488,6 +6488,7 @@ function loadInvoiceLive(fromDate, toDate) {
             <th>Paid</th>
             <th>Balance</th>
             <th>Status</th>
+			<th>Receive</th>
             <th>Edit</th>
             <th>Print</th>
             <th>Share</th>
@@ -6541,6 +6542,12 @@ function loadInvoiceLive(fromDate, toDate) {
             <td>${Number(d.balanceAmount || d.total || 0).toFixed(2)}</td>
 
             <td>${statusHTML}</td>
+
+			<td>
+  <button onclick="openReceivePayment('${doc.id}')">
+    Receive
+  </button>
+</td>
 
             <td>
               <button onclick="editInvoice('${doc.id}')">
@@ -6623,6 +6630,163 @@ function getInvoiceStatus(total,paid){
   return "unpaid";
 }	
 
+
+//////////////////////////////////////////////////
+// INVOICE PHASE 2 - PART 3
+// RECEIVE PAYMENT SYSTEM
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// OPEN RECEIVE PAYMENT POPUP
+//////////////////////////////////////////////////
+
+function openReceivePayment(id) {
+
+  db.collection("invoices").doc(id).get().then(doc => {
+
+    let d = doc.data();
+
+    if (!d) return;
+
+    if (d.status === "cancelled") {
+      showToast("Cancelled invoice", "error");
+      return;
+    }
+
+    if (d.status === "paid") {
+      showToast("Already fully paid");
+      return;
+    }
+
+    openPopup(`
+
+      <h3>Receive Payment</h3>
+
+      <p><b>Invoice:</b> ${d.invoiceNo}</p>
+      <p><b>Client:</b> ${d.recipient.name}</p>
+      <p><b>Total:</b> ${Number(d.total).toFixed(2)}</p>
+      <p><b>Paid:</b> ${Number(d.paidAmount || 0).toFixed(2)}</p>
+      <p><b>Balance:</b> ${Number(d.balanceAmount || d.total).toFixed(2)}</p>
+
+      <label>Received Amount</label>
+      <input type="number" id="payAmount">
+
+      <label>Payment Date</label>
+      <input type="date" id="payDate"
+      value="${new Date().toISOString().split("T")[0]}">
+
+      <label>Mode</label>
+      <select id="payMode">
+        <option value="Cash">Cash</option>
+        <option value="Bank">Bank</option>
+        <option value="Card">Card</option>
+        <option value="Transfer">Transfer</option>
+      </select>
+
+      <label>Note</label>
+      <input type="text" id="payNote">
+
+      <button onclick="saveReceivedPayment('${id}')">
+        Save Payment
+      </button>
+
+    `);
+
+  });
+
+}
+
+//////////////////////////////////////////////////
+// SAVE PAYMENT
+//////////////////////////////////////////////////
+
+async function saveReceivedPayment(id) {
+
+  try {
+
+    let amount = Number(
+      document.getElementById("payAmount").value
+    );
+
+    let payDate = document.getElementById("payDate").value;
+    let mode    = document.getElementById("payMode").value;
+    let note    = document.getElementById("payNote").value;
+
+    if (!amount || amount <= 0) {
+      showToast("Enter valid amount", "error");
+      return;
+    }
+
+    let ref = db.collection("invoices").doc(id);
+    let doc = await ref.get();
+
+    let d = doc.data();
+
+    let oldPaid = Number(d.paidAmount || 0);
+    let total   = Number(d.total || 0);
+
+    let newPaid = oldPaid + amount;
+
+    if (newPaid > total) {
+      showToast("Amount exceeds balance", "error");
+      return;
+    }
+
+    let newBalance = total - newPaid;
+
+    let newStatus = "unpaid";
+
+    if (newPaid === 0) {
+      newStatus = "unpaid";
+    }
+    else if (newPaid < total) {
+      newStatus = "partial";
+    }
+    else if (newPaid >= total) {
+      newStatus = "paid";
+    }
+
+    let history = d.paymentHistory || [];
+
+    history.push({
+      amount: amount,
+      date: payDate,
+      mode: mode,
+      note: note,
+      createdAt: new Date().toISOString()
+    });
+
+    await ref.update({
+
+      paidAmount: newPaid,
+      balanceAmount: newBalance,
+      status: newStatus,
+      paymentHistory: history,
+
+      updatedAt:
+      firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+    closePopup();
+
+    showToast("Payment Saved ✅");
+
+    refreshInvoiceReport();
+
+  }
+  catch (e) {
+
+    console.error(e);
+
+    showToast("Payment failed ❌", "error");
+
+  }
+
+}
+
+
+	
 //////////////////////////////////////////////////
 // QUICK PRINT INVOICE
 //////////////////////////////////////////////////
