@@ -3046,11 +3046,6 @@ function showPaymentsReport() {
 //////////////////////////////////////////////////
 
 function runPaymentReport() {
-//////////////////////////////////////////////////
-// RUN PAYMENT REPORT (NEW SYSTEM)
-//////////////////////////////////////////////////
-
-function runPaymentReport() {
 
   let ledger = document.getElementById("paymentLedger").value;
   let fromDate = document.getElementById("fromDate").value;
@@ -3624,7 +3619,11 @@ function refreshJournalReport(){
       </tr>
   `;
 
+  let total = 0;
+
   journals.forEach((j,index)=>{
+
+    total += Number(j.amount);
 
     html += `
       <tr>
@@ -3642,10 +3641,19 @@ function refreshJournalReport(){
     `;
   });
 
+  html += `
+    <tr>
+      <td colspan="7" style="text-align:right;font-weight:700;">Total</td>
+      <td class="amount" style="font-weight:700;">${total.toFixed(2)}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-	showJournalExportButton();
+  showJournalExportButton();
 }
 	
 //////////////////////////////////////////////////
