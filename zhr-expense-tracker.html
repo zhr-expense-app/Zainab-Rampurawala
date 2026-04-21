@@ -6498,13 +6498,23 @@ function loadInvoiceLive(fromDate, toDate) {
 
       let i = 0;
 
+		let grandTotal   = 0;
+let totalPaid    = 0;
+let totalBalance = 0;
+
       snapshot.forEach(doc => {
 
         let d = doc.data();
+		  let rowTotal   = Number(d.total || 0);
+let rowPaid    = Number(d.paidAmount || 0);
+let rowBalance = rowTotal - rowPaid;
 
         // Date Filter
         if (fromDate && d.invoiceDate < fromDate) return;
         if (toDate && d.invoiceDate > toDate) return;
+		  grandTotal   += rowTotal;
+totalPaid    += rowPaid;
+totalBalance += rowBalance;
 
         i++;
 
@@ -6535,16 +6545,11 @@ function loadInvoiceLive(fromDate, toDate) {
             <td>${d.recipient?.name || ""}</td>
             <td>${d.currency || ""}</td>
 
-            <td>${Number(d.total || 0).toFixed(2)}</td>
+            <td>${rowTotal.toFixed(2)}</td>
 
-            <td>${Number(d.paidAmount || 0).toFixed(2)}</td>
+<td>${rowPaid.toFixed(2)}</td>
 
-              <td>
-  ${(
-    Number(d.total || 0) -
-    Number(d.paidAmount || 0)
-  ).toFixed(2)}
-</td>
+<td>${rowBalance.toFixed(2)}</td>
 
             <td>${statusHTML}</td>
 
@@ -6581,8 +6586,27 @@ function loadInvoiceLive(fromDate, toDate) {
         `;
 
       });
+		
+html += `
 
-      html += `</table>`;
+<tr style="background:#f5f7fa;font-weight:700;">
+
+  <td colspan="6" style="text-align:right;">
+    Total
+  </td>
+
+  <td>${grandTotal.toFixed(2)}</td>
+  <td>${totalPaid.toFixed(2)}</td>
+  <td>${totalBalance.toFixed(2)}</td>
+
+  <td colspan="5"></td>
+
+</tr>
+
+</table>
+`;
+		
+      
 
       document.getElementById("reportOutput").innerHTML = html;
 
