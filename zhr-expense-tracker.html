@@ -6937,6 +6937,231 @@ async function saveReceivedPayment(id) {
 }
 
 
+//////////////////////////////////////////////////
+// INVOICE PHASE 2 - PART 4 FINAL
+// WHATSAPP SMART SHARE SYSTEM
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// OPEN SHARE POPUP
+//////////////////////////////////////////////////
+
+function openWhatsAppPopup(id) {
+
+  db.collection("invoices").doc(id).get().then(doc => {
+
+    let d = doc.data();
+
+    if (!d) return;
+
+    if (d.status === "cancelled") {
+      showToast("Cancelled invoice cannot be shared", "error");
+      return;
+    }
+
+    let mobile = d.recipient?.contact || "";
+
+    openPopup(`
+
+      <h3>WhatsApp Share</h3>
+
+      <label>Country Code</label>
+      <input type="text"
+      id="waCode"
+      value="+971">
+
+      <label>Mobile Number</label>
+      <input type="text"
+      id="waNumber"
+      value="${mobile}">
+
+      <button onclick="sendInvoiceWhatsApp('${id}')"
+      style="
+        background:#25D366;
+        color:#fff;
+        border:none;
+        padding:12px;
+        border-radius:8px;
+        width:100%;
+        font-weight:700;
+      ">
+        Share Now
+      </button>
+
+    `);
+
+  });
+
+}
+
+//////////////////////////////////////////////////
+// SEND WHATSAPP
+//////////////////////////////////////////////////
+
+async function sendInvoiceWhatsApp(id) {
+
+  try {
+
+    showToast("Opening WhatsApp...");
+
+    let code = document.getElementById("waCode").value.trim();
+    let num  = document.getElementById("waNumber").value.trim();
+
+    code = code.replace("+", "");
+    num  = num.replace(/\D/g, "");
+
+    if (!num) {
+      showToast("Enter mobile number", "error");
+      return;
+    }
+
+    let finalNumber = code + num;
+
+    let doc = await db.collection("invoices").doc(id).get();
+    let d = doc.data();
+
+    if (!d) return;
+
+    let total   = Number(d.total || 0);
+    let paid    = Number(d.paidAmount || 0);
+    let balance = total - paid;
+
+    let client   = d.recipient?.name || "Client";
+    let services = "";
+
+    if (d.items && d.items.length > 0) {
+      services = d.items.map(x => x.description || x.service || "").join(", ");
+    }
+
+    let msg = "";
+
+    //////////////////////////////////////////////////
+    // UNPAID
+    //////////////////////////////////////////////////
+
+    if (d.status === "unpaid") {
+
+      msg = `Hello ${client},
+
+Greetings from ZHR ACCOUNTING & TAX CONSULTANTS.
+
+Invoice Details:
+
+Invoice No: ${d.invoiceNo}
+Date: ${d.invoiceDate}
+Services: ${services}
+Currency: ${d.currency}
+Invoice Amount: ${d.currency} ${total.toFixed(2)}
+Payment Received: ${d.currency} 0.00
+Balance Due: ${d.currency} ${balance.toFixed(2)}
+Status: Unpaid
+
+Kindly arrange payment.
+
+Contact: +971XXXXXXXXX
+Website: www.zhrconsultants.com
+
+Thank you.`;
+    }
+
+    //////////////////////////////////////////////////
+    // PARTIAL
+    //////////////////////////////////////////////////
+
+    else if (d.status === "partial") {
+
+      msg = `Hello ${client},
+
+Greetings from ZHR ACCOUNTING & TAX CONSULTANTS.
+
+Invoice Details:
+
+Invoice No: ${d.invoiceNo}
+Date: ${d.invoiceDate}
+Services: ${services}
+Currency: ${d.currency}
+Invoice Amount: ${d.currency} ${total.toFixed(2)}
+Payment Received: ${d.currency} ${paid.toFixed(2)}
+Balance Due: ${d.currency} ${balance.toFixed(2)}
+Status: Partial
+
+Kindly arrange pending balance payment.
+
+Contact: +971XXXXXXXXX
+Website: www.zhrconsultants.com
+
+Thank you.`;
+    }
+
+    //////////////////////////////////////////////////
+    // PAID
+    //////////////////////////////////////////////////
+
+    else if (d.status === "paid") {
+
+      msg = `Hello ${client},
+
+Greetings from ZHR ACCOUNTING & TAX CONSULTANTS.
+
+We confirm receipt of full payment for:
+
+Invoice No: ${d.invoiceNo}
+Date: ${d.invoiceDate}
+Amount: ${d.currency} ${total.toFixed(2)}
+
+Thank you for your prompt payment.
+
+Contact: +971XXXXXXXXX
+Website: www.zhrconsultants.com`;
+    }
+
+    //////////////////////////////////////////////////
+    // CANCELLED
+    //////////////////////////////////////////////////
+
+    else {
+      showToast("Cancelled invoice cannot be shared", "error");
+      return;
+    }
+
+    //////////////////////////////////////////////////
+    // TRACK SHARE IN FIRESTORE
+    //////////////////////////////////////////////////
+
+    await db.collection("invoices").doc(id).update({
+
+      lastSharedAt:
+      firebase.firestore.FieldValue.serverTimestamp(),
+
+      lastSharedNumber: finalNumber
+
+    });
+
+    //////////////////////////////////////////////////
+    // OPEN WHATSAPP
+    //////////////////////////////////////////////////
+
+    let url =
+      "https://wa.me/" +
+      finalNumber +
+      "?text=" +
+      encodeURIComponent(msg);
+
+    closePopup();
+
+    window.open(url, "_blank");
+
+  }
+  catch (e) {
+
+    console.error(e);
+
+    showToast("Share failed ❌", "error");
+
+  }
+
+}
+	
 	
 //////////////////////////////////////////////////
 // QUICK PRINT INVOICE
