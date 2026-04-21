@@ -8785,6 +8785,192 @@ function getBalanceSheetHTML(){
 
 
 
+
+/* ==========================================================
+   1. SAVE CURRENT REPORT + FILTERS
+========================================================== */
+function saveReportFilters() {
+
+    localStorage.setItem(
+        "currentReport",
+        sessionStorage.getItem("currentReport") || ""
+    );
+
+    localStorage.setItem(
+        "fromDate",
+        document.getElementById("fromDate")?.value || ""
+    );
+
+    localStorage.setItem(
+        "toDate",
+        document.getElementById("toDate")?.value || ""
+    );
+
+    localStorage.setItem(
+        "reportDropdown",
+        document.getElementById("reportDropdown")?.value || ""
+    );
+
+    localStorage.setItem(
+        "ledgerDropdown",
+        document.getElementById("ledgerDropdown")?.value || ""
+    );
+
+    localStorage.setItem(
+        "customerDropdown",
+        document.getElementById("customerDropdown")?.value || ""
+    );
+}
+
+
+/* ==========================================================
+   2. RESTORE FILTERS AFTER PAGE REFRESH
+========================================================== */
+function restoreReportFilters() {
+
+    if (document.getElementById("fromDate")) {
+        document.getElementById("fromDate").value =
+            localStorage.getItem("fromDate") || "";
+    }
+
+    if (document.getElementById("toDate")) {
+        document.getElementById("toDate").value =
+            localStorage.getItem("toDate") || "";
+    }
+
+    if (document.getElementById("reportDropdown")) {
+        document.getElementById("reportDropdown").value =
+            localStorage.getItem("reportDropdown") || "";
+    }
+
+    if (document.getElementById("ledgerDropdown")) {
+        document.getElementById("ledgerDropdown").value =
+            localStorage.getItem("ledgerDropdown") || "";
+    }
+
+    if (document.getElementById("customerDropdown")) {
+        document.getElementById("customerDropdown").value =
+            localStorage.getItem("customerDropdown") || "";
+    }
+
+    sessionStorage.setItem(
+        "currentReport",
+        localStorage.getItem("currentReport") || "financialStatement"
+    );
+}
+
+
+/* ==========================================================
+   3. AUTO SAVE WHEN FILTERS CHANGE
+========================================================== */
+function attachFilterListeners() {
+
+    document.getElementById("fromDate")
+        ?.addEventListener("change", saveReportFilters);
+
+    document.getElementById("toDate")
+        ?.addEventListener("change", saveReportFilters);
+
+    document.getElementById("reportDropdown")
+        ?.addEventListener("change", saveReportFilters);
+
+    document.getElementById("ledgerDropdown")
+        ?.addEventListener("change", saveReportFilters);
+
+    document.getElementById("customerDropdown")
+        ?.addEventListener("change", saveReportFilters);
+}
+
+
+/* ==========================================================
+   4. OPEN ANY REPORT
+========================================================== */
+function openReport(reportName) {
+
+    sessionStorage.setItem("currentReport", reportName);
+
+    saveReportFilters();
+
+    refreshCurrentReport();
+}
+
+
+/* ==========================================================
+   5. REFRESH CURRENT REPORT
+========================================================== */
+function refreshCurrentReport() {
+
+    refreshDashboardUI();
+
+    let currentReport =
+        sessionStorage.getItem("currentReport") || "financialStatement";
+
+
+    if (currentReport === "receipts") {
+        refreshReceiptsReport();
+        return;
+    }
+
+    if (currentReport === "payments") {
+        refreshPaymentReport();
+        return;
+    }
+
+    if (currentReport === "journal") {
+        refreshJournalReport();
+        return;
+    }
+
+    if (currentReport === "ledgerStatement") {
+        renderLedgerStatement();
+        return;
+    }
+
+    if (currentReport === "invoice") {
+        refreshInvoiceReport();
+        return;
+    }
+
+    if (currentReport === "trialBalance") {
+        renderTrialBalance();
+        showFinancialExportButton();
+        return;
+    }
+
+    if (currentReport === "profitLoss") {
+        renderProfitLoss();
+        showFinancialExportButton();
+        return;
+    }
+
+    if (currentReport === "balanceSheet") {
+        renderBalanceSheet();
+        showFinancialExportButton();
+        return;
+    }
+
+    if (currentReport === "financialStatement") {
+        renderAllFinancialStatements();
+        showFinancialExportButton();
+        return;
+    }
+}
+
+
+/* ==========================================================
+   6. RUN ON PAGE LOAD
+========================================================== */
+window.onload = function () {
+
+    restoreReportFilters();
+
+    attachFilterListeners();
+
+    refreshCurrentReport();
+};
+
+	
+
 //////////////////////////////////////////////////
 // FINAL EXPORT V2 - PART 1
 // REPLACE OLD exportFinancialStatement()
