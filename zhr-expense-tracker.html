@@ -887,11 +887,11 @@ text-align:right;
 <div class="action-buttons">
 
 <button onclick="showReceiptsReport()">
-  <i data-lucide="file-text"></i> Receipt
+  <i data-lucide="file-text"></i> Receipts
 </button>
 
 <button onclick="showPaymentsReport()">
-  <i data-lucide="bar-chart-3"></i> Payment
+  <i data-lucide="bar-chart-3"></i> Payments
 </button>
 
 <button onclick="showJournalReport()">
@@ -3046,6 +3046,11 @@ function showPaymentsReport() {
 //////////////////////////////////////////////////
 
 function runPaymentReport() {
+//////////////////////////////////////////////////
+// RUN PAYMENT REPORT (NEW SYSTEM)
+//////////////////////////////////////////////////
+
+function runPaymentReport() {
 
   let ledger = document.getElementById("paymentLedger").value;
   let fromDate = document.getElementById("fromDate").value;
@@ -3094,7 +3099,7 @@ function runPaymentReport() {
 
     });
 
-let ledgerName = getLedgerNameById(ledger);
+  let ledgerName = getLedgerNameById(ledger);
 	
   let html = `
     <h3>${ledger ? ledgerName + " " : ""}Payments Report</h3>
@@ -3113,7 +3118,11 @@ let ledgerName = getLedgerNameById(ledger);
       </tr>
   `;
 
+  let total = 0;
+
   payments.forEach((p, index) => {
+
+    total += Number(p.amount);
 
     html += `
       <tr>
@@ -3121,8 +3130,8 @@ let ledgerName = getLedgerNameById(ledger);
         <td>${p.date}</td>
         <td>${p.transactionNumber || "-"}</td>
         <td>Payment</td>
-        <td>${getLedgerDisplayName(p,"credit")}</td>   <!-- Mode -->
-        <td>${getLedgerDisplayName(p,"debit")}</td>    <!-- Ledger -->
+        <td>${getLedgerDisplayName(p,"credit")}</td>
+        <td>${getLedgerDisplayName(p,"debit")}</td>
         <td>${p.narration}</td>
         <td class="amount">${Number(p.amount).toFixed(2)}</td>
         <td><button onclick="editPayment('${p.id}')">Edit</button></td>
@@ -3131,10 +3140,19 @@ let ledgerName = getLedgerNameById(ledger);
     `;
   });
 
+  html += `
+    <tr>
+      <td colspan="7" style="text-align:right;font-weight:700;">Total</td>
+      <td class="amount" style="font-weight:700;">${total.toFixed(2)}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-	showPaymentExportButton();
+  showPaymentExportButton();
 }
 
 //////////////////////////////////////////////////
@@ -3326,7 +3344,7 @@ function refreshPaymentReport(){
 
     });
 
-let ledgerName = getLedgerNameById(ledger);
+  let ledgerName = getLedgerNameById(ledger);
 	
   let html = `
     <h3>${ledger ? ledgerName + " " : ""}Payments Report</h3>
@@ -3345,7 +3363,11 @@ let ledgerName = getLedgerNameById(ledger);
       </tr>
   `;
 
+  let total = 0;
+
   payments.forEach((p, index) => {
+
+    total += Number(p.amount);
 
     html += `
       <tr>
@@ -3363,10 +3385,19 @@ let ledgerName = getLedgerNameById(ledger);
     `;
   });
 
+  html += `
+    <tr>
+      <td colspan="7" style="text-align:right;font-weight:700;">Total</td>
+      <td class="amount" style="font-weight:700;">${total.toFixed(2)}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-	showPaymentExportButton();
+  showPaymentExportButton();
 }
 
 
@@ -3593,7 +3624,11 @@ function refreshJournalReport(){
       </tr>
   `;
 
+  let total = 0;
+
   journals.forEach((j,index)=>{
+
+    total += Number(j.amount);
 
     html += `
       <tr>
@@ -3611,12 +3646,20 @@ function refreshJournalReport(){
     `;
   });
 
+  html += `
+    <tr>
+      <td colspan="7" style="text-align:right;font-weight:700;">Total</td>
+      <td class="amount" style="font-weight:700;">${total.toFixed(2)}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  `;
+
   html += "</table>";
 
   document.getElementById("reportOutput").innerHTML = html;
-	showJournalExportButton();
+  showJournalExportButton();
 }
-
 	
 //////////////////////////////////////////////////
 // EDIT RECEIPT (NEW SYSTEM)
