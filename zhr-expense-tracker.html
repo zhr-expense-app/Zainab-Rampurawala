@@ -6539,7 +6539,8 @@ function loadInvoiceLive(fromDate, toDate) {
 
             <td>${Number(d.paidAmount || 0).toFixed(2)}</td>
 
-              ${(
+              <td>
+  ${(
     Number(d.total || 0) -
     Number(d.paidAmount || 0)
   ).toFixed(2)}
