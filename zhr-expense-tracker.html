@@ -804,24 +804,30 @@ text-align:right;
          onkeydown="if(event.key==='Enter'){login()}"
          autocomplete="new-password">
 
+  <!-- LOGIN BUTTON -->
   <button onclick="login()">
     <i data-lucide="log-in"></i> Login
   </button>
 
+  <!-- FORGOT PASSWORD BUTTON -->
   <div style="margin-top:10px;text-align:center;">
 
-    <a href="javascript:void(0)"
-       onclick="openForgotPasswordPopup()"
-       style="font-size:14px;color:#0d6efd;text-decoration:none;cursor:pointer;">
+    <button onclick="openForgotPasswordPopup()"
+            style="background:#dc3545;color:#fff;font-size:14px;">
 
-       Forgot Password?
+      <i data-lucide="key-round"></i>
+      Forgot Password
 
-    </a>
+    </button>
 
   </div>
 
 </div>
 
+<script>
+requestAnimationFrame(() => lucide.createIcons());
+</script>
+	
 <div id="dashboard" style="display:none;">
 <div class="dashboard-container">
 
@@ -1147,7 +1153,7 @@ async function login(){
 }
 
 /* =====================================================
-   FORGOT PASSWORD POPUP
+   OPEN FORGOT PASSWORD POPUP
 ===================================================== */
 
 function openForgotPasswordPopup(){
@@ -1158,56 +1164,98 @@ openPopup(`
 
 <input type="email"
        id="resetEmail"
-       placeholder="Enter registered email">
+       placeholder="Enter registered email"
+       autocomplete="off">
 
 <br><br>
 
 <button onclick="sendPasswordResetLink()">
-Send Reset Link
+  <i data-lucide="mail"></i>
+  Send Reset Link
 </button>
 
 `);
+
+requestAnimationFrame(() => lucide.createIcons());
 
 }
 
 
 
 /* =====================================================
-   SEND FIREBASE RESET EMAIL
+   SEND RESET LINK
 ===================================================== */
 
-function sendPasswordResetLink(){
+async function sendPasswordResetLink(){
 
 let email =
-document.getElementById("resetEmail").value.trim();
+document.getElementById("resetEmail")
+.value
+.trim()
+.toLowerCase();
 
 if(!email){
-   showToast("Enter email address","error");
+   showToast(
+     "Enter email address",
+     "error"
+   );
    return;
 }
 
-firebase.auth()
-.sendPasswordResetEmail(email)
+showLoader();
 
-.then(()=>{
+try{
 
-   showToast(
-     "Reset link sent to your email",
-     "success"
-   );
+  /* -----------------------------------------
+     CHECK USER EXISTS IN FIRESTORE
+  ----------------------------------------- */
 
-   closePopup();
+  let doc =
+  await db
+  .collection("users")
+  .doc(email)
+  .get();
 
-})
+  if(!doc.exists){
 
-.catch((error)=>{
+     hideLoader();
 
-   showToast(
-     error.message,
-     "error"
-   );
+     showToast(
+       "Email not registered ❌",
+       "error"
+     );
 
-});
+     return;
+  }
+
+
+  /* -----------------------------------------
+     SEND FIREBASE RESET EMAIL
+  ----------------------------------------- */
+
+  await auth.sendPasswordResetEmail(email);
+
+
+  hideLoader();
+
+  showToast(
+    "Reset link sent to your email ✅",
+    "success"
+  );
+
+  closePopup();
+
+
+}catch(error){
+
+  hideLoader();
+
+  showToast(
+    error.message,
+    "error"
+  );
+
+}
 
 }
 
