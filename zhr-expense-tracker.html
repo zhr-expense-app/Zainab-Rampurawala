@@ -2385,7 +2385,9 @@ if(type === "receipt"){
     <label>Amount</label>
     <input type="number" id="amount">
 
-    <button onclick="saveReceipt()">Save</button>
+    <button onclick="saveReceipt()">
+  <i data-lucide="save"></i> Save
+</button>
   `);
 }
 
@@ -2425,7 +2427,9 @@ if(type === "payment"){
     <label>Amount</label>
     <input type="number" id="amount">
 
-    <button onclick="savePayment()">Save</button>
+    <button onclick="savePayment()">
+  <i data-lucide="save"></i> Save
+</button>
   `);
 }
 
@@ -2457,7 +2461,9 @@ if(type === "journal"){
     <label>Amount</label>
     <input type="number" id="amount">
 
-    <button onclick="saveJournal()">Save</button>
+    <button onclick="saveJournal()">
+  <i data-lucide="save"></i> Save
+</button>
   `);
 }
 
@@ -2820,7 +2826,9 @@ function showReceiptsReport() {
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runReceiptsReport()">Run</button>
+    <button onclick="runReceiptsReport()">
+  <i data-lucide="play"></i> Run
+</button>
   `);
 }
 
@@ -3036,7 +3044,9 @@ function showPaymentsReport() {
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runPaymentReport()">Run</button>
+    <button onclick="runPaymentReport()">
+  <i data-lucide="play"></i> Run
+</button>
   `);
 }
 
@@ -3192,7 +3202,9 @@ function editPayment(id){
     <label>Amount</label>
     <input type="number" id="amount" value="${t.amount}">
 
-    <button onclick="updatePayment('${id}')">Update</button>
+    <button onclick="updatePayment('${id}')">
+  <i data-lucide="save"></i> Update
+</button>
   `);
 }
 
@@ -3411,7 +3423,9 @@ function showJournalReport(){
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runJournalReport()">Run</button>
+    <button onclick="runJournalReport()">
+  <i data-lucide="play"></i> Run
+</button>
   `);
 }
 
@@ -3474,7 +3488,9 @@ function editJournal(id){
     <label>Amount</label>
     <input type="number" id="amount" value="${t.amount}">
 
-    <button onclick="updateJournal('${id}')">Update</button>
+    <button onclick="updateJournal('${id}')">
+  <i data-lucide="save"></i> Update
+</button>
   `);
 }
 
@@ -3695,7 +3711,9 @@ function editTransaction(id){
     <label>Amount</label>
     <input type="number" id="amount" value="${t.amount}">
 
-    <button onclick="updateTransaction('${id}')">Update</button>
+    <button onclick="updateTransaction('${id}')">
+  <i data-lucide="save"></i> Update
+</button>
   `);
 }
 
@@ -4689,7 +4707,9 @@ function showMiniStatement(){
     <label>To Date</label>
     <input type="date" id="miniTo">
 
-    <button onclick="runLedgerStatement()">Run</button>
+    <button onclick="runLedgerStatement()">
+  <i data-lucide="play"></i> Run
+</button>
   `);
 }
 
@@ -6512,7 +6532,9 @@ function showInvoiceReport(){
     <label>To Date</label>
     <input type="date" id="toDate">
 
-    <button onclick="runInvoiceReport()">Run</button>
+    <button onclick="runInvoiceReport()">
+  <i data-lucide="play"></i> Run
+</button>
   `);
 }	
 
@@ -6923,8 +6945,8 @@ function showReceivePaymentPopup(id, d) {
     value="${payNote}">
 
     <button onclick="saveReceivedPayment('${id}')">
-      Save Payment
-    </button>
+  <i data-lucide="save"></i> Save Payment
+</button>
 
   `);
 
@@ -7304,7 +7326,9 @@ function askDeleteInvoice(id){
 
     <input type="password" id="adminPassword" placeholder="Enter Password">
 
-    <button onclick="deleteInvoice('${id}')">Delete</button>
+    <button onclick="deleteInvoice('${id}')">
+  <i data-lucide="trash-2"></i> Delete
+</button>
   `);
 }
 
