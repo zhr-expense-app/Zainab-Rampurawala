@@ -791,10 +791,35 @@ text-align:right;
 
 <div id="login">
 
-<h3>Login</h3>
-<input type="email" id="username" placeholder="Login ID" autocomplete="off">
-<input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter'){login()}" autocomplete="new-password">
-<button onclick="login()">Login</button>
+  <h3>Login</h3>
+
+  <input type="email"
+         id="username"
+         placeholder="Login ID"
+         autocomplete="off">
+
+  <input type="password"
+         id="password"
+         placeholder="Password"
+         onkeydown="if(event.key==='Enter'){login()}"
+         autocomplete="new-password">
+
+  <button onclick="login()">
+    <i data-lucide="log-in"></i> Login
+  </button>
+
+  <div style="margin-top:10px;text-align:center;">
+
+    <a href="javascript:void(0)"
+       onclick="openForgotPasswordPopup()"
+       style="font-size:14px;color:#0d6efd;text-decoration:none;cursor:pointer;">
+
+       Forgot Password?
+
+    </a>
+
+  </div>
+
 </div>
 
 <div id="dashboard" style="display:none;">
@@ -1121,6 +1146,75 @@ async function login(){
   }
 }
 
+/* =====================================================
+   FORGOT PASSWORD POPUP
+===================================================== */
+
+function openForgotPasswordPopup(){
+
+openPopup(`
+
+<h3>Reset Password</h3>
+
+<input type="email"
+       id="resetEmail"
+       placeholder="Enter registered email">
+
+<br><br>
+
+<button onclick="sendPasswordResetLink()">
+Send Reset Link
+</button>
+
+`);
+
+}
+
+
+
+/* =====================================================
+   SEND FIREBASE RESET EMAIL
+===================================================== */
+
+function sendPasswordResetLink(){
+
+let email =
+document.getElementById("resetEmail").value.trim();
+
+if(!email){
+   showToast("Enter email address","error");
+   return;
+}
+
+firebase.auth()
+.sendPasswordResetEmail(email)
+
+.then(()=>{
+
+   showToast(
+     "Reset link sent to your email",
+     "success"
+   );
+
+   closePopup();
+
+})
+
+.catch((error)=>{
+
+   showToast(
+     error.message,
+     "error"
+   );
+
+});
+
+}
+
+
+
+
+	
 //////////////////////////////////////////////////
 // SHOW DASHBOARD
 //////////////////////////////////////////////////
