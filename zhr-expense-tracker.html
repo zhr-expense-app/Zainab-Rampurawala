@@ -793,25 +793,25 @@ text-align:right;
 
   <input type="email"
          id="username"
-         placeholder="Login ID"
-         autocomplete="off">
+         placeholder="Login ID">
 
   <input type="password"
          id="password"
          placeholder="Password"
-         onkeydown="if(event.key==='Enter'){login()}"
-         autocomplete="new-password">
+         onkeydown="if(event.key==='Enter'){login()}">
 
-  <!-- LOGIN BUTTON -->
-  <button onclick="login()">
-    <i data-lucide="log-in"></i> Login
-  </button>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
 
-  <!-- FORGOT PASSWORD BUTTON -->
-  <div style="margin-top:10px;text-align:center;">
+    <button onclick="login()"
+            style="background:#002366;color:#fff;">
+
+      <i data-lucide="log-in"></i>
+      Login
+
+    </button>
 
     <button onclick="openForgotPasswordPopup()"
-            style="background:#dc3545;color:#fff;font-size:14px;">
+            style="background:#0d6efd;color:#fff;">
 
       <i data-lucide="key-round"></i>
       Forgot Password
