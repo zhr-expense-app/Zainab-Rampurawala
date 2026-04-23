@@ -662,7 +662,7 @@ text-align:right;
 }
 
 	  
-/* REPLACE YOUR CURRENT MOBILE ACTION-BUTTON CSS WITH THIS */
+/* REPLACE MOBILE BUTTON CSS WITH THIS */
 @media screen and (max-width:768px){
 
 .action-buttons{
@@ -674,35 +674,29 @@ text-align:right;
 
   justify-content:flex-start;
   align-items:center;
-  gap:12px;
+  gap:10px;
 
-  padding:0 12px 10px;
-  margin:0 auto 15px;
+  padding:0 10px 8px;
+  margin-bottom:12px;
 
   scroll-behavior:smooth;
-  scroll-snap-type:x proximity;
+
+  /* hide scrollbar */
+  scrollbar-width:none;       /* firefox */
 }
 
 .action-buttons::-webkit-scrollbar{
-  height:4px;
-}
-
-.action-buttons::-webkit-scrollbar-thumb{
-  background:#cfcfcf;
-  border-radius:10px;
-}
-
-.action-buttons::-webkit-scrollbar-track{
-  background:transparent;
+  display:none;               /* chrome mobile */
 }
 
 .action-buttons button{
   flex:0 0 auto;
-  min-width:150px;        /* same size buttons */
-  height:54px;
   white-space:nowrap;
+  min-width:auto;            /* remove large width */
+  height:auto;               /* normal height */
+  padding:10px 16px;         /* earlier normal size */
+  font-size:14px;
   margin:0 !important;
-  scroll-snap-align:start;
 }
 
 }
