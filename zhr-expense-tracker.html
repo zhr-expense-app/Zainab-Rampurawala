@@ -1163,10 +1163,10 @@ async function login(){
 
 }
 
-/* =====================================================
-   OPEN FORGOT PASSWORD POPUP
-===================================================== */
-
+//////////////////////////////////////////////////
+// OPEN FORGOT PASSWORD POPUP
+//////////////////////////////////////////////////
+	
 function openForgotPasswordPopup(){
 
 openPopup(`
@@ -1192,10 +1192,9 @@ requestAnimationFrame(() => lucide.createIcons());
 }
 
 
-
-/* =====================================================
-   SEND RESET LINK
-===================================================== */
+//////////////////////////////////////////////////
+// SEND RESET LINK
+//////////////////////////////////////////////////
 
 async function sendPasswordResetLink(){
 
@@ -1206,10 +1205,7 @@ document.getElementById("resetEmail")
 .toLowerCase();
 
 if(!email){
-   showToast(
-     "Enter email address",
-     "error"
-   );
+   showToast("Enter email address","error");
    return;
 }
 
@@ -1217,62 +1213,29 @@ showLoader();
 
 try{
 
-  /* -----------------------------------------
-     CHECK USER EXISTS IN FIRESTORE
-  ----------------------------------------- */
+   await auth.sendPasswordResetEmail(email);
 
-  let doc =
-  await db
-  .collection("users")
-  .doc(email)
-  .get();
+   hideLoader();
 
-  if(!doc.exists){
+   showToast(
+     "If the email is registered, reset link has been sent ✅",
+     "success"
+   );
 
-     hideLoader();
-
-     showToast(
-       "Email not registered ❌",
-       "error"
-     );
-
-     return;
-  }
-
-
-  /* -----------------------------------------
-     SEND FIREBASE RESET EMAIL
-  ----------------------------------------- */
-
-  await auth.sendPasswordResetEmail(email);
-
-
-  hideLoader();
-
-  showToast(
-    "Reset link sent to your email ✅",
-    "success"
-  );
-
-  closePopup();
-
+   closePopup();
 
 }catch(error){
 
-  hideLoader();
+   hideLoader();
 
-  showToast(
-    error.message,
-    "error"
-  );
-
-}
+   showToast(
+     "Unable to send reset link ❌",
+     "error"
+   );
 
 }
 
-
-
-
+}
 	
 //////////////////////////////////////////////////
 // SHOW DASHBOARD
