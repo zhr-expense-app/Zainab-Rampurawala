@@ -76,7 +76,7 @@
       text-align: center;
 
       margin: 0;
-		background:#f4f7fb;
+		background:#f8f9fb;
 	}
 
     .logo {
@@ -680,6 +680,7 @@ text-align:right;
   margin-bottom:12px;
 
   scroll-behavior:smooth;
+	scroll-snap-type:x mandatory;
 
   /* hide scrollbar */
   scrollbar-width:none;       /* firefox */
@@ -692,6 +693,7 @@ text-align:right;
 .action-buttons button{
   flex:0 0 auto;
   white-space:nowrap;
+	scroll-snap-align:start;
   min-width:auto;            /* remove large width */
   height:auto;               /* normal height */
   padding:10px 16px;         /* earlier normal size */
