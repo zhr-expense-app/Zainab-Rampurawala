@@ -660,34 +660,51 @@ text-align:left;
 #personalMonthlySummary td:last-child{
 text-align:right;
 }
-}
+
 	  
+/* REPLACE YOUR CURRENT MOBILE ACTION-BUTTON CSS WITH THIS */
 @media screen and (max-width:768px){
 
-/* HORIZONTAL SCROLL BUTTONS */
 .action-buttons{
   display:flex;
-  flex-wrap:nowrap;
+  flex-wrap:nowrap !important;
   overflow-x:auto;
+  overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
 
   justify-content:flex-start;
-  padding:0 10px;
-  gap:10px;
+  align-items:center;
+  gap:12px;
+
+  padding:0 12px 10px;
+  margin:0 auto 15px;
 
   scroll-behavior:smooth;
-  scroll-snap-type:x mandatory;
+  scroll-snap-type:x proximity;
 }
 
 .action-buttons::-webkit-scrollbar{
-  display:none;
+  height:4px;
+}
+
+.action-buttons::-webkit-scrollbar-thumb{
+  background:#cfcfcf;
+  border-radius:10px;
+}
+
+.action-buttons::-webkit-scrollbar-track{
+  background:transparent;
 }
 
 .action-buttons button{
   flex:0 0 auto;
+  min-width:150px;        /* same size buttons */
+  height:54px;
   white-space:nowrap;
+  margin:0 !important;
   scroll-snap-align:start;
 }
+
 }
 
 
