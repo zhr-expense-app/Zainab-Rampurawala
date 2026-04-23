@@ -43,14 +43,26 @@
 
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
 
-  if (user) {
-    showDashboard();
-    startInactivityTracking(); // ✅ restart timer after refresh
-  } else {
+  if(user){
+
+    closePopup(); // close any popup immediately
+
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    await showDashboard();
+
+    startInactivityTracking();
+
+  }else{
+
+    closePopup(); // clear old popup if logout
+
     document.getElementById("login").style.display = "block";
     document.getElementById("dashboard").style.display = "none";
+
   }
 
 });
@@ -1124,30 +1136,32 @@ async function login(){
 
   showLoader();
 
-  let email = document.getElementById("username").value;
-  let password = document.getElementById("password").value;
+  let email =
+  document.getElementById("username").value.trim();
+
+  let password =
+  document.getElementById("password").value;
 
   try{
 
-	  // ✅ CLEAR OLD SESSION (IMPORTANT)
+    closePopup(); // important
+
     sessionStorage.clear();
-	  
+
     await auth.signInWithEmailAndPassword(email,password);
 
     hideLoader();
-    showToast("Login Successful ✅");
 
-    startInactivityTracking();
+    showToast("Login Successful ✅");
 
   }catch(e){
 
     hideLoader();
 
-    setTimeout(()=>{
-      showToast("Invalid Login ❌","error");
-    },100); // 👈 important delay
+    showToast("Invalid Login ID or Password ❌","error");
 
   }
+
 }
 
 /* =====================================================
