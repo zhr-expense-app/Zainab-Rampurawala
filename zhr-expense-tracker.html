@@ -786,8 +786,22 @@ text-align:right;
 }
 
 
+html, body{
+  height:100%;
+  margin:0;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+#mainContent{
+  flex:1;
+}
+
 #erpFooter{
-  margin-top:40px;
   background:#001d4c;
   color:#fff;
   text-align:center;
@@ -795,7 +809,6 @@ text-align:right;
   font-size:13px;
   font-weight:500;
 }
-
 
 	  
 </style>
@@ -968,11 +981,6 @@ requestAnimationFrame(() => lucide.createIcons());
 </div>
 
 <div id="reportOutput" style="margin-top:20px;"></div>
-
-<div id="erpFooter">
-  ZHR ERP PRIME | Secure Cloud Accounting | © 2026
-</div>
-
 	
 </div>
 	
@@ -983,7 +991,10 @@ requestAnimationFrame(() => lucide.createIcons());
 </div>
 </div>
 
-
+<div id="erpFooter">
+ZHR ERP PRIME | Secure Cloud Accounting | © 2026
+</div>
+	
 <script>
 
 let currentReport = null;
