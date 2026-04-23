@@ -74,8 +74,9 @@
     body {
       font-family:'Segoe UI',sans-serif;
       text-align: center;
-      background: #f8f9fb;
+
       margin: 0;
+		background:#f4f7fb;
 	}
 
     .logo {
@@ -85,11 +86,17 @@
 
 .page-title{
 text-align:center;
-font-size:30px;
+font-size:34px;
 color:#001d4c;
 margin:20px 0 10px;
 font-weight:700;
 }
+
+	  .page-subtitle{
+  text-align:center;
+  font-size:16px;
+  color:#6c757d;
+  margin-bottom:20px;
 
 	  
     h2,
@@ -267,11 +274,12 @@ button:active{
 }
 
     .summary-box {
-      background: white;
-      padding: 15px;
-      border: 1px solid #001d4c;
-      border-radius: 6px;
-      width: 320px;
+       background:#ffffff;
+  border:none;
+  border-radius:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  padding:18px;
+  width:320px;
 		max-height: 350px;
     }
 
@@ -282,10 +290,17 @@ button:active{
 
     .summary-box th,
     .summary-box td {
-      border: 1px solid #001d4c;
+      border:1px solid #d9e2ef;
       padding: 8px;
     }
 
+.summary-box th{
+background:#f8fbff;
+color:#001d4c;
+font-weight:700;
+}
+
+	
 	  .summary-box:nth-child(2) .summary-table-wrapper{
   max-height: 260px;   /* 👈 control scroll area */
   overflow-y: auto;
@@ -296,6 +311,15 @@ button:active{
   overflow-y: auto;
 }
 
+.summary-box td{
+font-size:15px;
+}
+
+.summary-box:hover{
+transform:translateY(-2px);
+transition:0.2s ease;
+}
+	  
 	  
     /* CHART SECTION */
 
@@ -489,11 +513,18 @@ font-size:14px;
 
 	.page-title{
 text-align:center;
-font-size:30px;
+font-size:34px;
 color:#001d4c;
 margin:20px 0 10px;
 font-weight:700;
 	}
+
+.page-subtitle{
+  text-align:center;
+  font-size:16px;
+  color:#6c757d;
+  margin-bottom:20px;
+	
 }
 
 
@@ -925,30 +956,34 @@ requestAnimationFrame(() => lucide.createIcons());
 <div id="dashboard" style="display:none;">
 <div class="dashboard-container">
 
-<h1 class="page-title">ZHR ERP PRIME</h1>
+<h1 class="page-title">Dashboard</h1>
+<div class="page-subtitle">Welcome back, Zainab</div>
 
 	
 	<!-- BUTTONS -->
     <div class="action-buttons">
 
-<button onclick="openDashboardFilterPopup()">
-  <i data-lucide="filter"></i> Filter
+<button onclick="openDashboardFilterPopup()"
+style="background:#ffffff;color:#001d4c;border:1px solid #001d4c;">
+<i data-lucide="filter"></i> Filter
 </button>
 
-<button onclick="exportSummaryExcel()">
-  <i data-lucide="download"></i> Export
+<button onclick="exportSummaryExcel()"
+style="background:#0d6efd;color:#fff;">
+<i data-lucide="download"></i> Export
 </button>
 
-<button onclick="manageLedgers()">
-  <i data-lucide="book"></i> Ledgers
-</button>		
+<button onclick="manageLedgers()"
+style="background:#001d4c;color:#fff;">
+<i data-lucide="book"></i> Ledgers
+</button>
 
-<button onclick="confirmLogout()" style="background:green;">
-  <i data-lucide="log-out"></i> Logout
+<button onclick="confirmLogout()"
+style="background:#198754;color:#fff;">
+<i data-lucide="log-out"></i> Logout
 </button>
 
 </div>
-
 
 <!-- FIRST ROW : 3 TABLES -->
 
