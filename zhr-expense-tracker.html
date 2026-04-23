@@ -810,31 +810,82 @@ text-align:right;
 
 <div id="login">
 
-  <h3>Login</h3>
+  <!-- TITLE -->
+  <h2 style="
+     margin:0;
+     color:#001d4c;
+     font-size:28px;
+     font-weight:700;">
+     Welcome Back
+  </h2>
 
-  <input type="email"
-         id="username"
-         placeholder="Login ID">
+  <p style="
+     margin:8px 0 25px;
+     color:#666;
+     font-size:14px;">
+     Secure access to ZHR ERP PRIME
+  </p>
 
-  <input type="password"
-         id="password"
-         placeholder="Password"
-         onkeydown="if(event.key==='Enter'){login()}">
+  <!-- EMAIL -->
+  <div style="position:relative;margin-bottom:14px;">
+
+    <i data-lucide="mail"
+       style="
+       position:absolute;
+       left:14px;
+       top:14px;
+       color:#888;
+       width:18px;height:18px;">
+    </i>
+
+    <input type="email"
+           id="username"
+           placeholder="Login ID"
+           style="padding-left:42px;">
+  </div>
+
+  <!-- PASSWORD -->
+  <div style="position:relative;margin-bottom:18px;">
+
+    <i data-lucide="lock"
+       style="
+       position:absolute;
+       left:14px;
+       top:14px;
+       color:#888;
+       width:18px;height:18px;">
+    </i>
+
+    <input type="password"
+           id="password"
+           placeholder="Password"
+           onkeydown="if(event.key==='Enter'){login()}"
+           style="padding-left:42px;">
+  </div>
 
   <!-- CAPTCHA -->
-  <div style="margin:15px 0;display:flex;justify-content:center;">
+  <div style="
+      display:flex;
+      justify-content:center;
+      margin-bottom:18px;">
 
     <div class="g-recaptcha"
-     data-sitekey="6LcbD8YsAAAAAEW5LoDwIT6M5HJQxdIxaRtXC6Lj">
-</div>
-	  
+         data-sitekey="6LcbD8YsAAAAAEW5LoDwIT6M5HJQxdIxaRtXC6Lj">
+    </div>
+
   </div>
 
   <!-- BUTTONS -->
-  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+  <div style="
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;">
 
     <button onclick="login()"
-            style="background:#001d4c;color:#fff;">
+            style="
+            background:#001d4c;
+            color:#fff;">
 
       <i data-lucide="log-in"></i>
       Login
@@ -842,7 +893,9 @@ text-align:right;
     </button>
 
     <button onclick="openForgotPasswordPopup()"
-            style="background:#001d4c;color:#fff;">
+            style="
+            background:#0d6efd;
+            color:#fff;">
 
       <i data-lucide="key-round"></i>
       Forgot Password
@@ -850,6 +903,14 @@ text-align:right;
     </button>
 
   </div>
+
+  <!-- FOOT NOTE -->
+  <p style="
+     margin-top:22px;
+     font-size:12px;
+     color:#888;">
+     Powered by ZHR Consultants
+  </p>
 
 </div>
 
