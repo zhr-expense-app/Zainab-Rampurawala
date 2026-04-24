@@ -992,6 +992,11 @@ style="background:#001d4c;color:#fff;">
 <i data-lucide="book"></i> Ledgers
 </button>
 
+<button onclick="manageClients()"
+style="background:#6f42c1;color:#fff;">
+<i data-lucide="users"></i> Clients
+</button>		
+
 <button onclick="confirmLogout()"
 style="background:#198754;color:#fff;">
 <i data-lucide="log-out"></i> Logout
@@ -1119,6 +1124,7 @@ let invoiceCounter = 1;
 let currentInvoiceData = {};	
 let currentInvoiceNo = "";	
 let currentPaidAmount = 0;	
+let clientList = [];	
 
 
 //////////////////////////////////////////////////
@@ -10413,8 +10419,325 @@ function applyFinancialSheetPolish(sheet){
 }
 
 
+/* =====================================================
+   2. MANAGE CLIENTS
+===================================================== */
 
+function manageClients(){
+
+  if(!checkPermission("admin")) return;
+
+  loadClients(showClientManager);
+
+}
 	
+/* =====================================================
+   3. LOAD CLIENTS FROM FIRESTORE
+===================================================== */
+
+function loadClients(callback){
+
+  db.collection("clients")
+  .orderBy("clientName")
+  .onSnapshot(snapshot=>{
+
+    clientList = [];
+
+    snapshot.forEach(doc=>{
+
+      clientList.push({
+        id: doc.id,
+        ...doc.data()
+      });
+
+    });
+
+    console.log("Clients Loaded:", clientList);
+
+    if(callback){
+      callback();
+    }
+
+  }, error=>{
+
+    console.error(error);
+
+    showToast(
+      "Error loading clients ❌",
+      "error"
+    );
+
+  });
+
+}
+
+
+/* =====================================================
+   4. SHOW CLIENT MANAGER POPUP
+===================================================== */
+
+function showClientManager(){
+
+let html = `
+
+<h3>Manage Clients</h3>
+
+<button onclick="showAddClientForm()">
+<i data-lucide="user-plus"></i>
+Add Client
+</button>
+
+<hr>
+
+<h4>Existing Clients</h4>
+
+`;
+
+
+/* EMPTY LIST */
+if(clientList.length === 0){
+
+html += `
+<p>No clients created yet</p>
+`;
+
+}else{
+
+
+clientList.forEach(c=>{
+
+html += `
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+padding:10px;
+border:1px solid #eee;
+border-radius:8px;
+background:#fff;">
+
+  <div style="text-align:left;">
+
+    <b>${c.clientName || ""}</b><br>
+
+    <small>
+    ${c.city || ""} ${c.state ? ", "+c.state : ""}
+    </small><br>
+
+    <small style="color:#777;">
+    ${c.contact || ""}
+    </small>
+
+  </div>
+
+
+  <div style="display:flex;gap:8px;">
+
+    <button onclick="editClient('${c.id}')">
+      <i data-lucide="edit"></i>
+    </button>
+
+    <button onclick="confirmDeleteClient('${c.id}')">
+      <i data-lucide="trash"></i>
+    </button>
+
+  </div>
+
+</div>
+
+`;
+
+});
+
+
+}
+
+
+openPopup(html);
+
+
+/* REFRESH ICONS */
+requestAnimationFrame(()=>{
+  lucide.createIcons();
+});
+
+}
+
+
+/* =====================================================
+   PART 1 : CLIENT MASTER BUTTON + LOAD + MAIN POPUP
+   SAFE CODE (NO EXISTING CODE BREAK)
+===================================================== */
+
+
+/* GLOBAL CLIENT ARRAY */
+let clientList = [];
+
+
+/* =====================================================
+   1. ADD THIS BUTTON BESIDE LEDGERS BUTTON IN HTML
+===================================================== */
+
+/*
+
+<button onclick="manageClients()"
+style="background:#6f42c1;color:#fff;">
+<i data-lucide="users"></i> Clients
+</button>
+
+*/
+
+
+/* =====================================================
+   2. MANAGE CLIENTS
+===================================================== */
+
+function manageClients(){
+
+  if(!checkPermission("admin")) return;
+
+  loadClients(showClientManager);
+
+}
+
+
+/* =====================================================
+   3. LOAD CLIENTS FROM FIRESTORE
+===================================================== */
+
+function loadClients(callback){
+
+  db.collection("clients")
+  .orderBy("clientName")
+  .onSnapshot(snapshot=>{
+
+    clientList = [];
+
+    snapshot.forEach(doc=>{
+
+      clientList.push({
+        id: doc.id,
+        ...doc.data()
+      });
+
+    });
+
+    console.log("Clients Loaded:", clientList);
+
+    if(callback){
+      callback();
+    }
+
+  }, error=>{
+
+    console.error(error);
+
+    showToast(
+      "Error loading clients ❌",
+      "error"
+    );
+
+  });
+
+}
+
+
+/* =====================================================
+   4. SHOW CLIENT MANAGER POPUP
+===================================================== */
+
+function showClientManager(){
+
+let html = `
+
+<h3>Manage Clients</h3>
+
+<button onclick="showAddClientForm()">
+<i data-lucide="user-plus"></i>
+Add Client
+</button>
+
+<hr>
+
+<h4>Existing Clients</h4>
+
+`;
+
+
+/* EMPTY LIST */
+if(clientList.length === 0){
+
+html += `
+<p>No clients created yet</p>
+`;
+
+}else{
+
+
+clientList.forEach(c=>{
+
+html += `
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+padding:10px;
+border:1px solid #eee;
+border-radius:8px;
+background:#fff;">
+
+  <div style="text-align:left;">
+
+    <b>${c.clientName || ""}</b><br>
+
+    <small>
+    ${c.city || ""} ${c.state ? ", "+c.state : ""}
+    </small><br>
+
+    <small style="color:#777;">
+    ${c.contact || ""}
+    </small>
+
+  </div>
+
+
+  <div style="display:flex;gap:8px;">
+
+    <button onclick="editClient('${c.id}')">
+      <i data-lucide="edit"></i>
+    </button>
+
+    <button onclick="confirmDeleteClient('${c.id}')">
+      <i data-lucide="trash"></i>
+    </button>
+
+  </div>
+
+</div>
+
+`;
+
+});
+
+
+}
+
+
+openPopup(html);
+
+
+/* REFRESH ICONS */
+requestAnimationFrame(()=>{
+  lucide.createIcons();
+});
+
+	}
+	
+
 	
 	  
 	
