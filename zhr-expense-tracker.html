@@ -842,6 +842,170 @@ text-align:right;
   font-weight:500;
 }
 
+
+//////////////////////////////////////////////////
+// DASHBOARD HEADER CSS
+//////////////////////////////////////////////////
+
+.dashboard-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 0 25px;
+  position:relative;
+}
+
+.topbar-left,
+.topbar-right{
+  width:60px;
+  display:flex;
+  justify-content:center;
+  position:relative;
+}
+
+.topbar-center{
+  flex:1;
+  text-align:center;
+}
+
+#welcomeTitle{
+  margin:0;
+  font-size:32px;
+  font-weight:700;
+  color:#001d4c;
+  line-height:1.2;
+}
+
+//////////////////////////////////////////////////
+// PROFILE BUTTON
+//////////////////////////////////////////////////
+
+.profile-btn{
+  width:44px;
+  height:44px;
+  border:none;
+  border-radius:50%;
+  background:#ffffff;
+  color:#001d4c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  padding:0;
+}
+
+.profile-btn i{
+  width:20px;
+  height:20px;
+}
+
+.profile-btn:hover{
+  transform:none;
+  opacity:1;
+}
+
+//////////////////////////////////////////////////
+// DROPDOWN MENU
+//////////////////////////////////////////////////
+
+.profile-dropdown{
+  display:none;
+  position:absolute;
+  top:55px;
+  right:0;
+  width:240px;
+  background:#ffffff;
+  border-radius:14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  overflow:hidden;
+  z-index:999;
+}
+
+.profile-dropdown.show{
+  display:block;
+}
+
+//////////////////////////////////////////////////
+// USER INFO BOX
+//////////////////////////////////////////////////
+
+.profile-info{
+  padding:14px 16px;
+  background:#f8fbff;
+  border-bottom:1px solid #eef2f7;
+}
+
+#profileName{
+  font-size:15px;
+  font-weight:700;
+  color:#001d4c;
+  margin-bottom:4px;
+}
+
+#profileEmail{
+  font-size:13px;
+  color:#666;
+  word-break:break-word;
+}
+
+//////////////////////////////////////////////////
+// MENU BUTTONS
+//////////////////////////////////////////////////
+
+.profile-dropdown button{
+  width:100%;
+  border:none;
+  border-radius:0;
+  background:#ffffff;
+  color:#222;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  box-shadow:none;
+  justify-content:flex-start;
+  font-size:14px;
+}
+
+.profile-dropdown button i{
+  width:18px;
+  height:18px;
+}
+
+.profile-dropdown button:hover{
+  background:#f5f8fc;
+  transform:none;
+}
+
+//////////////////////////////////////////////////
+// MOBILE RESPONSIVE
+//////////////////////////////////////////////////
+
+@media screen and (max-width:768px){
+
+.dashboard-topbar{
+  margin:5px 0 20px;
+}
+
+.topbar-left,
+.topbar-right{
+  width:44px;
+}
+
+#welcomeTitle{
+  font-size:24px;
+}
+
+.profile-dropdown{
+  width:220px;
+  right:0;
+}
+
+	}
+	  
 	  
 </style>
 
@@ -970,8 +1134,46 @@ requestAnimationFrame(() => lucide.createIcons());
 <div id="dashboard" style="display:none;">
 <div class="dashboard-container">
 
-<h1 class="page-title">Dashboard</h1>
-<div class="page-subtitle">Welcome back, Zainab</div>
+//////////////////////////////////////////////////
+// DASHBOARD HEADER HTML
+//////////////////////////////////////////////////
+
+<div class="dashboard-topbar">
+
+  <div class="topbar-left"></div>
+
+  <div class="topbar-center">
+    <h1 id="welcomeTitle">Welcome Back</h1>
+  </div>
+
+  <div class="topbar-right">
+
+    <button class="profile-btn" onclick="toggleProfileMenu()">
+      <i data-lucide="user"></i>
+    </button>
+
+    <div id="profileDropdown" class="profile-dropdown">
+
+      <div class="profile-info">
+        <div id="profileName">User</div>
+        <div id="profileEmail">email@example.com</div>
+      </div>
+
+      <button onclick="openSettings()">
+        <i data-lucide="settings"></i>
+        Settings
+      </button>
+
+      <button onclick="confirmLogout()">
+        <i data-lucide="log-out"></i>
+        Logout
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 	
 	<!-- BUTTONS -->
@@ -1125,6 +1327,8 @@ let currentInvoiceData = {};
 let currentInvoiceNo = "";	
 let currentPaidAmount = 0;	
 let clientList = [];	
+let currentUserName = "";
+let currentUserEmail = "";	
 
 
 //////////////////////////////////////////////////
@@ -1163,7 +1367,187 @@ function openDashboardFilterPopup(){
 
 }
 
+//////////////////////////////////////////////////
+// LOAD DASHBOARD USER DETAILS
+//////////////////////////////////////////////////
 
+async function loadDashboardUser(){
+
+try{
+
+let user = auth.currentUser;
+
+if(!user) return;
+
+currentUserEmail = user.email || "";
+
+
+//////////////////////////////////////////////////
+// GET USER DOCUMENT FROM FIRESTORE
+//////////////////////////////////////////////////
+
+let doc = await db
+.collection("users")
+.doc(currentUserEmail)
+.get();
+
+
+//////////////////////////////////////////////////
+// IF USER FOUND
+//////////////////////////////////////////////////
+
+if(doc.exists){
+
+let data = doc.data();
+
+currentUserName =
+data.displayName || "User";
+
+}else{
+
+currentUserName = "User";
+
+}
+
+
+//////////////////////////////////////////////////
+// UPDATE HEADER TEXT
+//////////////////////////////////////////////////
+
+document.getElementById("welcomeTitle").innerText =
+"Welcome Back, " + currentUserName;
+
+document.getElementById("profileName").innerText =
+currentUserName;
+
+document.getElementById("profileEmail").innerText =
+currentUserEmail;
+
+
+}catch(error){
+
+console.error(
+"User load error:",
+error
+);
+
+document.getElementById("welcomeTitle").innerText =
+"Welcome Back";
+
+}
+
+	}
+
+
+	
+//////////////////////////////////////////////////
+// TOGGLE PROFILE DROPDOWN
+//////////////////////////////////////////////////
+
+function toggleProfileMenu(){
+
+let menu =
+document.getElementById("profileDropdown");
+
+if(!menu) return;
+
+
+//////////////////////////////////////////////////
+// OPEN / CLOSE MENU
+//////////////////////////////////////////////////
+
+menu.classList.toggle("show");
+
+
+//////////////////////////////////////////////////
+// REFRESH LUCIDE ICONS
+//////////////////////////////////////////////////
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+
+
+
+//////////////////////////////////////////////////
+// CLOSE PROFILE DROPDOWN
+//////////////////////////////////////////////////
+
+function closeProfileMenu(){
+
+let menu =
+document.getElementById("profileDropdown");
+
+if(menu){
+menu.classList.remove("show");
+}
+
+}
+
+
+
+//////////////////////////////////////////////////
+// CLOSE MENU WHEN CLICK OUTSIDE
+//////////////////////////////////////////////////
+
+document.addEventListener("click", function(e){
+
+let menu =
+document.getElementById("profileDropdown");
+
+let button =
+document.querySelector(".profile-btn");
+
+if(!menu || !button) return;
+
+
+//////////////////////////////////////////////////
+// IF CLICK INSIDE MENU = KEEP OPEN
+//////////////////////////////////////////////////
+
+if(menu.contains(e.target)){
+return;
+}
+
+
+//////////////////////////////////////////////////
+// IF CLICK ON PROFILE BUTTON = IGNORE
+//////////////////////////////////////////////////
+
+if(button.contains(e.target)){
+return;
+}
+
+
+//////////////////////////////////////////////////
+// OTHERWISE CLOSE
+//////////////////////////////////////////////////
+
+closeProfileMenu();
+
+});
+
+
+
+//////////////////////////////////////////////////
+// SETTINGS PLACEHOLDER
+//////////////////////////////////////////////////
+
+function openSettings(){
+
+closeProfileMenu();
+
+showToast(
+"Settings Coming Soon ⚙️"
+);
+
+}	
+
+
+	
+	
 	
 //////////////////////////////////////////////////
 // CHECK PERMISSION
@@ -1410,19 +1794,44 @@ try{
 }
 
 }
+
+//////////////////////////////////////////////////
+// DASHBOARD INITIALIZE HEADER
+//////////////////////////////////////////////////
+
+async function initDashboardHeader(){
+
+await loadDashboardUser();
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+	
 	
 //////////////////////////////////////////////////
 // SHOW DASHBOARD
 //////////////////////////////////////////////////
-	
-async function showDashboard() {
 
-  document.getElementById("login").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
-	await loadUserRole(); // ✅ VERY IMPORTANT
-  loadTransactions();
-loadLedgers(); // ✅ ADD THIS
+async function showDashboard(){
+
+document.getElementById("login").style.display =
+"none";
+
+document.getElementById("dashboard").style.display =
+"block";
+
+await loadUserRole();
+
+await initDashboardHeader();
+
+loadTransactions();
+
+loadLedgers();
+
 loadInvoices();
+
 
 //////////////////////////////////////////////////
 // ENTER KEY LOGIN
@@ -1432,87 +1841,117 @@ document.addEventListener("keydown", function(e){
 
 if(e.key === "Enter"){
 
-let loginVisible = document.getElementById("login").style.display !== "none";
+let loginVisible =
+document.getElementById("login").style.display !== "none";
 
 if(loginVisible){
 login();
 }
+
 resetInactivityTimer();
+
 }
 
-});	
+});
+
 
 //////////////////////////////////////////////////
 // RESTORE LAST SUMMARY
 //////////////////////////////////////////////////
 
-  setTimeout(function(){
+setTimeout(function(){
 
-    let activeSummary = sessionStorage.getItem("activeSummary");
+let activeSummary =
+sessionStorage.getItem("activeSummary");
 
-    if(activeSummary === "currentMonth"){
-      showCurrentMonth();
-    }
+if(activeSummary === "currentMonth"){
+showCurrentMonth();
+}
 
-    else if(activeSummary === "lastMonth"){
-      showLastMonth();
-    }
+else if(activeSummary === "lastMonth"){
+showLastMonth();
+}
 
-    else if(activeSummary === "fullYear"){
-      showFullYear();
-    }
+else if(activeSummary === "fullYear"){
+showFullYear();
+}
 
-    else if(activeSummary === "customSummary"){
+else if(activeSummary === "customSummary"){
 
-      let fromDate = sessionStorage.getItem("summaryFromDate");
-      let toDate = sessionStorage.getItem("summaryToDate");
+let fromDate =
+sessionStorage.getItem("summaryFromDate");
 
-      let balanceTitle = `Balance as on ${toDate}`;
-      let expenseTitle = `From ${fromDate} till ${toDate}`;
+let toDate =
+sessionStorage.getItem("summaryToDate");
 
-      calculateSummary(fromDate,toDate,expenseTitle,balanceTitle);
+let balanceTitle =
+`Balance as on ${toDate}`;
 
-    }
+let expenseTitle =
+`From ${fromDate} till ${toDate}`;
 
-    else{
-      showCurrentMonth(); // default
-    }
+calculateSummary(
+fromDate,
+toDate,
+expenseTitle,
+balanceTitle
+);
 
-  },600);
+}
+
+else{
+showCurrentMonth();
+}
+
+},600);
 
 
-  //////////////////////////////////////////////////
-  // RESTORE LAST REPORT
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// RESTORE LAST REPORT
+//////////////////////////////////////////////////
 
-  setTimeout(function(){
+setTimeout(function(){
 
-    let savedReport = sessionStorage.getItem("currentReport");
+let savedReport =
+sessionStorage.getItem("currentReport");
 
-    if(savedReport === "receipts"){
-      refreshReceiptsReport();
-    }
+if(savedReport === "receipts"){
+refreshReceiptsReport();
+}
 
-    if(savedReport === "payments"){
-      refreshPaymentReport();
-    }
+if(savedReport === "payments"){
+refreshPaymentReport();
+}
 
-    if(savedReport === "contra"){
-      refreshContraReport();
-    }
+if(savedReport === "contra"){
+refreshContraReport();
+}
 
 if(savedReport === "ledgerStatement"){
 
-  let ledgerId = sessionStorage.getItem("ledgerStatementId");
-  let fromDate = sessionStorage.getItem("currentFromDate");
-  let toDate = sessionStorage.getItem("currentToDate");
+let ledgerId =
+sessionStorage.getItem("ledgerStatementId");
 
-  if(ledgerId && fromDate && toDate){
-    renderLedgerStatement();
-  }
-		  }
-	  
-  }, 600);
+let fromDate =
+sessionStorage.getItem("currentFromDate");
+
+let toDate =
+sessionStorage.getItem("currentToDate");
+
+if(ledgerId && fromDate && toDate){
+renderLedgerStatement();
+}
+
+}
+
+},600);
+
+
+//////////////////////////////////////////////////
+// START TIMER
+//////////////////////////////////////////////////
+
+startInactivityTracking();
 
 }
 
@@ -5340,8 +5779,13 @@ function logout() {
 
 }
 
-	function confirmLogout() {
+//////////////////////////////////////////////////
+// CONFIRM LOGOUT
+//////////////////////////////////////////////////
+	
 
+	function confirmLogout() {
+closeProfileMenu();
   openPopup(`
     <h3>Confirm Logout</h3>
     <p>Are you sure you want to logout?</p>
