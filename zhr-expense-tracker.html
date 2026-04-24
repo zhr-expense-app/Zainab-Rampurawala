@@ -10565,178 +10565,221 @@ requestAnimationFrame(()=>{
 
 }
 
+//////////////////////////////////////////////////
+// SHOW ADD CLIENT FORM
+//////////////////////////////////////////////////
 
-/* =====================================================
-   PART 1 : CLIENT MASTER BUTTON + LOAD + MAIN POPUP
-   SAFE CODE (NO EXISTING CODE BREAK)
-===================================================== */
-
-
-/* GLOBAL CLIENT ARRAY */
-let clientList = [];
-
-
-/* =====================================================
-   1. ADD THIS BUTTON BESIDE LEDGERS BUTTON IN HTML
-===================================================== */
-
-/*
-
-<button onclick="manageClients()"
-style="background:#6f42c1;color:#fff;">
-<i data-lucide="users"></i> Clients
-</button>
-
-*/
-
-
-/* =====================================================
-   2. MANAGE CLIENTS
-===================================================== */
-
-function manageClients(){
-
-  if(!checkPermission("admin")) return;
-
-  loadClients(showClientManager);
-
-}
-
-
-/* =====================================================
-   3. LOAD CLIENTS FROM FIRESTORE
-===================================================== */
-
-function loadClients(callback){
-
-  db.collection("clients")
-  .orderBy("clientName")
-  .onSnapshot(snapshot=>{
-
-    clientList = [];
-
-    snapshot.forEach(doc=>{
-
-      clientList.push({
-        id: doc.id,
-        ...doc.data()
-      });
-
-    });
-
-    console.log("Clients Loaded:", clientList);
-
-    if(callback){
-      callback();
-    }
-
-  }, error=>{
-
-    console.error(error);
-
-    showToast(
-      "Error loading clients ❌",
-      "error"
-    );
-
-  });
-
-}
-
-
-/* =====================================================
-   4. SHOW CLIENT MANAGER POPUP
-===================================================== */
-
-function showClientManager(){
+function showAddClientForm(){
 
 let html = `
 
-<h3>Manage Clients</h3>
-
-<button onclick="showAddClientForm()">
-<i data-lucide="user-plus"></i>
-Add Client
+<h3>
+<button onclick="showClientManager()"
+style="margin-right:10px;">
+⬅
 </button>
 
-<hr>
+Add Client
+</h3>
 
-<h4>Existing Clients</h4>
+<label>Client Name *</label>
+<input type="text" id="clientName">
+
+<label>Contact Person</label>
+<input type="text" id="contactPerson">
+
+<label>Mobile Number *</label>
+<input type="tel" id="contact">
+
+<label>WhatsApp Number</label>
+<input type="tel" id="whatsapp">
+
+<label>Email</label>
+<input type="email" id="email">
+
+<label>TRN / VAT Number</label>
+<input type="text" id="trn">
+
+<label>Address</label>
+<textarea id="address"
+style="width:100%;height:70px;"></textarea>
+
+<label>City</label>
+<input type="text" id="city">
+
+<label>State</label>
+<input type="text" id="state">
+
+<label>Country</label>
+<input type="text" id="country" value="UAE">
+
+<label>Place of Supply</label>
+<input type="text" id="placeOfSupply" value="UAE">
+
+<label>Payment Terms</label>
+<select id="paymentTerms">
+<option value="Immediate">Immediate</option>
+<option value="7 Days">7 Days</option>
+<option value="15 Days">15 Days</option>
+<option value="30 Days">30 Days</option>
+<option value="45 Days">45 Days</option>
+</select>
+
+<label>Credit Limit</label>
+<input type="number" id="creditLimit" value="0">
+
+<label>Remarks</label>
+<textarea id="remarks"
+style="width:100%;height:60px;"></textarea>
+
+<label>Status</label>
+<select id="active">
+<option value="true">Active</option>
+<option value="false">Inactive</option>
+</select>
+
+<br><br>
+
+<button onclick="addClient()">
+<i data-lucide="save"></i>
+Save Client
+</button>
 
 `;
-
-
-/* EMPTY LIST */
-if(clientList.length === 0){
-
-html += `
-<p>No clients created yet</p>
-`;
-
-}else{
-
-
-clientList.forEach(c=>{
-
-html += `
-
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-padding:10px;
-border:1px solid #eee;
-border-radius:8px;
-background:#fff;">
-
-  <div style="text-align:left;">
-
-    <b>${c.clientName || ""}</b><br>
-
-    <small>
-    ${c.city || ""} ${c.state ? ", "+c.state : ""}
-    </small><br>
-
-    <small style="color:#777;">
-    ${c.contact || ""}
-    </small>
-
-  </div>
-
-
-  <div style="display:flex;gap:8px;">
-
-    <button onclick="editClient('${c.id}')">
-      <i data-lucide="edit"></i>
-    </button>
-
-    <button onclick="confirmDeleteClient('${c.id}')">
-      <i data-lucide="trash"></i>
-    </button>
-
-  </div>
-
-</div>
-
-`;
-
-});
-
-
-}
-
 
 openPopup(html);
 
-
-/* REFRESH ICONS */
 requestAnimationFrame(()=>{
   lucide.createIcons();
 });
 
+}
+
+
+
+//////////////////////////////////////////////////
+// ADD CLIENT
+//////////////////////////////////////////////////
+
+async function addClient(){
+
+if(!checkPermission("admin")) return;
+
+let clientName =
+document.getElementById("clientName").value.trim();
+
+let contact =
+document.getElementById("contact").value.trim();
+
+if(!clientName){
+
+showToast(
+"Enter Client Name ❌",
+"error"
+);
+
+return;
+}
+
+if(!contact){
+
+showToast(
+"Enter Mobile Number ❌",
+"error"
+);
+
+return;
+}
+
+try{
+
+showLoader();
+
+await db.collection("clients").add({
+
+clientName: clientName,
+
+contactPerson:
+document.getElementById("contactPerson").value.trim(),
+
+contact: contact,
+
+whatsapp:
+document.getElementById("whatsapp").value.trim(),
+
+email:
+document.getElementById("email").value.trim(),
+
+trn:
+document.getElementById("trn").value.trim(),
+
+address:
+document.getElementById("address").value.trim(),
+
+city:
+document.getElementById("city").value.trim(),
+
+state:
+document.getElementById("state").value.trim(),
+
+country:
+document.getElementById("country").value.trim(),
+
+placeOfSupply:
+document.getElementById("placeOfSupply").value.trim(),
+
+paymentTerms:
+document.getElementById("paymentTerms").value,
+
+creditLimit:
+Number(
+document.getElementById("creditLimit").value
+) || 0,
+
+remarks:
+document.getElementById("remarks").value.trim(),
+
+active:
+document.getElementById("active").value === "true",
+
+createdAt:
+firebase.firestore.FieldValue.serverTimestamp(),
+
+updatedAt:
+firebase.firestore.FieldValue.serverTimestamp(),
+
+createdBy:
+auth.currentUser.email,
+
+updatedBy:
+auth.currentUser.email
+
+});
+
+hideLoader();
+
+showToast(
+"Client Added ✅"
+);
+
+loadClients(()=>{
+showClientManager();
+});
+
+}catch(e){
+
+hideLoader();
+
+console.error(e);
+
+showToast(
+"Error saving client ❌",
+"error"
+);
+
+}
+
 	}
-	
 
 	
 	  
