@@ -10781,6 +10781,361 @@ showToast(
 
 	}
 
+
+//////////////////////////////////////////////////
+// EDIT CLIENT
+//////////////////////////////////////////////////
+
+function editClient(id){
+
+let c =
+clientList.find(x => x.id === id);
+
+let html = `
+
+<h3>
+<button onclick="showClientManager()"
+style="margin-right:10px;">
+⬅
+</button>
+
+Edit Client
+</h3>
+
+<label>Client Name *</label>
+<input type="text"
+id="clientName"
+value="${c.clientName || ""}">
+
+<label>Contact Person</label>
+<input type="text"
+id="contactPerson"
+value="${c.contactPerson || ""}">
+
+<label>Mobile Number *</label>
+<input type="tel"
+id="contact"
+value="${c.contact || ""}">
+
+<label>WhatsApp Number</label>
+<input type="tel"
+id="whatsapp"
+value="${c.whatsapp || ""}">
+
+<label>Email</label>
+<input type="email"
+id="email"
+value="${c.email || ""}">
+
+<label>TRN / VAT Number</label>
+<input type="text"
+id="trn"
+value="${c.trn || ""}">
+
+<label>Address</label>
+<textarea id="address"
+style="width:100%;height:70px;">${c.address || ""}</textarea>
+
+<label>City</label>
+<input type="text"
+id="city"
+value="${c.city || ""}">
+
+<label>State</label>
+<input type="text"
+id="state"
+value="${c.state || ""}">
+
+<label>Country</label>
+<input type="text"
+id="country"
+value="${c.country || ""}">
+
+<label>Place of Supply</label>
+<input type="text"
+id="placeOfSupply"
+value="${c.placeOfSupply || ""}">
+
+<label>Payment Terms</label>
+<select id="paymentTerms">
+
+<option value="Immediate"
+${c.paymentTerms==="Immediate"?"selected":""}>
+Immediate
+</option>
+
+<option value="7 Days"
+${c.paymentTerms==="7 Days"?"selected":""}>
+7 Days
+</option>
+
+<option value="15 Days"
+${c.paymentTerms==="15 Days"?"selected":""}>
+15 Days
+</option>
+
+<option value="30 Days"
+${c.paymentTerms==="30 Days"?"selected":""}>
+30 Days
+</option>
+
+<option value="45 Days"
+${c.paymentTerms==="45 Days"?"selected":""}>
+45 Days
+</option>
+
+</select>
+
+<label>Credit Limit</label>
+<input type="number"
+id="creditLimit"
+value="${c.creditLimit || 0}">
+
+<label>Remarks</label>
+<textarea id="remarks"
+style="width:100%;height:60px;">${c.remarks || ""}</textarea>
+
+<label>Status</label>
+<select id="active">
+
+<option value="true"
+${c.active ? "selected" : ""}>
+Active
+</option>
+
+<option value="false"
+${!c.active ? "selected" : ""}>
+Inactive
+</option>
+
+</select>
+
+<br><br>
+
+<button onclick="updateClient('${id}')">
+<i data-lucide="save"></i>
+Update Client
+</button>
+
+`;
+
+openPopup(html);
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+
+
+
+//////////////////////////////////////////////////
+// UPDATE CLIENT
+//////////////////////////////////////////////////
+
+async function updateClient(id){
+
+if(!checkPermission("admin")) return;
+
+let clientName =
+document.getElementById("clientName").value.trim();
+
+let contact =
+document.getElementById("contact").value.trim();
+
+if(!clientName){
+
+showToast(
+"Enter Client Name ❌",
+"error"
+);
+
+return;
+}
+
+if(!contact){
+
+showToast(
+"Enter Mobile Number ❌",
+"error"
+);
+
+return;
+}
+
+try{
+
+showLoader();
+
+await db.collection("clients")
+.doc(id)
+.update({
+
+clientName: clientName,
+
+contactPerson:
+document.getElementById("contactPerson").value.trim(),
+
+contact: contact,
+
+whatsapp:
+document.getElementById("whatsapp").value.trim(),
+
+email:
+document.getElementById("email").value.trim(),
+
+trn:
+document.getElementById("trn").value.trim(),
+
+address:
+document.getElementById("address").value.trim(),
+
+city:
+document.getElementById("city").value.trim(),
+
+state:
+document.getElementById("state").value.trim(),
+
+country:
+document.getElementById("country").value.trim(),
+
+placeOfSupply:
+document.getElementById("placeOfSupply").value.trim(),
+
+paymentTerms:
+document.getElementById("paymentTerms").value,
+
+creditLimit:
+Number(
+document.getElementById("creditLimit").value
+) || 0,
+
+remarks:
+document.getElementById("remarks").value.trim(),
+
+active:
+document.getElementById("active").value === "true",
+
+updatedAt:
+firebase.firestore.FieldValue.serverTimestamp(),
+
+updatedBy:
+auth.currentUser.email
+
+});
+
+hideLoader();
+
+showToast(
+"Client Updated ✏️"
+);
+
+loadClients(()=>{
+showClientManager();
+});
+
+}catch(e){
+
+hideLoader();
+
+console.error(e);
+
+showToast(
+"Update failed ❌",
+"error"
+);
+
+}
+
+}
+
+
+
+//////////////////////////////////////////////////
+// CONFIRM DELETE CLIENT
+//////////////////////////////////////////////////
+
+function confirmDeleteClient(id){
+
+openPopup(`
+
+<h3>Confirm Delete</h3>
+
+<p>Enter Admin Password</p>
+
+<input type="password"
+id="adminPassword"
+placeholder="Admin Password">
+
+<button onclick="deleteClient('${id}')">
+Delete
+</button>
+
+`);
+
+}
+
+
+
+//////////////////////////////////////////////////
+// DELETE CLIENT
+//////////////////////////////////////////////////
+
+async function deleteClient(id){
+
+if(!checkPermission("admin")) return;
+
+let password =
+document.getElementById("adminPassword").value;
+
+let user =
+auth.currentUser;
+
+try{
+
+showLoader();
+
+let credential =
+firebase.auth.EmailAuthProvider
+.credential(
+user.email,
+password
+);
+
+await user
+.reauthenticateWithCredential(
+credential
+);
+
+await db.collection("clients")
+.doc(id)
+.delete();
+
+hideLoader();
+
+showToast(
+"Client Deleted 🗑️"
+);
+
+loadClients(()=>{
+showClientManager();
+});
+
+}catch(e){
+
+hideLoader();
+
+console.error(e);
+
+showToast(
+"Wrong password or delete failed ❌",
+"error"
+);
+
+}
+
+}
+
 	
 	  
 	
