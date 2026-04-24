@@ -988,6 +988,65 @@ text-align:right;
 
 	}
 	  
+
+
+.filter-dropdown{
+  display:none;
+  position:absolute;
+  top:0;
+  left:calc(100% + 10px);
+  width:210px;
+  background:#ffffff;
+  border-radius:14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  padding:10px;
+  z-index:999;
+}
+
+.filter-dropdown.show{
+  display:grid;
+  gap:8px;
+}
+
+.filter-dropdown button{
+  width:100%;
+  background:#ffffff;
+  color:#001d4c;
+  border:1px solid #dbe5f1;
+  border-radius:10px;
+  padding:11px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:flex-start;
+  box-shadow:none;
+  font-size:14px;
+  font-weight:600;
+}
+
+.filter-dropdown button i{
+  width:17px;
+  height:17px;
+}
+
+.filter-dropdown button:hover{
+  background:#f8fbff;
+  transform:none;
+}
+
+
+@media screen and (max-width:768px){
+
+.filter-dropdown{
+  top:52px;
+  left:0;
+  width:190px;
+}
+
+}
+
+
+
 	  
 </style>
 
@@ -1157,10 +1216,42 @@ requestAnimationFrame(() => lucide.createIcons());
 	<!-- BUTTONS -->
     <div class="action-buttons">
 
-<button onclick="openDashboardFilterPopup()"
+<div style="position:relative;">
+
+<button onclick="toggleFilterMenu()"
 style="background:#ffffff;color:#001d4c;border:1px solid #001d4c;">
-<i data-lucide="filter"></i> Filter
+
+<i data-lucide="filter"></i>
+Filter
+
 </button>
+
+
+<div id="filterDropdown" class="filter-dropdown">
+
+<button onclick="runDashboardFilter('current')">
+<i data-lucide="calendar"></i>
+Current Month
+</button>
+
+<button onclick="runDashboardFilter('last')">
+<i data-lucide="calendar-days"></i>
+Last Month
+</button>
+
+<button onclick="runDashboardFilter('year')">
+<i data-lucide="bar-chart"></i>
+Full Year
+</button>
+
+<button onclick="runDashboardFilter('custom')">
+<i data-lucide="sliders-horizontal"></i>
+Custom Filter
+</button>
+
+</div>
+
+</div>
 
 <button onclick="exportSummaryExcel()"
 style="background:#0d6efd;color:#fff;">
@@ -1310,40 +1401,108 @@ let currentUserEmail = "";
 
 
 //////////////////////////////////////////////////
-// DASHBOARD FILTER POPUP
+// PART 1C - FILTER DROPDOWN JS
 //////////////////////////////////////////////////
 
-function openDashboardFilterPopup(){
+function toggleFilterMenu(){
 
-  openPopup(`
+let menu =
+document.getElementById("filterDropdown");
 
-    <h3 style="margin-bottom:15px;">Filter Dashboard</h3>
+if(!menu) return;
 
-    <div style="display:grid;gap:10px;">
 
-      <button onclick="closePopup();showCurrentMonth();">
-        <i data-lucide="calendar"></i> Current Month
-      </button>
+//////////////////////////////////////////////////
+// CLOSE PROFILE MENU IF OPEN
+//////////////////////////////////////////////////
 
-      <button onclick="closePopup();showLastMonth();">
-        <i data-lucide="calendar-days"></i> Last Month
-      </button>
+closeProfileMenu();
 
-      <button onclick="closePopup();showFullYear();">
-        <i data-lucide="bar-chart"></i> Full Year
-      </button>
 
-      <button onclick="closePopup();showCustomSummary();">
-        <i data-lucide="filter"></i> Custom Filter
-      </button>
+//////////////////////////////////////////////////
+// TOGGLE FILTER MENU
+//////////////////////////////////////////////////
 
-    </div>
+menu.classList.toggle("show");
 
-  `);
 
-  requestAnimationFrame(()=> lucide.createIcons());
+//////////////////////////////////////////////////
+// REFRESH ICONS
+//////////////////////////////////////////////////
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
 
 }
+
+//////////////////////////////////////////////////
+// CLOSE FILTER MENU
+//////////////////////////////////////////////////
+
+function closeFilterMenu(){
+
+let menu =
+document.getElementById("filterDropdown");
+
+if(menu){
+menu.classList.remove("show");
+}
+
+}
+
+//////////////////////////////////////////////////
+// RUN FILTER ACTIONS
+//////////////////////////////////////////////////
+
+function runDashboardFilter(type){
+
+closeFilterMenu();
+
+if(type === "current"){
+showCurrentMonth();
+}
+
+else if(type === "last"){
+showLastMonth();
+}
+
+else if(type === "year"){
+showFullYear();
+}
+
+else if(type === "custom"){
+showCustomSummary();
+}
+
+}
+
+//////////////////////////////////////////////////
+// CLICK OUTSIDE CLOSES FILTER MENU
+//////////////////////////////////////////////////
+
+document.addEventListener("click", function(e){
+
+let menu =
+document.getElementById("filterDropdown");
+
+let trigger =
+document.querySelector('[onclick="toggleFilterMenu()"]');
+
+if(!menu || !trigger) return;
+
+
+if(menu.contains(e.target)){
+return;
+}
+
+if(trigger.contains(e.target)){
+return;
+}
+
+closeFilterMenu();
+
+});
 
 //////////////////////////////////////////////////
 // LOAD DASHBOARD USER DETAILS
