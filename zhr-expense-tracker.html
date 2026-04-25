@@ -1033,6 +1033,46 @@ text-align:right;
 }
 
 
+.section-title{
+  display:flex;
+  align-items:center;      /* vertical center */
+  justify-content:center;
+  gap:10px;
+
+  font-size:34px;
+  font-weight:700;
+  color:#000;
+
+  margin:35px 0 18px;
+  line-height:1;           /* important */
+}
+
+.section-title i,
+.section-title svg{
+  width:30px;
+  height:30px;
+  stroke-width:2.2;
+
+  flex-shrink:0;
+  display:block;           /* important */
+}
+	  
+@media screen and (max-width:768px){
+
+.section-title{
+  font-size:28px;
+  gap:8px;
+  line-height:1;
+}
+
+.section-title i,
+.section-title svg{
+  width:24px;
+  height:24px;
+}
+
+}
+	  
 	  
 </style>
 
