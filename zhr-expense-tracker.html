@@ -1176,6 +1176,16 @@ height:18px;">
 
     </button>
 
+<button onclick="openSignupPopup()"
+style="
+background:#198754;
+color:#fff;">
+
+<i data-lucide="user-plus"></i>
+Sign Up
+
+</button>	  
+
   </div>
 
   <!-- FOOT NOTE -->
@@ -1430,6 +1440,234 @@ let currentUserName = "";
 let currentUserEmail = "";	
 
 
+
+//////////////////////////////////////////////////
+// PART 1B - SIGN UP POPUP FUNCTION
+//////////////////////////////////////////////////
+
+function openSignupPopup(){
+
+openPopup(`
+
+<h3 style="
+margin:0 0 15px;
+text-align:center;
+color:#001d4c;">
+Create Account
+</h3>
+
+<p style="
+margin:0 0 18px;
+font-size:13px;
+text-align:center;
+color:#666;">
+Account will remain pending until admin approval
+</p>
+
+<label>Full Name</label>
+<input type="text"
+id="signupName"
+placeholder="Enter Full Name">
+
+<label>Email Address</label>
+<input type="email"
+id="signupEmail"
+placeholder="Enter Email">
+
+<label>Password</label>
+<input type="password"
+id="signupPassword"
+placeholder="Enter Password">
+
+<label>Confirm Password</label>
+<input type="password"
+id="signupConfirmPassword"
+placeholder="Re-enter Password">
+
+<button onclick="signupUser()"
+style="
+width:100%;
+margin-top:14px;
+background:#198754;
+color:#fff;">
+
+<i data-lucide="user-plus"></i>
+Create Account
+
+</button>
+
+`);
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+
+//////////////////////////////////////////////////
+// PART 2 - SIGN UP USER (SECURE METHOD)
+//////////////////////////////////////////////////
+
+async function signupUser(){
+
+//////////////////////////////////////////////////
+// GET VALUES
+//////////////////////////////////////////////////
+
+let name =
+document.getElementById("signupName")
+.value.trim();
+
+let email =
+document.getElementById("signupEmail")
+.value.trim().toLowerCase();
+
+let password =
+document.getElementById("signupPassword")
+.value;
+
+let confirmPassword =
+document.getElementById("signupConfirmPassword")
+.value;
+
+
+//////////////////////////////////////////////////
+// VALIDATIONS
+//////////////////////////////////////////////////
+
+if(!name){
+showToast("Enter Full Name","error");
+return;
+}
+
+if(!email){
+showToast("Enter Email Address","error");
+return;
+}
+
+if(!password){
+showToast("Enter Password","error");
+return;
+}
+
+if(password.length < 6){
+showToast("Password must be minimum 6 characters","error");
+return;
+}
+
+if(password !== confirmPassword){
+showToast("Passwords do not match","error");
+return;
+}
+
+
+//////////////////////////////////////////////////
+// CREATE ACCOUNT
+//////////////////////////////////////////////////
+
+try{
+
+showLoader();
+
+//////////////////////////////////////////////////
+// STEP 1 : FIREBASE AUTH USER
+//////////////////////////////////////////////////
+
+let result =
+await auth.createUserWithEmailAndPassword(
+email,
+password
+);
+
+
+//////////////////////////////////////////////////
+// STEP 2 : FIRESTORE PROFILE
+//////////////////////////////////////////////////
+
+await db
+.collection("users")
+.doc(email)
+.set({
+
+displayName:name,
+email:email,
+
+role:"viewer",
+active:false,
+
+createdAt:
+firebase.firestore.FieldValue.serverTimestamp(),
+
+approvedBy:"",
+approvedAt:null,
+
+lastLogin:null
+
+});
+
+
+//////////////////////////////////////////////////
+// STEP 3 : LOGOUT IMMEDIATELY
+//////////////////////////////////////////////////
+
+await auth.signOut();
+
+hideLoader();
+
+closePopup();
+
+showToast(
+"Account Created. Await Admin Approval ✅"
+);
+
+}catch(error){
+
+hideLoader();
+
+console.error(error);
+
+//////////////////////////////////////////////////
+// FRIENDLY ERRORS
+//////////////////////////////////////////////////
+
+if(error.code === "auth/email-already-in-use"){
+
+showToast(
+"Email already registered",
+"error"
+);
+
+}else if(error.code === "auth/invalid-email"){
+
+showToast(
+"Invalid Email Address",
+"error"
+);
+
+}else if(error.code === "auth/weak-password"){
+
+showToast(
+"Weak Password",
+"error"
+);
+
+}else{
+
+showToast(
+"Signup failed ❌",
+"error"
+);
+
+}
+
+}
+
+}
+
+
+	
+
+	
 //////////////////////////////////////////////////
 // PART 1C - FILTER DROPDOWN JS
 //////////////////////////////////////////////////
@@ -1811,68 +2049,148 @@ function getMonthName(monthIndex){
 let transactionsCache = [];
 
 //////////////////////////////////////////////////
-// SESSION LOGIN SYSTEM
+// LOGIN
 //////////////////////////////////////////////////
 
 async function login(){
 
-  /* CAPTCHA CHECK */
-  let captchaResponse =
-  grecaptcha.getResponse();
+//////////////////////////////////////////////////
+// CAPTCHA CHECK
+//////////////////////////////////////////////////
 
-  if(captchaResponse.length === 0){
+let captchaResponse =
+grecaptcha.getResponse();
 
-    showToast(
-      "Please verify CAPTCHA",
-      "error"
-    );
+if(captchaResponse.length === 0){
 
-    return;
-  }
+showToast(
+"Please verify CAPTCHA",
+"error"
+);
 
-  showLoader();
+return;
 
-  let email =
-  document.getElementById("username")
-  .value
-  .trim();
+}
 
-  let password =
-  document.getElementById("password")
-  .value;
+showLoader();
 
-  try{
 
-    closePopup();
+//////////////////////////////////////////////////
+// GET INPUTS
+//////////////////////////////////////////////////
 
-    sessionStorage.clear();
+let email =
+document.getElementById("username")
+.value
+.trim()
+.toLowerCase();
 
-    await auth
-    .signInWithEmailAndPassword(
-      email,
-      password
-    );
+let password =
+document.getElementById("password")
+.value;
 
-    hideLoader();
 
-    showToast(
-      "Login Successful ✅"
-    );
+try{
 
-    grecaptcha.reset();
+closePopup();
 
-  }catch(e){
+sessionStorage.clear();
 
-    hideLoader();
 
-    showToast(
-      "Invalid Login ID or Password ❌",
-      "error"
-    );
+//////////////////////////////////////////////////
+// FIREBASE LOGIN
+//////////////////////////////////////////////////
 
-    grecaptcha.reset();
+await auth.signInWithEmailAndPassword(
+email,
+password
+);
 
-  }
+
+//////////////////////////////////////////////////
+// CHECK FIRESTORE USER PROFILE
+//////////////////////////////////////////////////
+
+let userDoc =
+await db
+.collection("users")
+.doc(email)
+.get();
+
+
+//////////////////////////////////////////////////
+// NO PROFILE FOUND
+//////////////////////////////////////////////////
+
+if(!userDoc.exists){
+
+await auth.signOut();
+
+hideLoader();
+
+showToast(
+"User profile not found",
+"error"
+);
+
+grecaptcha.reset();
+
+return;
+
+}
+
+
+let userData =
+userDoc.data();
+
+
+//////////////////////////////////////////////////
+// BLOCK INACTIVE USER
+//////////////////////////////////////////////////
+
+if(userData.active !== true){
+
+await auth.signOut();
+
+hideLoader();
+
+showToast(
+"Account Pending Admin Approval",
+"error"
+);
+
+grecaptcha.reset();
+
+return;
+
+}
+
+
+//////////////////////////////////////////////////
+// LOGIN SUCCESS
+//////////////////////////////////////////////////
+
+hideLoader();
+
+showToast(
+"Login Successful ✅"
+);
+
+grecaptcha.reset();
+
+
+}catch(e){
+
+hideLoader();
+
+showToast(
+"Invalid Login ID or Password ❌",
+"error"
+);
+
+grecaptcha.reset();
+
+}
 
 }
 
