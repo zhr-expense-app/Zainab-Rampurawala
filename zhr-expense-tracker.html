@@ -1342,6 +1342,11 @@ style="background:#0d6efd;color:#fff;">
 <i data-lucide="users"></i> Clients
 </button>
 
+<button onclick="manageUsers()">
+<i data-lucide="shield-check"></i>
+Users
+</button>
+	
 </div>	
 
 	
@@ -1441,6 +1446,8 @@ let currentPaidAmount = 0;
 let clientList = [];	
 let currentUserName = "";
 let currentUserEmail = "";	
+let userList = [];
+let unsubscribeUsers = null;	
 
 
 
@@ -11982,8 +11989,340 @@ showToast(
 
 }
 
+//////////////////////////////////////////////////
+// USER MASTER OPEN
+//////////////////////////////////////////////////
+
+
+function manageUsers(){
+
+if(!checkPermission("admin")) return;
+
+loadUsers(showUserManager);
+
+}
+
+
+//////////////////////////////////////////////////
+// LOAD USERS
+//////////////////////////////////////////////////
+
+
+function loadUsers(callback){
+
+if(unsubscribeUsers){
+unsubscribeUsers();
+}
+
+unsubscribeUsers = db.collection("users")
+.orderBy("displayName")
+.onSnapshot(snapshot=>{
+
+userList = [];
+
+snapshot.forEach(doc=>{
+userList.push({
+id:doc.id,
+...doc.data()
+});
+});
+
+if(callback){
+callback();
+}
+
+},error=>{
+
+console.error(error);
+showToast("Error loading users ❌","error");
+
+});
+
+}
+
+
+//////////////////////////////////////////////////
+// SHOW USER MANAGER
+//////////////////////////////////////////////////
+
+function showUserManager(){
+
+let html = `
+<h3>Manage Users</h3>
+
+<hr>
+
+<h4>Existing Users</h4>
+`;
+
+if(userList.length === 0){
+
+html += `<p>No users found</p>`;
+
+}else{
+
+userList.forEach(u=>{
+
+let statusText = u.active ? "Active" : "Inactive";
+let roleText = u.role || "viewer";
+
+html += `
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px;border:1px solid #eee;border-radius:6px;gap:10px;">
+
+<div style="text-align:left;flex:1;">
+
+<b>${u.displayName || "User"}</b><br>
+
+<small>${statusText} | ${roleText}</small>
+
+</div>
+
+<div style="display:flex;gap:8px;">
+
+<button onclick="editUser('${u.id}')">
+<i data-lucide="edit"></i>
+</button>
+
+<button onclick="confirmDeleteUser('${u.id}')">
+<i data-lucide="trash"></i>
+</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+openPopup(html);
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
 	
-	  
+
+//////////////////////////////////////////////////
+// EDIT USER
+//////////////////////////////////////////////////
+
+function editUser(id){
+
+let u = userList.find(x => x.id === id);
+
+if(!u){
+showToast("User not found","error");
+return;
+}
+
+let html = `
+<h3>
+<button onclick="showUserManager()" style="margin-right:10px;">⬅</button>
+Edit User
+</h3>
+
+<label>Full Name</label>
+<input type="text" id="editUserName" value="${u.displayName || ""}">
+
+<label>Email</label>
+<input type="email" id="editUserEmail" value="${u.email || id}" readonly>
+
+<label>Role</label>
+<select id="editUserRole">
+<option value="viewer" ${u.role==="viewer"?"selected":""}>viewer</option>
+<option value="user" ${u.role==="user"?"selected":""}>user</option>
+<option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
+</select>
+
+<label>Status</label>
+<select id="editUserActive">
+<option value="true" ${u.active===true?"selected":""}>active</option>
+<option value="false" ${u.active!==true?"selected":""}>inactive</option>
+</select>
+
+<button onclick="updateUser('${id}')">
+<i data-lucide="save"></i>
+Save Changes
+</button>
+`;
+
+openPopup(html);
+
+}
+
+
+//////////////////////////////////////////////////
+// UPDATE USER
+//////////////////////////////////////////////////
+
+async function updateUser(id){
+
+if(!checkPermission("admin")) return;
+
+let displayName = document.getElementById("editUserName").value.trim();
+let role = document.getElementById("editUserRole").value;
+let active = document.getElementById("editUserActive").value === "true";
+
+if(!displayName){
+showToast("Enter Full Name","error");
+return;
+}
+
+try{
+
+showLoader();
+
+await db.collection("users").doc(id).update({
+displayName:displayName,
+role:role,
+active:active,
+approvedBy:auth.currentUser ? auth.currentUser.email : "",
+approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+hideLoader();
+
+showToast("User Updated ✅");
+
+loadUsers(()=>{
+showUserManager();
+});
+
+}catch(error){
+
+hideLoader();
+
+console.error(error);
+
+showToast("Update Failed ❌","error");
+
+}
+
+}
+	
+
+//////////////////////////////////////////////////
+// CONFIRM DELETE USER
+//////////////////////////////////////////////////
+
+function confirmDeleteUser(id){
+
+let u = userList.find(x => x.id === id);
+
+if(!u){
+showToast("User not found","error");
+return;
+}
+
+openPopup(`
+
+<h3>Confirm Delete</h3>
+
+<p style="margin-bottom:12px;">
+Delete <b>${u.displayName || u.email || id}</b> ?
+</p>
+
+<p style="font-size:13px;color:#666;margin-bottom:12px;">
+Enter Admin Password to continue
+</p>
+
+<input type="password"
+id="adminDeleteUserPassword"
+placeholder="Admin Password">
+
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+
+<button onclick="showUserManager()">
+<i data-lucide="arrow-left"></i>
+Back
+</button>
+
+<button onclick="deleteUser('${id}')"
+style="background:#dc3545;color:#fff;">
+
+<i data-lucide="trash-2"></i>
+Delete
+
+</button>
+
+</div>
+
+`);
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+
+//////////////////////////////////////////////////
+// DELETE USER
+//////////////////////////////////////////////////
+
+async function deleteUser(id){
+
+if(!checkPermission("admin")) return;
+
+let password =
+document.getElementById("adminDeleteUserPassword").value;
+
+if(!password){
+showToast("Enter Admin Password","error");
+return;
+}
+
+let user = auth.currentUser;
+
+try{
+
+showLoader();
+
+let credential =
+firebase.auth.EmailAuthProvider.credential(
+user.email,
+password
+);
+
+await user.reauthenticateWithCredential(
+credential
+);
+
+//////////////////////////////////////////////////
+// DELETE FIRESTORE PROFILE ONLY
+//////////////////////////////////////////////////
+
+await db.collection("users").doc(id).delete();
+
+hideLoader();
+
+showToast("User Deleted 🗑️");
+
+loadUsers(()=>{
+showUserManager();
+});
+
+}catch(error){
+
+hideLoader();
+
+console.error(error);
+
+showToast(
+"Wrong Password or Delete Failed ❌",
+"error"
+);
+
+}
+
+	}
+	
+
+	
 	
 </script>
 <script src="layout.js"></script>
