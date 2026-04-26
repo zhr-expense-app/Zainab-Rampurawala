@@ -46,24 +46,27 @@
 
     auth.onAuthStateChanged(async user => {
 
-  if(user){
+if(window.isSignupProcess){
+return;
+}
 
-    closePopup(); // close any popup immediately
+if(user){
 
-    document.getElementById("login").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+closePopup();
 
-    await showDashboard();
+document.getElementById("login").style.display = "none";
+document.getElementById("dashboard").style.display = "block";
 
-    startInactivityTracking();
+await showDashboard();
 
-  }else{
+startInactivityTracking();
 
+}else{
 
-    document.getElementById("login").style.display = "block";
-    document.getElementById("dashboard").style.display = "none";
+document.getElementById("login").style.display = "block";
+document.getElementById("dashboard").style.display = "none";
 
-  }
+}
 
 });
 	  
@@ -1485,11 +1488,7 @@ id="signupConfirmPassword"
 placeholder="Re-enter Password">
 
 <button onclick="signupUser()"
-style="
-width:100%;
-margin-top:14px;
-background:#198754;
-color:#fff;">
+style="background:#198754;color:#fff;">
 
 <i data-lucide="user-plus"></i>
 Create Account
@@ -1504,36 +1503,17 @@ lucide.createIcons();
 
 }
 
+
 //////////////////////////////////////////////////
-// PART 2 - SIGN UP USER (SECURE METHOD)
+// SIGN UP USER
 //////////////////////////////////////////////////
 
 async function signupUser(){
 
-//////////////////////////////////////////////////
-// GET VALUES
-//////////////////////////////////////////////////
-
-let name =
-document.getElementById("signupName")
-.value.trim();
-
-let email =
-document.getElementById("signupEmail")
-.value.trim().toLowerCase();
-
-let password =
-document.getElementById("signupPassword")
-.value;
-
-let confirmPassword =
-document.getElementById("signupConfirmPassword")
-.value;
-
-
-//////////////////////////////////////////////////
-// VALIDATIONS
-//////////////////////////////////////////////////
+let name = document.getElementById("signupName").value.trim();
+let email = document.getElementById("signupEmail").value.trim().toLowerCase();
+let password = document.getElementById("signupPassword").value;
+let confirmPassword = document.getElementById("signupConfirmPassword").value;
 
 if(!name){
 showToast("Enter Full Name","error");
@@ -1560,110 +1540,59 @@ showToast("Passwords do not match","error");
 return;
 }
 
-
-//////////////////////////////////////////////////
-// CREATE ACCOUNT
-//////////////////////////////////////////////////
-
 try{
 
 showLoader();
 
-//////////////////////////////////////////////////
-// STEP 1 : FIREBASE AUTH USER
-//////////////////////////////////////////////////
+window.isSignupProcess = true;
 
-let result =
-await auth.createUserWithEmailAndPassword(
-email,
-password
-);
+await auth.createUserWithEmailAndPassword(email,password);
 
-
-//////////////////////////////////////////////////
-// STEP 2 : FIRESTORE PROFILE
-//////////////////////////////////////////////////
-
-await db
-.collection("users")
-.doc(email)
-.set({
-
+await db.collection("users").doc(email).set({
 displayName:name,
 email:email,
-
 role:"viewer",
 active:false,
-
-createdAt:
-firebase.firestore.FieldValue.serverTimestamp(),
-
+createdAt:firebase.firestore.FieldValue.serverTimestamp(),
 approvedBy:"",
 approvedAt:null,
-
 lastLogin:null
-
 });
 
-
-//////////////////////////////////////////////////
-// STEP 3 : LOGOUT IMMEDIATELY
-//////////////////////////////////////////////////
-
 await auth.signOut();
+
+window.isSignupProcess = false;
 
 hideLoader();
 
 closePopup();
 
-showToast(
-"Account Created. Await Admin Approval ✅"
-);
+showToast("Account Created. Await Admin Approval ✅");
 
 }catch(error){
+
+window.isSignupProcess = false;
 
 hideLoader();
 
 console.error(error);
 
-//////////////////////////////////////////////////
-// FRIENDLY ERRORS
-//////////////////////////////////////////////////
-
 if(error.code === "auth/email-already-in-use"){
-
-showToast(
-"Email already registered",
-"error"
-);
-
-}else if(error.code === "auth/invalid-email"){
-
-showToast(
-"Invalid Email Address",
-"error"
-);
-
-}else if(error.code === "auth/weak-password"){
-
-showToast(
-"Weak Password",
-"error"
-);
-
-}else{
-
-showToast(
-"Signup failed ❌",
-"error"
-);
-
+showToast("Email already registered","error");
+}
+else if(error.code === "auth/invalid-email"){
+showToast("Invalid Email Address","error");
+}
+else if(error.code === "auth/weak-password"){
+showToast("Weak Password","error");
+}
+else{
+showToast("Signup failed ❌","error");
 }
 
 }
 
-}
-
+	}
 
 	
 
