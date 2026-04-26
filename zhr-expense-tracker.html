@@ -1348,15 +1348,15 @@ Master Data
 
 <div id="masterButtons" class="action-buttons">
 
-<button onclick="manageLedgers()">
+<button onclick="secureAccess('master',manageLedgers)">
 <i data-lucide="book"></i> Ledgers
 </button>
 
-<button onclick="manageClients()">
+<button onclick="secureAccess('master',manageClients)">
 <i data-lucide="users"></i> Clients
 </button>
 
-<button onclick="manageUsers()">
+<button onclick="secureAccess('master',manageUsers)">
 <i data-lucide="shield-check"></i> Users
 </button>
 
@@ -1371,19 +1371,19 @@ Transactions
 
 <div id="transactionButtons" class="action-buttons">
 
-<button onclick="showForm('receipt')">
+<button onclick="secureAccess('transaction',function(){showForm('receipt')})">
 <i data-lucide="arrow-down-circle"></i> Receipts
 </button>
 
-<button onclick="showForm('payment')">
+<button onclick="secureAccess('transaction',function(){showForm('payment')})">
 <i data-lucide="arrow-up-circle"></i> Payments
 </button>
 
-<button onclick="showForm('journal')">
+<button onclick="secureAccess('transaction',function(){showForm('journal')})">
 <i data-lucide="repeat"></i> Journal
 </button>
 
-<button onclick="openInvoicePopup()">
+<button onclick="secureAccess('transaction',openInvoicePopup)">
 <i data-lucide="file-text"></i> Invoice
 </button>
 
@@ -1398,27 +1398,27 @@ Reports
 
 <div id="reportButtons" class="action-buttons">
 
-<button onclick="showReceiptsReport()">
+<button onclick="secureAccess('report',showReceiptsReport)">
 <i data-lucide="file-text"></i> Receipts
 </button>
 
-<button onclick="showPaymentsReport()">
+<button onclick="secureAccess('report',showPaymentsReport)">
 <i data-lucide="bar-chart-3"></i> Payments
 </button>
 
-<button onclick="showJournalReport()">
+<button onclick="secureAccess('report',showJournalReport)">
 <i data-lucide="shuffle"></i> Journal
 </button>
 
-<button onclick="showMiniStatement()">
+<button onclick="secureAccess('report',showMiniStatement)">
 <i data-lucide="book-open"></i> Ledger
 </button>
 
-<button onclick="showFinancialStatement()">
+<button onclick="secureAccess('report',showFinancialStatement)">
 <i data-lucide="file-spreadsheet"></i> Financial
 </button>
 
-<button onclick="showInvoiceReport()">
+<button onclick="secureAccess('report',showInvoiceReport)">
 <i data-lucide="file-text"></i> Invoice
 </button>
 
@@ -1468,47 +1468,154 @@ let userList = [];
 let unsubscribeUsers = null;	
 
 
-
 //////////////////////////////////////////////////
-// APPLY ROLE ACCESS
+// APPLY ACCESS LOCKS
 //////////////////////////////////////////////////
-
-function applyRoleAccess(){
+	
+function applyAccessLocks(){
 
 let role = currentUserRole || "viewer";
 
-setAccess("master", role === "admin");
-setAccess("transaction", role === "admin" || role === "user");
-setAccess("report", role === "admin" || role === "user");
+let masterLock = document.getElementById("masterLock");
+let transactionLock = document.getElementById("transactionLock");
+let reportLock = document.getElementById("reportLock");
 
+masterLock.innerHTML = "";
+transactionLock.innerHTML = "";
+reportLock.innerHTML = "";
+
+//////////////////////////////////////////////////
+// ADMIN
+//////////////////////////////////////////////////
+
+if(role === "admin"){
+return;
+}
+
+//////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////
+
+if(role === "user"){
+
+masterLock.innerHTML = `
+<i data-lucide="lock"
+style="
+width:16px;
+height:16px;
+color:#f4b400;
+margin-left:8px;
+vertical-align:middle;">
+</i>
+
+<span style="
+font-size:14px;
+font-weight:700;
+color:#f4b400;
+margin-left:4px;">
+(Locked)
+</span>
+`;
+
+requestAnimationFrame(()=>{
 lucide.createIcons();
+});
+
+return;
+}
+
+//////////////////////////////////////////////////
+// VIEWER
+//////////////////////////////////////////////////
+
+masterLock.innerHTML = `
+<i data-lucide="lock"
+style="
+width:16px;
+height:16px;
+color:#f4b400;
+margin-left:8px;
+vertical-align:middle;">
+</i>
+<span style="
+font-size:14px;
+font-weight:700;
+color:#f4b400;
+margin-left:4px;">
+(Locked)
+</span>
+`;
+
+transactionLock.innerHTML = `
+<i data-lucide="lock"
+style="
+width:16px;
+height:16px;
+color:#f4b400;
+margin-left:8px;
+vertical-align:middle;">
+</i>
+<span style="
+font-size:14px;
+font-weight:700;
+color:#f4b400;
+margin-left:4px;">
+(Locked)
+</span>
+`;
+
+reportLock.innerHTML = `
+<i data-lucide="lock"
+style="
+width:16px;
+height:16px;
+color:#f4b400;
+margin-left:8px;
+vertical-align:middle;">
+</i>
+<span style="
+font-size:14px;
+font-weight:700;
+color:#f4b400;
+margin-left:4px;">
+(Locked)
+</span>
+`;
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
 
 }
 
-function setAccess(name, allowed){
+//////////////////////////////////////////////////
+// SECURE ACCESS
+//////////////////////////////////////////////////	
 
-let btn =
-document.getElementById(name + "Buttons");
+function secureAccess(section,callback){
 
-let lock =
-document.getElementById(name + "Lock");
+let role = currentUserRole || "viewer";
 
-if(allowed){
+if(role === "admin"){
+callback();
+return;
+}
 
-btn.style.display = "grid";
-lock.innerHTML = "";
+if(role === "user"){
 
-}else{
+if(section === "master"){
+showToast("Not Authorized 🔒","error");
+return;
+}
 
-btn.style.display = "none";
-
-lock.innerHTML =
-'<i data-lucide="lock" class="section-lock"></i>';
+callback();
+return;
 
 }
 
-}
+showToast("Not Authorized 🔒","error");
 
+}	
 	
 
 //////////////////////////////////////////////////
@@ -2286,7 +2393,7 @@ document.getElementById("dashboard").style.display =
 "block";
 
 await loadUserRole();
-applyRoleAccess();	
+applyAccessLocks();	
 
 await initDashboardHeader();
 
