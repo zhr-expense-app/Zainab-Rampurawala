@@ -1069,6 +1069,15 @@ text-align:right;
 }
 
 }
+
+.section-lock{
+color:#ffc107;
+margin-left:8px;
+width:18px;
+height:18px;
+vertical-align:middle;
+}
+
 	  
 	  
 </style>
@@ -1327,14 +1336,14 @@ style="background:#0d6efd;color:#fff;">
 </div>
 
 
-<div id="masterSection">
 
-<h2 class="section-title">
+<h2 id="masterTitle" class="section-title">
 <i data-lucide="folder-kanban"></i>
 Master Data
+<span id="masterLock"></span>
 </h2>
 
-<div class="action-buttons">
+<div id="masterButtons" class="action-buttons">
 
 <button onclick="manageLedgers()">
 <i data-lucide="book"></i> Ledgers
@@ -1353,14 +1362,15 @@ Users
 </div>
 
 	
-<div id="transactionSection">
 
-<h2 class="section-title">
+
+<h2 id="transactionTitle" class="section-title">
 <i data-lucide="wallet"></i>
 Transactions
+<span id="transactionLock"></span>
 </h2>
 
-<div class="action-buttons">
+<div id="transactionButtons" class="action-buttons">
 
 <button onclick="showForm('receipt')">
   <i data-lucide="arrow-down-circle"></i> Receipts
@@ -1382,14 +1392,15 @@ Transactions
 </div>
 
 
-<div id="reportSection">
 
-<h2 class="section-title">
+
+<h2 id="reportTitle" class="section-title">
 <i data-lucide="bar-chart-3"></i>
 Reports
+<span id="reportLock"></span>
 </h2>
 
-<div class="action-buttons">
+<div id="reportButtons" class="action-buttons">
 
 <button onclick="showReceiptsReport()">
   <i data-lucide="file-text"></i> Receipts
@@ -1466,31 +1477,33 @@ function applyRoleAccess(){
 
 let role = currentUserRole || "viewer";
 
-let master = document.getElementById("masterSection");
-let transaction = document.getElementById("transactionSection");
-let report = document.getElementById("reportSection");
+setAccess("master", role === "admin");
+setAccess("transaction", role === "admin" || role === "user");
+setAccess("report", role === "admin" || role === "user");
 
-if(role === "admin"){
-
-if(master) master.style.display = "block";
-if(transaction) transaction.style.display = "block";
-if(report) report.style.display = "block";
+lucide.createIcons();
 
 }
 
-else if(role === "user"){
+function setAccess(name, allowed){
 
-if(master) master.style.display = "none";
-if(transaction) transaction.style.display = "block";
-if(report) report.style.display = "block";
+let btn =
+document.getElementById(name + "Buttons");
 
-}
+let lock =
+document.getElementById(name + "Lock");
 
-else{
+if(allowed){
 
-if(master) master.style.display = "none";
-if(transaction) transaction.style.display = "none";
-if(report) report.style.display = "none";
+btn.style.display = "grid";
+lock.innerHTML = "";
+
+}else{
+
+btn.style.display = "none";
+
+lock.innerHTML =
+'<i data-lucide="lock" class="section-lock"></i>';
 
 }
 
