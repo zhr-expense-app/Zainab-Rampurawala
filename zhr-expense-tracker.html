@@ -1247,7 +1247,7 @@ requestAnimationFrame(() => lucide.createIcons());
 
 	
 	<!-- BUTTONS -->
-    <div class="action-buttons">
+    <div id="quickSection" class="action-buttons">
 
 <div style="position:relative;">
 
@@ -1327,9 +1327,11 @@ style="background:#0d6efd;color:#fff;">
 </div>
 
 
+<div id="masterSection">
+
 <h2 class="section-title">
-  <i data-lucide="folder-kanban"></i>
-  Master Data
+<i data-lucide="folder-kanban"></i>
+Master Data
 </h2>
 
 <div class="action-buttons">
@@ -1348,11 +1350,14 @@ Users
 </button>
 	
 </div>	
+</div>
 
 	
+<div id="transactionSection">
+
 <h2 class="section-title">
-  <i data-lucide="wallet"></i>
-  Transactions
+<i data-lucide="wallet"></i>
+Transactions
 </h2>
 
 <div class="action-buttons">
@@ -1373,13 +1378,15 @@ Users
   <i data-lucide="file-text"></i> Invoice
 </button>
 	
-
+</div>
 </div>
 
 
+<div id="reportSection">
+
 <h2 class="section-title">
-  <i data-lucide="bar-chart-3"></i>
-  Reports
+<i data-lucide="bar-chart-3"></i>
+Reports
 </h2>
 
 <div class="action-buttons">
@@ -1450,6 +1457,46 @@ let userList = [];
 let unsubscribeUsers = null;	
 
 
+
+//////////////////////////////////////////////////
+// APPLY ROLE ACCESS
+//////////////////////////////////////////////////
+
+function applyRoleAccess(){
+
+let role = currentUserRole || "viewer";
+
+let master = document.getElementById("masterSection");
+let transaction = document.getElementById("transactionSection");
+let report = document.getElementById("reportSection");
+
+if(role === "admin"){
+
+if(master) master.style.display = "block";
+if(transaction) transaction.style.display = "block";
+if(report) report.style.display = "block";
+
+}
+
+else if(role === "user"){
+
+if(master) master.style.display = "none";
+if(transaction) transaction.style.display = "block";
+if(report) report.style.display = "block";
+
+}
+
+else{
+
+if(master) master.style.display = "none";
+if(transaction) transaction.style.display = "none";
+if(report) report.style.display = "none";
+
+}
+
+}
+
+	
 
 //////////////////////////////////////////////////
 // PART 1B - SIGN UP POPUP FUNCTION
@@ -2226,6 +2273,7 @@ document.getElementById("dashboard").style.display =
 "block";
 
 await loadUserRole();
+applyRoleAccess();	
 
 await initDashboardHeader();
 
