@@ -1459,17 +1459,11 @@ function openSignupPopup(){
 
 openPopup(`
 
-<h3 style="
-margin:0 0 15px;
-text-align:center;
-color:#001d4c;">
-Create Account
-</h3>
+<h3>Create Account</h3>
 
 <p style="
 margin:0 0 18px;
 font-size:13px;
-text-align:center;
 color:#666;">
 Account will remain pending until admin approval
 </p>
@@ -12207,7 +12201,7 @@ showToast("Update Failed ❌","error");
 	
 
 //////////////////////////////////////////////////
-// CONFIRM DELETE USER
+// CONFIRM DELETE USER + DELETE USER
 //////////////////////////////////////////////////
 
 function confirmDeleteUser(id){
@@ -12221,36 +12215,24 @@ return;
 
 openPopup(`
 
-<h3>Confirm Delete</h3>
+<h3>
+<button onclick="showUserManager()" style="margin-right:10px;">⬅</button>
+Confirm Delete
+</h3>
 
-<p style="margin-bottom:12px;">
-Delete <b>${u.displayName || u.email || id}</b> ?
-</p>
-
-<p style="font-size:13px;color:#666;margin-bottom:12px;">
-Enter Admin Password to continue
-</p>
+<p>Enter Admin Password</p>
 
 <input type="password"
-id="adminDeleteUserPassword"
+id="adminPassword"
 placeholder="Admin Password">
-
-<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-
-<button onclick="showUserManager()">
-<i data-lucide="arrow-left"></i>
-Back
-</button>
 
 <button onclick="deleteUser('${id}')"
 style="background:#dc3545;color:#fff;">
 
 <i data-lucide="trash-2"></i>
-Delete
+Delete User
 
 </button>
-
-</div>
 
 `);
 
@@ -12261,7 +12243,7 @@ lucide.createIcons();
 }
 
 //////////////////////////////////////////////////
-// DELETE USER
+// CONFIRM DELETE USER + DELETE USER
 //////////////////////////////////////////////////
 
 async function deleteUser(id){
@@ -12269,57 +12251,60 @@ async function deleteUser(id){
 if(!checkPermission("admin")) return;
 
 let password =
-document.getElementById("adminDeleteUserPassword").value;
+document.getElementById("adminPassword").value;
 
 if(!password){
 showToast("Enter Admin Password","error");
 return;
 }
 
-let user = auth.currentUser;
+let user =
+auth.currentUser;
 
 try{
 
 showLoader();
 
 let credential =
-firebase.auth.EmailAuthProvider.credential(
+firebase.auth.EmailAuthProvider
+.credential(
 user.email,
 password
 );
 
-await user.reauthenticateWithCredential(
+await user
+.reauthenticateWithCredential(
 credential
 );
 
-//////////////////////////////////////////////////
-// DELETE FIRESTORE PROFILE ONLY
-//////////////////////////////////////////////////
-
-await db.collection("users").doc(id).delete();
+await db.collection("users")
+.doc(id)
+.delete();
 
 hideLoader();
 
-showToast("User Deleted 🗑️");
+showToast(
+"User Deleted 🗑️"
+);
 
 loadUsers(()=>{
 showUserManager();
 });
 
-}catch(error){
+}catch(e){
 
 hideLoader();
 
-console.error(error);
+console.error(e);
 
 showToast(
-"Wrong Password or Delete Failed ❌",
+"Wrong password or delete failed ❌",
 "error"
 );
 
 }
 
-	}
+}
 	
 
 	
