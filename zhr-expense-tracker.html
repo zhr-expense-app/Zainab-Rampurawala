@@ -12474,8 +12474,107 @@ showToast(
 }
 
 }
-	
 
+	
+//////////////////////////////////////////////////
+// SETTINGS POPUP
+//////////////////////////////////////////////////
+
+function openSettings(){
+
+let soundOn = localStorage.getItem("soundOn")==="yes";
+
+openPopup(`
+
+<h3 style="margin:0 0 18px;">Settings</h3>
+
+<button onclick="toggleSound()" style="width:100%;justify-content:flex-start;margin-bottom:10px;">
+<i data-lucide="volume-2"></i>
+Sound Effects : ${soundOn ? "ON" : "OFF"}
+</button>
+
+<button onclick="closePopup()" style="width:100%;justify-content:flex-start;">
+<i data-lucide="x"></i>
+Close
+</button>
+
+`);
+
+requestAnimationFrame(()=>{
+lucide.createIcons();
+});
+
+}
+
+
+//////////////////////////////////////////////////
+// SOUND TOGGLE
+//////////////////////////////////////////////////
+
+function toggleSound(){
+
+let soundOn = localStorage.getItem("soundOn");
+
+if(soundOn === "yes"){
+
+localStorage.setItem("soundOn","no");
+showToast("Sound Effects Off 🔇");
+
+}else{
+
+localStorage.setItem("soundOn","yes");
+showToast("Sound Effects On 🔊");
+
+}
+
+openSettings();
+
+}
+	
+//////////////////////////////////////////////////
+// BUTTON CLICK SOUND
+//////////////////////////////////////////////////
+
+let clickSound = new Audio("click.mp3");
+
+function playClickSound(){
+
+if(localStorage.getItem("soundOn")==="yes"){
+
+clickSound.currentTime = 0;
+
+clickSound.play().catch(()=>{});
+
+}
+
+}	
+
+//////////////////////////////////////////////////
+// GLOBAL BUTTON CLICK LISTENER
+//////////////////////////////////////////////////
+
+document.addEventListener("click",function(e){
+
+let btn = e.target.closest("button");
+
+if(btn){
+playClickSound();
+}
+
+});
+
+//////////////////////////////////////////////////
+// DEFAULT FIRST TIME SETTING
+//////////////////////////////////////////////////
+
+if(localStorage.getItem("soundOn") === null){
+
+localStorage.setItem("soundOn","yes");
+
+}
+
+
+	
 	
 	
 </script>
