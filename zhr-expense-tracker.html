@@ -12477,7 +12477,7 @@ showToast(
 
 	
 //////////////////////////////////////////////////
-// SETTINGS POPUP
+// SETTINGS POPUP (TOGGLE STYLE)
 //////////////////////////////////////////////////
 
 function openSettings(){
@@ -12486,26 +12486,45 @@ let soundOn = localStorage.getItem("soundOn")==="yes";
 
 openPopup(`
 
-<h3 style="margin:0 0 18px;">Settings</h3>
+<h3 style="margin:0 0 22px;">Settings</h3>
 
-<button onclick="toggleSound()" style="width:100%;justify-content:flex-start;margin-bottom:10px;">
-<i data-lucide="volume-2"></i>
-Sound Effects : ${soundOn ? "ON" : "OFF"}
-</button>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
 
-<button onclick="closePopup()" style="width:100%;justify-content:flex-start;">
-<i data-lucide="x"></i>
-Close
-</button>
+<div style="font-size:16px;font-weight:600;color:#001d4c;">
+Sound Effects
+</div>
+
+<div onclick="toggleSound()" style="
+width:72px;
+height:38px;
+border-radius:30px;
+padding:4px;
+cursor:pointer;
+transition:.3s;
+position:relative;
+box-sizing:border-box;
+background:${soundOn ? "#16c60c" : "#e5e5e5"};
+">
+
+<div style="
+width:30px;
+height:30px;
+border-radius:50%;
+background:#fff;
+position:absolute;
+top:4px;
+left:${soundOn ? "38px" : "4px"};
+transition:.3s;
+box-shadow:0 4px 10px rgba(0,0,0,.15);
+"></div>
+
+</div>
+
+</div>
 
 `);
 
-requestAnimationFrame(()=>{
-lucide.createIcons();
-});
-
 }
-
 
 //////////////////////////////////////////////////
 // SOUND TOGGLE
@@ -12516,15 +12535,11 @@ function toggleSound(){
 let soundOn = localStorage.getItem("soundOn");
 
 if(soundOn === "yes"){
-
 localStorage.setItem("soundOn","no");
-showToast("Sound Effects Off 🔇");
-
+showToast("Sound Off 🔇");
 }else{
-
 localStorage.setItem("soundOn","yes");
-showToast("Sound Effects On 🔊");
-
+showToast("Sound On 🔊");
 }
 
 openSettings();
