@@ -1272,9 +1272,16 @@ requestAnimationFrame(() => lucide.createIcons());
     <div id="profileDropdown" class="profile-dropdown">
 
       <div class="profile-info">
-        <div id="profileName">User</div>
-        <div id="profileEmail">email@example.com</div>
-      </div>
+
+<div id="profileName" style="font-weight:700;"></div>
+
+<div id="profileRole" style="font-size:13px;color:#666;"></div>
+
+<div id="profileEmail" style="font-size:13px;color:#666;margin-bottom:8px;"></div>
+
+<div id="profileMeta" style="font-size:12px;color:#888;line-height:1.5;"></div>
+
+</div>
 
       <button onclick="openSettings()">
         <i data-lucide="settings"></i>
@@ -1797,6 +1804,95 @@ showToast("Signup failed ❌","error");
 
 	}
 
+//////////////////////////////////////////////////
+// LOAD USER PROFILE
+//////////////////////////////////////////////////
+
+function loadUserProfile(){
+
+let user = auth.currentUser;
+
+if(!user) return;
+
+let email = user.email;
+
+db.collection("users").doc(email).get()
+.then(doc=>{
+
+if(!doc.exists) return;
+
+let data = doc.data();
+
+let name = data.displayName || "User";
+let role = (data.role || "viewer").toUpperCase();
+let lastLogin = data.lastLogin;
+
+//////////////////////////////////////////////////
+// FORMAT LAST LOGIN
+//////////////////////////////////////////////////
+
+let lastLoginText = "First Login";
+
+if(lastLogin){
+
+let d = lastLogin.toDate();
+
+lastLoginText = d.toLocaleString();
+
+}
+
+//////////////////////////////////////////////////
+// DEVICE INFO
+//////////////////////////////////////////////////
+
+let device = getDeviceInfo();
+
+//////////////////////////////////////////////////
+// SET UI
+//////////////////////////////////////////////////
+
+document.getElementById("profileName").innerText = name;
+document.getElementById("profileRole").innerText = role;
+document.getElementById("profileEmail").innerText = email;
+
+document.getElementById("profileMeta").innerHTML = `
+Last Login: ${lastLoginText}<br>
+Device: ${device}<br>
+Session: <span style="color:green;">Active</span>
+`;
+
+})
+.catch(e=>{
+console.error(e);
+});
+
+}
+
+//////////////////////////////////////////////////
+// GET DEVICE INFO
+//////////////////////////////////////////////////
+
+	
+function getDeviceInfo(){
+
+let ua = navigator.userAgent;
+
+let browser = "Unknown";
+let os = "Unknown";
+
+if(ua.includes("Chrome")) browser = "Chrome";
+else if(ua.includes("Safari")) browser = "Safari";
+else if(ua.includes("Firefox")) browser = "Firefox";
+
+if(ua.includes("Windows")) os = "Windows";
+else if(ua.includes("Mac")) os = "Mac";
+else if(ua.includes("Android")) os = "Android";
+else if(ua.includes("iPhone")) os = "iOS";
+
+return browser + " / " + os;
+
+}
+	
 	
 
 	
@@ -2428,6 +2524,7 @@ document.getElementById("dashboard").style.display =
 "block";
 
 await loadUserRole();
+loadUserProfile();	
 applyAccessLocks();	
 
 await initDashboardHeader();
