@@ -2329,21 +2329,13 @@ sessionStorage.clear();
 // FIREBASE LOGIN
 //////////////////////////////////////////////////
 
-await auth.signInWithEmailAndPassword(
-email,
-password
-);
+await auth.signInWithEmailAndPassword(email,password);
 
+let user = auth.currentUser;
 
-//////////////////////////////////////////////////
-// CHECK FIRESTORE USER PROFILE
-//////////////////////////////////////////////////
-
-let userDoc =
-await db
-.collection("users")
-.doc(email)
-.get();
+await db.collection("users").doc(user.email).update({
+lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+});
 
 
 //////////////////////////////////////////////////
