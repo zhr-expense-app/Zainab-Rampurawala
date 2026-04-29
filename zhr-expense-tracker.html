@@ -2286,44 +2286,26 @@ async function login(){
 // CAPTCHA CHECK
 //////////////////////////////////////////////////
 
-let captchaResponse =
-grecaptcha.getResponse();
+let captchaResponse = grecaptcha.getResponse();
 
 if(captchaResponse.length === 0){
-
-showToast(
-"Please verify CAPTCHA",
-"error"
-);
-
+showToast("Please verify CAPTCHA","error");
 return;
-
 }
 
 showLoader();
-
 
 //////////////////////////////////////////////////
 // GET INPUTS
 //////////////////////////////////////////////////
 
-let email =
-document.getElementById("username")
-.value
-.trim()
-.toLowerCase();
-
-let password =
-document.getElementById("password")
-.value;
-
+let email = document.getElementById("username").value.trim().toLowerCase();
+let password = document.getElementById("password").value;
 
 try{
 
 closePopup();
-
 sessionStorage.clear();
-
 
 //////////////////////////////////////////////////
 // FIREBASE LOGIN
@@ -2331,12 +2313,11 @@ sessionStorage.clear();
 
 await auth.signInWithEmailAndPassword(email,password);
 
-let user = auth.currentUser;
+//////////////////////////////////////////////////
+// GET USER PROFILE
+//////////////////////////////////////////////////
 
-await db.collection("users").doc(user.email).update({
-lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-});
-
+let userDoc = await db.collection("users").doc(email).get();
 
 //////////////////////////////////////////////////
 // NO PROFILE FOUND
@@ -2348,21 +2329,14 @@ await auth.signOut();
 
 hideLoader();
 
-showToast(
-"User profile not found",
-"error"
-);
+showToast("User profile not found","error");
 
 grecaptcha.reset();
 
 return;
-
 }
 
-
-let userData =
-userDoc.data();
-
+let userData = userDoc.data();
 
 //////////////////////////////////////////////////
 // BLOCK INACTIVE USER
@@ -2374,17 +2348,20 @@ await auth.signOut();
 
 hideLoader();
 
-showToast(
-"Account Pending Admin Approval",
-"error"
-);
+showToast("Account Pending Admin Approval","error");
 
 grecaptcha.reset();
 
 return;
-
 }
 
+//////////////////////////////////////////////////
+// UPDATE LAST LOGIN (CORRECT PLACE)
+//////////////////////////////////////////////////
+
+await db.collection("users").doc(email).update({
+lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+});
 
 //////////////////////////////////////////////////
 // LOGIN SUCCESS
@@ -2392,21 +2369,17 @@ return;
 
 hideLoader();
 
-showToast(
-"Login Successful ✅"
-);
+showToast("Login Successful ✅");
 
 grecaptcha.reset();
-
 
 }catch(e){
 
 hideLoader();
 
-showToast(
-"Invalid Login ID or Password ❌",
-"error"
-);
+console.error(e);
+
+showToast("Invalid Login ID or Password ❌","error");
 
 grecaptcha.reset();
 
