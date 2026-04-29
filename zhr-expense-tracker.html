@@ -1508,6 +1508,7 @@ let currentUserName = "";
 let currentUserEmail = "";	
 let userList = [];
 let unsubscribeUsers = null;	
+let ledgerUnsubscribe = null;	
 
 
 
@@ -6677,29 +6678,44 @@ function manageLedgers(){
 	
 function loadLedgers(callback){
 
-  db.collection("ledgers").onSnapshot(snapshot=>{
+if(ledgerUnsubscribe){
+ledgerUnsubscribe();
+ledgerUnsubscribe = null;
+}
 
-    ledgerList = [];
+if(!auth.currentUser){
+return;
+}
 
-    snapshot.forEach(doc=>{
-      ledgerList.push({id:doc.id, ...doc.data()});
-    });
+ledgerUnsubscribe = db.collection("ledgers").onSnapshot(snapshot=>{
 
-    console.log("Ledger Loaded:", ledgerList);
+ledgerList = [];
 
-    
+snapshot.forEach(doc=>{
+ledgerList.push({id:doc.id, ...doc.data()});
+});
 
-    if(callback && ledgerList.length > 0){
-      callback();
-    }
+console.log("Ledger Loaded:", ledgerList);
 
-  }, error => {
-    console.error("Ledger Load Error:", error);
-    showToast("Error loading ledgers ❌","error");
-  });
+if(callback && ledgerList.length > 0){
+callback();
+}
 
-}	
+}, error => {
 
+if(!auth.currentUser){
+return;
+}
+
+console.error("Ledger Load Error:", error);
+showToast("Error loading ledgers ❌","error");
+
+});
+
+}
+
+
+	
 //////////////////////////////////////////////////
 // SHOW LEDGER MANAGER
 //////////////////////////////////////////////////
