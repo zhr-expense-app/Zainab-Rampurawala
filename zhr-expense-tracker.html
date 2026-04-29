@@ -1281,6 +1281,10 @@ requestAnimationFrame(() => lucide.createIcons());
 
 <div id="profileMeta" style="font-size:12px;color:#888;line-height:1.5;"></div>
 
+<div style="font-size:12px;color:#888;margin-top:6px;">
+Last Updated: <span id="lastUpdatedText">Just now ✔</span>
+</div>
+
 </div>
 
       <button onclick="openSettings()">
@@ -1509,9 +1513,55 @@ let currentUserEmail = "";
 let userList = [];
 let unsubscribeUsers = null;	
 let ledgerUnsubscribe = null;	
+let lastUpdatedTime = Date.now();	
 
 
 
+
+
+//////////////////////////////////////////////////
+// UPDATE PROFILE LAST UPDATED
+//////////////////////////////////////////////////	
+
+function updateProfileLastUpdated(){
+
+let now = Date.now();
+let diff = Math.floor((now - lastUpdatedTime)/1000);
+
+let text = "Just now ✔";
+
+if(diff > 5 && diff < 60){
+text = diff + " sec ago";
+}
+else if(diff >= 60){
+let min = Math.floor(diff/60);
+text = min + " min ago";
+}
+
+let el = document.getElementById("lastUpdatedText");
+
+if(el){
+el.innerText = text;
+}
+
+}
+
+setInterval(updateProfileLastUpdated,5000);
+
+	
+//////////////////////////////////////////////////
+// MARK DATA UPDATED
+//////////////////////////////////////////////////
+
+function markDataUpdated(){
+
+lastUpdatedTime = Date.now();
+
+updateProfileLastUpdated();
+
+}
+	
+	
 //////////////////////////////////////////////////
 // SMART TRUST TOAST SYSTEM
 //////////////////////////////////////////////////
