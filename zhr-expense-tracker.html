@@ -4106,6 +4106,8 @@ if(ledgerList.length === 0){
       amount: amount
     });
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Receipt Saved ✅");
     closePopup();
@@ -4203,6 +4205,8 @@ if(isCashBankLedger(creditLedger)){
       amount: amount
     });
 
+	  markDataUpdated();
+
     hideLoader();
     showToast("Payment Saved ✅");
     closePopup();
@@ -4294,6 +4298,8 @@ if(ledgerList.length === 0){
       amount: amount
     });
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Journal Saved ✅");
     closePopup();
@@ -4799,6 +4805,8 @@ async function updatePayment(id){
       amount: amount
     });
 
+	markDataUpdated();
+
     hideLoader();
     showToast("Payment Updated ✏️");
 
@@ -5072,6 +5080,8 @@ if(isCashBankLedger(creditLedgerName)){
       amount: amount
     });
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Journal Updated ✏️");
 
@@ -5284,6 +5294,8 @@ async function updateTransaction(id){
       amount: amount
     });
 
+markDataUpdated();
+	  
     hideLoader();
     showToast("Receipt Updated ✏️");
 
@@ -5431,6 +5443,8 @@ async function confirmDelete(id){
 
     await db.collection("transactions").doc(id).delete();
 
+markDataUpdated();
+	  
     hideLoader();
     showToast("Deleted Successfully 🗑️");
 
@@ -6964,6 +6978,8 @@ if(group === "Profit & Loss"){
       active:true
     });
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Ledger Added ✅");
 
@@ -7078,6 +7094,8 @@ if(group === "Profit & Loss"){
       openingDate
     });
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Ledger Updated ✏️");
 
@@ -7140,6 +7158,8 @@ async function deleteLedger(id){
     // ✅ Now delete
     await db.collection("ledgers").doc(id).delete();
 
+markDataUpdated();
+	
     hideLoader();
     showToast("Ledger Deleted 🗑️");
 
@@ -7578,6 +7598,8 @@ currentInvoiceNo = invoiceNo;
 
 });
 
+markDataUpdated();
+	
     showToast(`Invoice ${invoiceNo} saved`, "success");
 
     closePopup();
@@ -7776,6 +7798,8 @@ async function updateInvoice(id){
   .FieldValue.serverTimestamp()
 
 });
+
+	  markDataUpdated();
 
     showToast("Invoice Updated ✏️", "success");
 
@@ -8574,6 +8598,8 @@ async function saveReceivedPayment(id) {
 
     });
 
+markDataUpdated();
+	  
     closePopup();
 
     showToast("Payment Updated ✅");
@@ -8883,6 +8909,8 @@ async function deleteInvoice(id){
 
     await db.collection("invoices").doc(id).delete();
 
+markDataUpdated();
+	  
     closePopup();
 
     showToast("Invoice Deleted 🗑️");
@@ -11993,6 +12021,8 @@ auth.currentUser.email
 
 });
 
+markDataUpdated();	
+
 hideLoader();
 
 showToast(
@@ -12261,6 +12291,8 @@ auth.currentUser.email
 
 });
 
+markDataUpdated();
+	
 hideLoader();
 
 showToast(
@@ -12348,6 +12380,8 @@ await db.collection("clients")
 .doc(id)
 .delete();
 
+markDataUpdated();
+	
 hideLoader();
 
 showToast(
@@ -12569,6 +12603,8 @@ approvedBy:auth.currentUser ? auth.currentUser.email : "",
 approvedAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 
+markDataUpdated();
+	
 hideLoader();
 
 showToast("User Updated ✅");
@@ -12671,6 +12707,8 @@ await db.collection("users")
 .doc(id)
 .delete();
 
+markDataUpdated();
+	
 hideLoader();
 
 showToast(
