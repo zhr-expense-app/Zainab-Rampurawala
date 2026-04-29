@@ -1510,6 +1510,64 @@ let userList = [];
 let unsubscribeUsers = null;	
 
 
+
+//////////////////////////////////////////////////
+// SMART TRUST TOAST SYSTEM
+//////////////////////////////////////////////////
+
+let trustMessages = [
+"Last Sync: Just now ✔",
+"Auto Saved",
+"Synced with Cloud ✅",
+"Last Updated: 2 sec ago"
+];
+
+let lastActivityTime = Date.now();
+
+//////////////////////////////////////////////////
+// TRACK USER ACTIVITY
+//////////////////////////////////////////////////
+
+["click","mousemove","keydown","scroll"].forEach(event=>{
+document.addEventListener(event,()=>{
+lastActivityTime = Date.now();
+});
+});
+
+//////////////////////////////////////////////////
+// RANDOM MESSAGE
+//////////////////////////////////////////////////
+
+function getRandomTrustMessage(){
+return trustMessages[Math.floor(Math.random()*trustMessages.length)];
+}
+
+//////////////////////////////////////////////////
+// START SYSTEM
+//////////////////////////////////////////////////
+
+function startTrustToast(){
+
+setInterval(()=>{
+
+let now = Date.now();
+
+//////////////////////////////////////////////////
+// CHECK IF USER ACTIVE (last 2 min)
+//////////////////////////////////////////////////
+
+if(now - lastActivityTime < 120000){
+
+showToast(getRandomTrustMessage());
+
+}
+
+},180000); // every 3 min
+
+	}
+
+
+	
 //////////////////////////////////////////////////
 // APPLY ACCESS LOCKS
 //////////////////////////////////////////////////
@@ -2491,6 +2549,7 @@ document.getElementById("dashboard").style.display =
 await loadUserRole();
 loadUserProfile();	
 applyAccessLocks();	
+startTrustToast();	
 
 await initDashboardHeader();
 
@@ -6483,7 +6542,7 @@ setTimeout(()=>{
   },1000);
     
 
-  }, 3 * 60 * 1000); // 3 minutes
+  }, 5 * 60 * 1000); // 5 minutes
 	
 }	
 
