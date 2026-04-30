@@ -1145,6 +1145,17 @@ vertical-align:middle;
   transform:translate(-50%, -10px);
 }	  
 	
+
+@keyframes pulseGreen{
+  0%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.4);opacity:0.6;}
+  100%{transform:scale(1);opacity:1;}
+}
+
+.sync-dot-active{
+  animation:pulseGreen 1.5s infinite;
+}
+
 	  
 	  
 </style>
@@ -1290,6 +1301,32 @@ requestAnimationFrame(() => lucide.createIcons());
 
   <div class="topbar-center">
     <h1 id="welcomeTitle">Welcome Back</h1>
+<div id="syncStatus" style="
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+font-size:12px;
+color:#666;
+margin-top:4px;
+">
+
+<span id="syncDot" style="
+width:8px;
+height:8px;
+border-radius:50%;
+background:#16c60c;
+display:inline-block;
+"></span>
+
+<span id="syncText">Synced</span>
+
+<span>•</span>
+
+<span id="headerLastUpdated">Just now</span>
+
+</div>
+	  
   </div>
 
   <div class="topbar-right">
@@ -1572,7 +1609,12 @@ let el = document.getElementById("lastUpdatedText");
 if(el){
 el.innerText = text;
 }
-
+	
+let headerEl = document.getElementById("headerLastUpdated");
+if(headerEl){
+headerEl.innerText = "Updated " + text.replace("✔","");
+	}
+	
 }
 
 setInterval(updateProfileLastUpdated,5000);
@@ -1586,9 +1628,15 @@ function markDataUpdated(){
 
 lastUpdatedTime = Date.now();
 
+setSyncStatus("syncing");
+
+setTimeout(()=>{
+  setSyncStatus("synced");
+},1000);
+
 updateProfileLastUpdated();
 
-}
+	}
 	
 	
 //////////////////////////////////////////////////
@@ -1634,7 +1682,7 @@ setInterval(()=>{
 let now = Date.now();
 let inactiveTime = (now - lastUserActionTime)/1000;
 
-if(inactiveTime > 180){
+if(inactiveTime > 120){
 return;
 }
 
@@ -1670,6 +1718,59 @@ setTimeout(()=>{
 },2000);
 
 }
+
+
+//////////////////////////////////////////////////
+// SYNC STATUS CONTROLLER
+//////////////////////////////////////////////////
+
+function setSyncStatus(status){
+
+let dot = document.getElementById("syncDot");
+let text = document.getElementById("syncText");
+
+if(!dot || !text) return;
+
+//////////////////////////////////////////////////
+// RESET ANIMATION
+//////////////////////////////////////////////////
+
+dot.classList.remove("sync-dot-active");
+
+//////////////////////////////////////////////////
+// STATES
+//////////////////////////////////////////////////
+
+if(status === "synced"){
+  dot.style.background = "#16c60c";
+  text.innerText = "Synced";
+  dot.classList.add("sync-dot-active");
+}
+
+if(status === "syncing"){
+  dot.style.background = "#ffc107";
+  text.innerText = "Syncing...";
+}
+
+if(status === "offline"){
+  dot.style.background = "#dc3545";
+  text.innerText = "Offline";
+}
+
+	}
+	
+
+//////////////////////////////////////////////////
+// NETWORK STATUS LISTENER (PLACE HERE)
+//////////////////////////////////////////////////
+
+window.addEventListener("online", ()=>{
+  setSyncStatus("synced");
+});
+
+window.addEventListener("offline", ()=>{
+  setSyncStatus("offline");
+});
 
 	
 	
@@ -2534,7 +2635,8 @@ hideLoader();
 
 showToast("Login Successful ✅");
 startTrustSystem();	
-
+setSyncStatus("synced");
+	
 grecaptcha.reset();
 
 }catch(e){
