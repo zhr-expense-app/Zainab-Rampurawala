@@ -1580,8 +1580,8 @@ let userList = [];
 let unsubscribeUsers = null;	
 let ledgerUnsubscribe = null;	
 let lastUpdatedTime = Date.now();	
-
-
+let currentSyncState = "synced";
+let lastUserActionTime = Date.now();
 
 
 
@@ -1590,6 +1590,10 @@ let lastUpdatedTime = Date.now();
 //////////////////////////////////////////////////	
 
 function updateProfileLastUpdated(){
+
+if(currentSyncState === "offline" || currentSyncState === "inactive"){
+return;
+}
 
 let now = Date.now();
 let diff = Math.floor((now - lastUpdatedTime)/1000);
@@ -1605,20 +1609,46 @@ text = min + " min ago";
 }
 
 let el = document.getElementById("lastUpdatedText");
-
 if(el){
 el.innerText = text;
 }
-	
+
 let headerEl = document.getElementById("headerLastUpdated");
 if(headerEl){
 headerEl.innerText = "Updated " + text.replace("✔","");
-	}
-	
+}
+
 }
 
 setInterval(updateProfileLastUpdated,5000);
 
+//////////////////////////////////////////////////
+// INACTIVITY DETECTION (ADD HERE)
+//////////////////////////////////////////////////
+
+setInterval(()=>{
+
+let now = Date.now();
+let inactiveTime = (now - lastUserActionTime)/1000;
+
+//////////////////////////////////////////////////
+// INACTIVE AFTER 2 MIN
+//////////////////////////////////////////////////
+
+if(inactiveTime > 120 && navigator.onLine){
+setSyncStatus("inactive");
+}
+
+//////////////////////////////////////////////////
+// BACK TO ACTIVE
+//////////////////////////////////////////////////
+
+if(inactiveTime <= 5 && currentSyncState === "inactive"){
+markDataUpdated();   // resets to Just now
+}
+
+},5000);
+	
 	
 //////////////////////////////////////////////////
 // MARK DATA UPDATED
@@ -1682,7 +1712,7 @@ setInterval(()=>{
 let now = Date.now();
 let inactiveTime = (now - lastUserActionTime)/1000;
 
-if(inactiveTime > 120){
+if(inactiveTime > 120 || !navigator.onLine){
 return;
 }
 
@@ -1694,10 +1724,9 @@ showTrustToast(msg);
 
 markDataUpdated();
 
-},180000); // 3 minutes
+},180000);
 
 }
-
 //////////////////////////////////////////////////
 // TRUST TOAST CSS
 //////////////////////////////////////////////////
@@ -1726,20 +1755,14 @@ setTimeout(()=>{
 
 function setSyncStatus(status){
 
+currentSyncState = status;   // ✅ IMPORTANT
+
 let dot = document.getElementById("syncDot");
 let text = document.getElementById("syncText");
 
 if(!dot || !text) return;
 
-//////////////////////////////////////////////////
-// RESET ANIMATION
-//////////////////////////////////////////////////
-
 dot.classList.remove("sync-dot-active");
-
-//////////////////////////////////////////////////
-// STATES
-//////////////////////////////////////////////////
 
 if(status === "synced"){
   dot.style.background = "#16c60c";
@@ -1755,9 +1778,20 @@ if(status === "syncing"){
 if(status === "offline"){
   dot.style.background = "#dc3545";
   text.innerText = "Offline";
+
+  //////////////////////////////////////////////////
+  // HIDE LAST UPDATED
+  //////////////////////////////////////////////////
+
+  document.getElementById("headerLastUpdated").innerText = "No Internet";
 }
 
-	}
+if(status === "inactive"){
+  dot.style.background = "#ff9800";
+  text.innerText = "Inactive";
+}
+
+}
 	
 
 //////////////////////////////////////////////////
