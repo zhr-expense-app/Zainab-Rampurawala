@@ -1651,7 +1651,7 @@ const trustMessages = [
   "Data protected & updated ✔"
 ];
 
-let lastActivityTime = Date.now();
+let lastUserActionTime = Date.now();
 
 //////////////////////////////////////////////////
 // TRACK USER ACTIVITY
@@ -1659,7 +1659,7 @@ let lastActivityTime = Date.now();
 
 ["click","mousemove","keydown","touchstart","scroll"].forEach(event=>{
 document.addEventListener(event,()=>{
-lastActivityTime = Date.now();
+lastUserActionTime = Date.now();  
 });
 });
 
