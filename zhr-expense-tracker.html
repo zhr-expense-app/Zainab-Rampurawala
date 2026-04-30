@@ -1116,6 +1116,35 @@ height:18px;
 vertical-align:middle;
 }
 
+
+.toast-success{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+
+  background:#16c60c;
+  color:#ffffff;
+
+  padding:12px 20px;
+  border-radius:10px;
+
+  font-size:14px;
+  font-weight:500;
+
+  opacity:0;
+  transition:all 0.3s ease;
+
+  z-index:3000;
+
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+.toast-success.show{
+  opacity:1;
+  transform:translate(-50%, -10px);
+}	  
+	
 	  
 	  
 </style>
@@ -1566,11 +1595,12 @@ updateProfileLastUpdated();
 // SMART TRUST TOAST SYSTEM
 //////////////////////////////////////////////////
 
-let trustMessages = [
-"Last Sync: Just now ✔",
-"Auto Saved",
-"Synced with Cloud ✅",
-"Last Updated: 2 sec ago"
+const trustMessages = [
+  "Auto Saved ✔",
+  "Synced with Cloud ☁️",
+  "All changes secured 🔐",
+  "Backup completed safely 💾",
+  "Data protected & updated ✔"
 ];
 
 let lastActivityTime = Date.now();
@@ -1579,7 +1609,7 @@ let lastActivityTime = Date.now();
 // TRACK USER ACTIVITY
 //////////////////////////////////////////////////
 
-["click","mousemove","keydown","scroll"].forEach(event=>{
+["click","mousemove","keydown","touchstart","scroll"].forEach(event=>{
 document.addEventListener(event,()=>{
 lastActivityTime = Date.now();
 });
@@ -1597,27 +1627,51 @@ return trustMessages[Math.floor(Math.random()*trustMessages.length)];
 // START SYSTEM
 //////////////////////////////////////////////////
 
-function startTrustToast(){
+function startTrustSystem(){
 
 setInterval(()=>{
 
 let now = Date.now();
+let inactiveTime = (now - lastUserActionTime)/1000;
 
-//////////////////////////////////////////////////
-// CHECK IF USER ACTIVE (last 2 min)
-//////////////////////////////////////////////////
+if(inactiveTime > 180){
+return;
+}
 
-if(now - lastActivityTime < 120000){
+let msg = trustMessages[
+Math.floor(Math.random() * trustMessages.length)
+];
 
-showToast(getRandomTrustMessage());
+showTrustToast(msg);
+
+markDataUpdated();
+
+},180000); // 3 minutes
 
 }
 
-},180000); // every 3 min
+//////////////////////////////////////////////////
+// TRUST TOAST CSS
+//////////////////////////////////////////////////
+	
+function showTrustToast(message){
 
-	}
+let toast = document.createElement("div");
+toast.className = "toast-success";
+toast.innerText = message;
 
+document.body.appendChild(toast);
 
+setTimeout(()=>toast.classList.add("show"),50);
+
+setTimeout(()=>{
+  toast.classList.remove("show");
+  setTimeout(()=>toast.remove(),300);
+},2000);
+
+}
+
+	
 	
 //////////////////////////////////////////////////
 // APPLY ACCESS LOCKS
@@ -2479,6 +2533,7 @@ lastLogin: firebase.firestore.FieldValue.serverTimestamp()
 hideLoader();
 
 showToast("Login Successful ✅");
+startTrustSystem();	
 
 grecaptcha.reset();
 
