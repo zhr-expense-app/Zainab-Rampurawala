@@ -2636,7 +2636,7 @@ hideLoader();
 showToast("Login Successful ✅");
 startTrustSystem();	
 setSyncStatus("synced");
-	
+	await loadLedgers();
 grecaptcha.reset();
 
 }catch(e){
@@ -2757,13 +2757,13 @@ document.getElementById("dashboard").style.display =
 await loadUserRole();
 loadUserProfile();	
 applyAccessLocks();	
-startTrustToast();	
+startTrustSystem();	
 
 await initDashboardHeader();
 
 loadTransactions();
 
-loadLedgers();
+await loadLedgers();
 
 loadInvoices();
 
