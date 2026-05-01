@@ -300,6 +300,7 @@ button:active{
   border-radius:12px;
   box-shadow:var(--card-shadow);
   text-align:center;
+  transition:background .3s, box-shadow .3s;
 }
 
 /* LOGIN FORM ELEMENTS */
@@ -349,12 +350,12 @@ button:active{
   background:var(--card);
   border:none;
   border-radius:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  box-shadow:var(--card-shadow);
   padding:18px;
   width:320px;
   max-height:350px;
   color:var(--text);
-  transition:background .3s,color .3s;
+  transition:background .3s,color .3s, box-shadow .3s;
 }
 
 /* TABLE INSIDE SUMMARY */
@@ -440,14 +441,14 @@ button:active{
 
 .report-table th,
 .report-table td{
-  border:1px solid #001d4c;
+  border:1px solid var(--primary);
   padding:10px;
   text-align:center;
 }
 
 .report-table th{
-  background:#001d4c;
-  color:white;
+  background:var(--primary);
+  color:var(--btn-text);
 }
 
 /* =====================================================
@@ -462,12 +463,12 @@ button:active{
   top:0;
   width:100%;
   height:100%;
-  background-color:rgba(0,0,0,0.5);
+  background-color:var(--overlay);
 }
 
 /* MODAL CONTENT */
 .modal-content{
-  background:white;
+  background:var(--card);
   margin:5% auto;
   padding:20px;
   width:400px;
@@ -475,6 +476,7 @@ button:active{
   text-align:left;
   max-height:80vh;     /* limit height */
   overflow-y:auto;     /* enable scroll */
+  transition:background .3s; 
 }
 
 /* CLOSE BUTTON */
