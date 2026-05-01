@@ -85,6 +85,17 @@ document.getElementById("dashboard").style.display = "none";
   --primary:#001d4c;
   --border:#d9e2ef;
   --tablehead:#f8fbff;
+  --muted:#6c757d;
+  --input-border:#ccc;
+  --btn-text:#ffffff;
+  --btn-shadow:0 2px 6px rgba(0,0,0,.10);
+  --btn-shadow-hover:0 6px 14px rgba(0,0,0,0.15);
+  --btn-shadow-active:0 2px 4px rgba(0,0,0,0.2);
+  --toast-shadow:0 8px 20px rgba(0,0,0,.18);
+  --overlay:rgba(255,255,255,0.7);
+  --loader-bg:#eee;
+  --loader-primary:#001d4c;
+  --card-shadow:0px 8px 25px rgba(0,0,0,0.08);
 }
 
 /* =====================================================
@@ -98,6 +109,17 @@ body.dark{
   --primary:#0d6efd;
   --border:#384150;
   --tablehead:#232936;
+  --muted:#9aa3b2;
+  --input-border:#4b5563;
+  --btn-text:#ffffff;
+  --btn-shadow:0 2px 6px rgba(0,0,0,.4);
+  --btn-shadow-hover:0 6px 14px rgba(0,0,0,0.5);
+  --btn-shadow-active:0 2px 4px rgba(0,0,0,0.6);
+  --toast-shadow:0 8px 20px rgba(0,0,0,.5);
+  --overlay:rgba(0,0,0,0.6);
+  --loader-bg:#2a3140;
+  --loader-primary:#0d6efd;
+  --card-shadow:0px 8px 25px rgba(0,0,0,0.5);
 }
 
 /* =====================================================
@@ -126,7 +148,7 @@ body{
 .page-title{
   text-align:center;
   font-size:34px;
-  color:#001d4c;
+  color:var(--text);
   margin:20px 0 10px;
   font-weight:700;
 }
@@ -134,7 +156,7 @@ body{
 .page-subtitle{
   text-align:center;
   font-size:16px;
-  color:#6c757d;
+  color:var(--muted);
   margin-bottom:20px;
 }
 
@@ -152,7 +174,7 @@ select{
   padding:10px;
   margin:8px 0;
   border-radius:6px;
-  border:1px solid #ccc;
+  border:1px solid var(--input-border);
   font-size:14px;
 }
 
@@ -184,14 +206,14 @@ button{
   justify-content:center;
   gap:8px;
   background:var(--primary);
-  color:#ffffff;
+  color:var(--btn-text);
   border:none;
   padding:10px 16px;
   border-radius:8px;
   cursor:pointer;
   font-weight:500;
   transition:all .2s ease, background .3s, color .3s;
-  box-shadow:0 2px 6px rgba(0,0,0,.10);
+  box-shadow:var(--btn-shadow);
 }
 
 /* ICON SIZE */
@@ -203,14 +225,14 @@ button i{
 /* HOVER EFFECT */
 button:hover{
   transform:translateY(-2px);
-  box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  box-shadow:var(--btn-shadow-hover);
   opacity:1;
 }
 
 /* CLICK EFFECT */
 button:active{
   transform:scale(0.96);
-  box-shadow:0 2px 4px rgba(0,0,0,0.2);
+  box-shadow:var(--btn-shadow-active);
 }
 
 /* =====================================================
@@ -222,14 +244,14 @@ button:active{
   left:50%;
   transform:translateX(-50%);
   background:var(--primary);
-  color:#ffffff;
+  color:var(--btn-text);
   padding:12px 20px;
   border-radius:8px;
   font-size:14px;
   opacity:0;
   transition:all .3s ease, background .3s, color .3s;
   z-index:3000;
-  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  box-shadow:var(--toast-shadow);
 }
 
 .toast.show{
@@ -246,7 +268,7 @@ button:active{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(255,255,255,0.7);
+  background:var(--overlay);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -254,8 +276,8 @@ button:active{
 }
 
 .loader{
-  border:5px solid #eee;
-  border-top:5px solid #001d4c;
+  border:5px solid var(--loader-bg);
+  border-top:5px solid var(--loader-primary);
   border-radius:50%;
   width:40px;
   height:40px;
@@ -273,10 +295,10 @@ button:active{
 #login{
   width:400px;
   margin:60px auto;
-  background:white;
+  background:var(--card);
   padding:40px;
   border-radius:12px;
-  box-shadow:0px 8px 25px rgba(0,0,0,0.08);
+  box-shadow:var(--card-shadow);
   text-align:center;
 }
 
@@ -286,7 +308,7 @@ button:active{
   padding:14px;
   margin:8px 0;
   border-radius:8px;
-  border:1px solid #ccc;
+  border:1px solid var(--input-border);
   font-size:15px;
 }
 
@@ -302,7 +324,7 @@ button:active{
    14. USER INFO BADGE
 ===================================================== */
 #userEmail{
-  background:#eef3ff;
+  background:var(--soft-bg);
   padding:6px 12px;
   border-radius:20px;
   font-size:13px;
