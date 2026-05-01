@@ -96,6 +96,9 @@ document.getElementById("dashboard").style.display = "none";
   --loader-bg:#eee;
   --loader-primary:#001d4c;
   --card-shadow:0px 8px 25px rgba(0,0,0,0.08);
+  --table-total-bg:#f9f9f9;
+  --dropdown-shadow:0 12px 28px rgba(0,0,0,.12);
+  --text-soft:#222;
 }
 
 /* =====================================================
@@ -120,6 +123,9 @@ body.dark{
   --loader-bg:#2a3140;
   --loader-primary:#0d6efd;
   --card-shadow:0px 8px 25px rgba(0,0,0,0.5);
+  --table-total-bg:#1f2937;
+  --dropdown-shadow:0 12px 28px rgba(0,0,0,.6);
+  --text-soft:#d1d5db;
 }
 
 /* =====================================================
@@ -575,7 +581,7 @@ button:active{
   .page-subtitle{
     text-align:center;
     font-size:16px;
-    color:#6c757d;
+    color:var(--muted);
     margin-bottom:20px;
   }
 
@@ -789,7 +795,7 @@ button{
 /* Total Row */
 .trial-balance-table tr:last-child td{
   font-weight:700;
-  background:#f9f9f9;
+  background:var(--table-total-bg);
 }
 
 /* =====================================================
@@ -827,7 +833,7 @@ button{
 /* Total Row */
 .profit-loss-table tr:last-child td{
   font-weight:700;
-  background:#f9f9f9;
+  background:var(--table-total-bg);
 }
 
 /* =====================================================
@@ -865,7 +871,7 @@ button{
 /* Total Row */
 .balance-sheet-table tr:last-child td{
   font-weight:700;
-  background:#f9f9f9;
+  background:var(--table-total-bg);
 }
 
 /* =====================================================
@@ -875,7 +881,7 @@ button{
 /* Balance Sheet Section Headings */
 .balance-sheet-table th[colspan="2"]{
   background:none !important;
-  color:#000 !important;
+  color:var(--text) !important; 
   font-weight:700 !important;
   text-align:left !important;
 }
@@ -883,7 +889,7 @@ button{
 /* Profit & Loss Section Headings */
 .profit-loss-table th[colspan="2"]{
   background:none !important;
-  color:#000 !important;
+  color:var(--text) !important; 
   font-weight:700 !important;
   text-align:left !important;
 }
@@ -894,7 +900,7 @@ button{
 
 #erpFooter{
   background:var(--primary);
-  color:#ffffff;
+  color:var(--btn-text);
   text-align:center;
   padding:14px;
   font-size:13px;
@@ -959,7 +965,7 @@ button{
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  box-shadow:var(--card-shadow);
   padding:0;
   transition:background .3s,color .3s;
 }
@@ -984,9 +990,9 @@ button{
   top:55px;
   right:0;
   width:240px;
-  background:#ffffff;
+  background:var(--card);
   border-radius:14px;
-  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  box-shadow:var(--dropdown-shadow);
   overflow:hidden;
   z-index:999;
 }
@@ -998,20 +1004,20 @@ button{
 /* PROFILE INFO */
 .profile-info{
   padding:14px 16px;
-  background:#f8fbff;
-  border-bottom:1px solid #eef2f7;
+  background:var(--soft-bg);
+  border-bottom:1px solid var(--border);
 }
 
 #profileName{
   font-size:15px;
   font-weight:700;
-  color:#001d4c;
+  color:var(--text);
   margin-bottom:4px;
 }
 
 #profileEmail{
   font-size:13px;
-  color:#666;
+  color:var(--subtext);
   word-break:break-word;
 }
 
@@ -1020,8 +1026,8 @@ button{
   width:100%;
   border:none;
   border-radius:0;
-  background:#ffffff;
-  color:#222;
+  background:var(--card);
+  color:var(--text-soft);
   padding:12px 16px;
   display:flex;
   align-items:center;
@@ -1038,7 +1044,7 @@ button{
 }
 
 .profile-dropdown button:hover{
-  background:#f5f8fc;
+  background:var(--hover);
   transform:none;
 }
 
