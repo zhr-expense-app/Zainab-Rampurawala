@@ -74,96 +74,124 @@ document.getElementById("dashboard").style.display = "none";
 
   <style>
 
-
-	:root{
---bg:#f8f9fb;
---text:#001d4c;
---card:#ffffff;
---subtext:#666;
---primary:#001d4c;
---border:#d9e2ef;
---tablehead:#f8fbff;
+/* =====================================================
+   1. THEME VARIABLES (LIGHT MODE)
+===================================================== */
+:root{
+  --bg:#f8f9fb;
+  --text:#001d4c;
+  --card:#ffffff;
+  --subtext:#666;
+  --primary:#001d4c;
+  --border:#d9e2ef;
+  --tablehead:#f8fbff;
 }
 
+/* =====================================================
+   2. DARK MODE OVERRIDES
+===================================================== */
 body.dark{
---bg:#0f1115;
---text:#ffffff;
---card:#1b1f27;
---subtext:#b8bcc7;
---primary:#0d6efd;
---border:#384150;
---tablehead:#232936;
+  --bg:#0f1115;
+  --text:#ffffff;
+  --card:#1b1f27;
+  --subtext:#b8bcc7;
+  --primary:#0d6efd;
+  --border:#384150;
+  --tablehead:#232936;
 }
 
-	  
-    body{
-font-family:'Segoe UI',sans-serif;
-text-align:center;
-margin:0;
-background:var(--bg);
-color:var(--text);
-transition:background .3s,color .3s;
-	}
+/* =====================================================
+   3. BASE / GLOBAL STYLES
+===================================================== */
+body{
+  font-family:'Segoe UI',sans-serif;
+  text-align:center;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  transition:background .3s,color .3s;
+}
 
-	  
-    .logo {
-      width: 320px;
-      margin: 20px 0;
-    }
+/* =====================================================
+   4. BRANDING / LOGO
+===================================================== */
+.logo{
+  width:320px;
+  margin:20px 0;
+}
 
+/* =====================================================
+   5. TYPOGRAPHY
+===================================================== */
 .page-title{
-text-align:center;
-font-size:34px;
-color:#001d4c;
-margin:20px 0 10px;
-font-weight:700;
+  text-align:center;
+  font-size:34px;
+  color:#001d4c;
+  margin:20px 0 10px;
+  font-weight:700;
 }
 
-	  .page-subtitle{
+.page-subtitle{
   text-align:center;
   font-size:16px;
   color:#6c757d;
   margin-bottom:20px;
 }
-	  
-    h2,
-    h3 {
-      margin-bottom: 15px;
-    }
 
-    input,
-    select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+h2,
+h3{
+  margin-bottom:15px;
+}
 
-    /* BUTTON GROUP */
+/* =====================================================
+   6. FORM ELEMENTS
+===================================================== */
+input,
+select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+/* =====================================================
+   7. BUTTON GROUP / ACTIONS
+===================================================== */
 .action-buttons{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
   gap:10px;
 }
-	  
+
+/* =====================================================
+   8. GLOBAL RESET
+===================================================== */
+*{
+  box-sizing:border-box;
+}
+
+/* =====================================================
+   9. BUTTON SYSTEM (BASE - DESKTOP FIRST)
+===================================================== */
+
 /* MODERN BUTTON */
 button{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-gap:8px;
-background:var(--primary);
-color:#ffffff;
-border:none;
-padding:10px 16px;
-border-radius:8px;
-cursor:pointer;
-font-weight:500;
-transition:all .2s ease,background .3s,color .3s;
-box-shadow:0 2px 6px rgba(0,0,0,.10);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:var(--primary);
+  color:#ffffff;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  transition:all .2s ease, background .3s, color .3s;
+  box-shadow:0 2px 6px rgba(0,0,0,.10);
 }
 
 /* ICON SIZE */
@@ -174,47 +202,34 @@ button i{
 
 /* HOVER EFFECT */
 button:hover{
-  transform: translateY(-2px);
+  transform:translateY(-2px);
   box-shadow:0 6px 14px rgba(0,0,0,0.15);
   opacity:1;
 }
 
 /* CLICK EFFECT */
 button:active{
-  transform: scale(0.96);
+  transform:scale(0.96);
   box-shadow:0 2px 4px rgba(0,0,0,0.2);
 }
 
-	  
-    * {
-      box-sizing: border-box;
-    }
-  
-
-/* FIX LOGIN BUTTON ALIGNMENT */
-#login button{
-  display:flex;
-  
-  text-align:center;
-  justify-content:center; /* 👈 important */
-}
-
-
-
+/* =====================================================
+   11. TOAST NOTIFICATION
+===================================================== */
 .toast{
-position:fixed;
-bottom:30px;
-left:50%;
-transform:translateX(-50%);
-background:var(--primary);
-color:#ffffff;
-padding:12px 20px;
-border-radius:8px;
-font-size:14px;
-opacity:0;
-transition:all .3s ease,background .3s,color .3s;
-z-index:3000;
-box-shadow:0 8px 20px rgba(0,0,0,.18);
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--primary);
+  color:#ffffff;
+  padding:12px 20px;
+  border-radius:8px;
+  font-size:14px;
+  opacity:0;
+  transition:all .3s ease, background .3s, color .3s;
+  z-index:3000;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
 }
 
 .toast.show{
@@ -222,7 +237,9 @@ box-shadow:0 8px 20px rgba(0,0,0,.18);
   bottom:50px;
 }
 
-	  
+/* =====================================================
+   12. LOADER / SPINNER
+===================================================== */
 .loader-overlay{
   position:fixed;
   top:0;
@@ -250,464 +267,313 @@ box-shadow:0 8px 20px rgba(0,0,0,.18);
   100%{transform:rotate(360deg);}
 }
 
-	  
-	  
-    /* LOGIN BOX */
+/* =====================================================
+   13. LOGIN COMPONENT
+===================================================== */
+#login{
+  width:400px;
+  margin:60px auto;
+  background:white;
+  padding:40px;
+  border-radius:12px;
+  box-shadow:0px 8px 25px rgba(0,0,0,0.08);
+  text-align:center;
+}
 
-    #login {
-      width: 400px;
-      margin: 60px auto;
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.08);
-      text-align: center;
-    }
+/* LOGIN FORM ELEMENTS */
+#login input{
+  width:100%;
+  padding:14px;
+  margin:8px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
 
-    #login input {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
+/* FIX LOGIN BUTTON ALIGNMENT */
+#login button{
+  display:flex;
+  text-align:center;
+  justify-content:center;
+  border-radius:6px;
+}
 
-    #login button {
-      
-      border-radius: 6px;
-    }
-
-#userEmail {
+/* =====================================================
+   14. USER INFO BADGE
+===================================================== */
+#userEmail{
   background:#eef3ff;
   padding:6px 12px;
   border-radius:20px;
   font-size:13px;
 }
 
-	  
-    /* SUMMARY TABLES */
+/* =====================================================
+   15. SUMMARY SECTION (CARDS + TABLES)
+===================================================== */
 
-/* SUMMARY TABLES */
-
-.summary-container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin: 20px 0;
-  flex-wrap: wrap;
-	flex-direction: row;
-        align-items: stretch;
-
-	
+.summary-container{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  margin:20px 0;
+  flex-wrap:wrap;
+  flex-direction:row;
+  align-items:stretch;
 }
 
+/* SUMMARY CARD */
 .summary-box{
-background:var(--card);
-border:none;
-border-radius:16px;
-box-shadow:0 8px 20px rgba(0,0,0,.08);
-padding:18px;
-width:320px;
-max-height:350px;
-color:var(--text);
-transition:background .3s,color .3s;
+  background:var(--card);
+  border:none;
+  border-radius:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  padding:18px;
+  width:320px;
+  max-height:350px;
+  color:var(--text);
+  transition:background .3s,color .3s;
 }
 
+/* TABLE INSIDE SUMMARY */
 .summary-box table{
-width:100%;
-border-collapse:collapse;
+  width:100%;
+  border-collapse:collapse;
 }
 
 .summary-box th,
 .summary-box td{
-border:1px solid var(--border);
-padding:8px;
+  border:1px solid var(--border);
+  padding:8px;
 }
 
 .summary-box th{
-background:var(--tablehead);
-color:var(--text);
-font-weight:700;
+  background:var(--tablehead);
+  color:var(--text);
+  font-weight:700;
 }
 
+/* SCROLLABLE TABLE WRAPPERS */
 .summary-box:nth-child(2) .summary-table-wrapper{
-max-height:260px;
-overflow-y:auto;
+  max-height:260px;
+  overflow-y:auto;
 }
 
 .summary-box:nth-child(3) .summary-table-wrapper{
-max-height:260px;
-overflow-y:auto;
+  max-height:260px;
+  overflow-y:auto;
 }
 
+/* TABLE TEXT */
 .summary-box td{
-font-size:15px;
-color:var(--text);
+  font-size:15px;
+  color:var(--text);
+  text-align:right;
 }
 
+/* HOVER EFFECT */
 .summary-box:hover{
-transform:translateY(-2px);
-transition:.2s ease;
+  transform:translateY(-2px);
+  transition:.2s ease;
 }
-	  
-	  
-    /* CHART SECTION */
 
-    .charts-container {
-      display: flex;
-      justify-content: center;
-      gap: 50px;
-      margin-top: 20px;
-      margin-bottom: 90px;
-    }
+/* =====================================================
+   16. CHART SECTION
+===================================================== */
 
-    .chart-box {
-      border-radius: 6px;
-      width: 400px;
-      height: 300px;
-    }
-
-    .chart-box canvas {
-      width: 100% !important;
-      height: 300px !important;
-    }
-
-    #expensePieChart,
-    #cashFlowChart {
-      width: 100% !important;
-      height: 300px !important;
-    }
-
-    /* REPORT TABLE */
-
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-
-    .report-table th,
-    .report-table td {
-      border: 1px solid #001d4c;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .report-table th {
-      background: #001d4c;
-      color: white;
-    }
-
-    /* POPUP */
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-content {
-  background: white;
-  margin: 5% auto;
-  padding: 20px;
-  width: 400px;
-  border-radius: 8px;
-  text-align: left;
-
-  max-height: 80vh;        /* ✅ limit height */
-  overflow-y: auto;        /* ✅ enable scroll */
-	}
-
-    .close {
-      float: right;
-      font-size: 22px;
-      cursor: pointer;
-    }
-
-    .dashboard-container {
-      max-width: 1200px;
-      margin:20px auto 0;
-      padding: 20px;
-    }
-
-    #reportOutput {
-      max-width: 1100px;
-      margin: 30px auto;
-    }
-
-    .summary-title {
-      font-weight: 600;
-      font-size: 18px;
-      margin-bottom: 12px;
-      text-align: center;
-		
-    }
-
-    /* MOBILE */
-
-    @media screen and (max-width: 768px) {
-
-      
-
-      #login {
-        width: 95%;
-        
-      }
-
-      .logo {
-        width: 200px;
-      }
-
-      .summary-container {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-      }
-
-      .summary-box {
-        width: 100%;
-      }
-
-      .charts-container{
-flex-direction:column;
-align-items:stretch;
-gap:30px;
+.charts-container{
+  display:flex;
+  justify-content:center;
+  gap:50px;
+  margin-top:20px;
+  margin-bottom:90px;
 }
 
 .chart-box{
-width:100%;
-height:auto;
+  border-radius:6px;
+  width:400px;
+  height:300px;
 }
-
 
 .chart-box canvas{
-width:100% !important;
-height:260px !important;
+  width:100% !important;
+  height:300px !important;
 }
 
-/* BUTTONS FULL WIDTH */
-
-button{
-width:100%;
-margin:6px 0;
+#expensePieChart,
+#cashFlowChart{
+  width:100% !important;
+  height:300px !important;
 }
 
-     /* POPUP FIX */
-
-.modal-content{
-  width:95%;
-  margin:10% auto;
-
-  max-height: 80vh;      /* ✅ add */
-  overflow-y: auto;      /* ✅ add */
-}
-
-/* REPORT TABLE SCROLL */
+/* =====================================================
+   17. REPORT TABLE (GLOBAL)
+===================================================== */
 
 .report-table{
-display:block;
-overflow-x:auto;
-white-space:nowrap;
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
 }
 
-/* INPUTS BIGGER FOR MOBILE */
-
-input, select{
-font-size:16px;
+.report-table th,
+.report-table td{
+  border:1px solid #001d4c;
+  padding:10px;
+  text-align:center;
 }
 
-/* DASHBOARD PADDING */
+.report-table th{
+  background:#001d4c;
+  color:white;
+}
+
+/* =====================================================
+   18. MODAL / POPUP
+===================================================== */
+
+.modal{
+  display:none;
+  position:fixed;
+  z-index:1000;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background-color:rgba(0,0,0,0.5);
+}
+
+/* MODAL CONTENT */
+.modal-content{
+  background:white;
+  margin:5% auto;
+  padding:20px;
+  width:400px;
+  border-radius:8px;
+  text-align:left;
+  max-height:80vh;     /* limit height */
+  overflow-y:auto;     /* enable scroll */
+}
+
+/* CLOSE BUTTON */
+.close{
+  float:right;
+  font-size:22px;
+  cursor:pointer;
+}
+
+/* =====================================================
+   19. MAIN DASHBOARD LAYOUT
+===================================================== */
 
 .dashboard-container{
-padding:10px;
+  max-width:1200px;
+  margin:20px auto 0;
+  padding:20px;
 }
 
-/* PERSONAL MONTHLY TABLE */
-
-#personalMonthlySummary table{
-font-size:14px;
+#reportOutput{
+  max-width:1100px;
+  margin:30px auto;
 }
 
+/* =====================================================
+   20. SECTION HEADINGS
+===================================================== */
+
+.summary-title{
+  font-weight:600;
+  font-size:18px;
+  margin-bottom:12px;
+  text-align:center;
 }
 
-@media (max-width:768px){
+/* =====================================================
+   21. MOBILE RESPONSIVE (MERGED CLEAN VERSION)
+===================================================== */
+
+@media screen and (max-width:768px){
+
+  /* -------------------------
+     LAYOUT ADJUSTMENTS
+  ------------------------- */
+
+  #login{
+    width:95%;
+    margin:50px auto;
+  }
+
+  .logo{
+    width:200px;
+  }
+
+  .dashboard-container{
+    padding:10px;
+  }
+
+  .summary-container{
+    flex-direction:column;
+    align-items:stretch;
+    gap:15px;
+  }
+
+  .summary-box{
+    width:100%;
+    padding:12px;
+  }
+
+  .charts-container{
+    flex-direction:column;
+    align-items:stretch;
+    gap:30px;
+  }
+
+  .chart-box{
+    width:100%;
+    height:auto;
+  }
+
+  .chart-box canvas{
+    width:100% !important;
+    height:260px !important;
+  }
+
+
+  /* -------------------------
+     TYPOGRAPHY
+  ------------------------- */
+
   .page-title{
     font-size:24px;
     margin-top:10px;
   }
 
-	.page-title{
-text-align:center;
-font-size:34px;
-color:#001d4c;
-margin:20px 0 10px;
-font-weight:700;
-	}
+  .page-subtitle{
+    text-align:center;
+    font-size:16px;
+    color:#6c757d;
+    margin-bottom:20px;
+  }
 
-.page-subtitle{
-  text-align:center;
-  font-size:16px;
-  color:#6c757d;
-  margin-bottom:20px;
-	
-}
-}
-
-	  
-/* Mobile button spacing */
-
-@media screen and (max-width:768px){
-
+ /* -------------------------
+   GENERAL MOBILE BUTTONS
+------------------------- */
 button{
-width:auto;
-padding:8px 14px;
-margin:6px 6px;
-font-size:14px;
+  width:100%;
+  margin:6px 0;
+  font-size:14px;
+  padding:10px 14px;
 }
 
-
-
-/* MODERN BUTTON */
-button{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-gap:8px;
-background:var(--primary);
-color:#ffffff;
-border:none;
-padding:10px 16px;
-border-radius:8px;
-cursor:pointer;
-font-weight:500;
-transition:all .2s ease,background .3s,color .3s;
-box-shadow:0 2px 6px rgba(0,0,0,.10);
-}
-
-
-/* ICON SIZE */
-button i{
-  width:16px;
-  height:16px;
-}
-
-/* HOVER EFFECT */
-button:hover{
-  transform: translateY(-2px);
-  box-shadow:0 6px 14px rgba(0,0,0,0.15);
-  opacity:1;
-}
-
-/* CLICK EFFECT */
-button:active{
-  transform: scale(0.96);
-  box-shadow:0 2px 4px rgba(0,0,0,0.2);
-}
-
-	
-#login {
-	margin: 50px auto;
-}
-
-body{
-font-family:'Segoe UI',sans-serif;
-text-align:center;
-background:var(--bg);
-color:var(--text);
-margin:0;
-transition:background .3s,color .3s;
-}
-	
-.dashboard-container{
-padding:15px;
-}
-
-.summary-box{
-padding:12px;
-}
-
-}
-
-.summary-box td{
-text-align:right;
-}
-
-/* UNIVERSAL REPORT TABLE ALIGNMENT */
-
-/* Default center alignment */
-
-.report-table td{
-text-align:center;
-}
-
-/* Amount column always right aligned */
-
-.report-table td:nth-last-child(3){
-text-align:right;
-}
-
-/* Edit button column */
-
-.report-table td:nth-last-child(2){
-text-align:center;
-}
-
-/* Delete button column */
-
-.report-table td:nth-last-child(1){
-text-align:center;
-}
-
-
-/* SUMMARY TABLE ALIGNMENT */
-
-/* Headers stay centered */
-.summary-box th{
-text-align:center;
-}
-
-/* First column text left aligned */
-.summary-box td:first-child{
-text-align:left;
-}
-
-/* Numbers right aligned */
-.summary-box td:last-child{
-text-align:right;
-}
-
-/* Monthly personal expense table */
-
-#personalMonthlySummary th{
-text-align:center;
-}
-
-#personalMonthlySummary td:first-child{
-text-align:left;
-}
-
-#personalMonthlySummary td:last-child{
-text-align:right;
-}
-
-	  
-/* REPLACE MOBILE BUTTON CSS WITH THIS */
-@media screen and (max-width:768px){
-
+/* -------------------------
+   ACTION BUTTON GRID OVERRIDE
+------------------------- */
 .action-buttons{
   display:grid;
   grid-template-columns:repeat(2, 1fr);
   gap:10px;
-
   padding:0;
   margin-bottom:15px;
-
   overflow:visible !important;
 }
 
@@ -715,19 +581,164 @@ text-align:right;
   width:100%;
   min-width:0;
   height:auto;
-
   padding:10px 14px;
   font-size:14px;
-  margin:0 !important;
-
+  margin:0 !important;   /* overrides general button margin */
   justify-content:center;
 }
 
+  /* -------------------------
+     MODAL FIX
+  ------------------------- */
 
+  .modal-content{
+    width:95%;
+    margin:10% auto;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+
+  /* -------------------------
+     TABLE FIXES
+  ------------------------- */
+
+  .report-table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+
+  #personalMonthlySummary table{
+    font-size:14px;
+  }
+
+  /* -------------------------
+     FORM INPUTS
+  ------------------------- */
+
+  input, select{
+    font-size:16px;
+  }
+
+/* -------------------------
+   TOPBAR MOBILE ADJUSTMENTS
+------------------------- */
+
+.dashboard-topbar{
+  margin:5px 0 20px;
+}
+
+.topbar-left,
+.topbar-right{
+  width:44px;
+}
+
+#welcomeTitle{
+  font-size:24px;
+}
+
+.profile-dropdown{
+  width:220px;
+  right:0;
+}
+
+/* -------------------------
+   FILTER DROPDOWN MOBILE
+------------------------- */
+
+.filter-dropdown{
+  top:55px;
+  left:0;
+  width:100%;
+  min-width:220px;
+}
+
+/* -------------------------
+   SECTION TITLE MOBILE
+------------------------- */
+
+.section-title{
+  gap:8px;
+  line-height:1;
+}
+
+.section-title i,
+.section-title svg{
+  width:24px;
+  height:24px;
+}
+}
+
+
+/* =====================================================
+   22. TABLE ALIGNMENT SYSTEM (GLOBAL)
+===================================================== */
+
+/* -------------------------
+   REPORT TABLE ALIGNMENT
+------------------------- */
+
+/* Default center alignment */
+.report-table td{
+  text-align:center;
+}
+
+/* Amount column always right aligned */
+.report-table td:nth-last-child(3){
+  text-align:right;
+}
+
+/* Edit button column */
+.report-table td:nth-last-child(2){
+  text-align:center;
+}
+
+/* Delete button column */
+.report-table td:nth-last-child(1){
+  text-align:center;
+}
+
+/* -------------------------
+   SUMMARY TABLE ALIGNMENT
+------------------------- */
+
+/* Headers stay centered */
+.summary-box th{
+  text-align:center;
+}
+
+/* First column text left aligned */
+.summary-box td:first-child{
+  text-align:left;
+}
+
+/* Numbers right aligned */
+.summary-box td:last-child{
+  text-align:right;
+}
+
+/* -------------------------
+   PERSONAL MONTHLY TABLE
+------------------------- */
+
+#personalMonthlySummary th{
+  text-align:center;
+}
+
+#personalMonthlySummary td:first-child{
+  text-align:left;
+}
+
+#personalMonthlySummary td:last-child{
+  text-align:right;
 }
 
 /* =====================================================
-   1. TRIAL BALANCE
+   23. FINANCIAL TABLES (TRIAL BALANCE / P&L / B/S)
+===================================================== */
+
+/* =====================================================
+   23.1 TRIAL BALANCE
 ===================================================== */
 
 /* Main Header Row Center */
@@ -751,15 +762,14 @@ text-align:right;
   text-align:right;
 }
 
+/* Total Row */
 .trial-balance-table tr:last-child td{
   font-weight:700;
   background:#f9f9f9;
 }
 
-
-
 /* =====================================================
-   2. PROFIT & LOSS
+   23.2 PROFIT & LOSS
 ===================================================== */
 
 /* Header Row Center */
@@ -790,15 +800,14 @@ text-align:right;
   font-weight:700;
 }
 
+/* Total Row */
 .profit-loss-table tr:last-child td{
   font-weight:700;
   background:#f9f9f9;
 }
 
-
-
 /* =====================================================
-   3. BALANCE SHEET
+   23.3 BALANCE SHEET
 ===================================================== */
 
 /* Header Row Center */
@@ -822,21 +831,24 @@ text-align:right;
   text-align:right;
 }
 
-/* CAPITAL / LIABILITY / ASSET / CASH & BANK */
+/* Section Headings */
 .balance-sheet-table th[colspan="2"]{
   text-align:left !important;
   background:none !important;
   font-weight:700;
 }
 
+/* Total Row */
 .balance-sheet-table tr:last-child td{
   font-weight:700;
   background:#f9f9f9;
 }
 
+/* =====================================================
+   23.4 SHARED HEADING OVERRIDES
+===================================================== */
 
 /* Balance Sheet Section Headings */
-
 .balance-sheet-table th[colspan="2"]{
   background:none !important;
   color:#000 !important;
@@ -845,7 +857,6 @@ text-align:right;
 }
 
 /* Profit & Loss Section Headings */
-
 .profit-loss-table th[colspan="2"]{
   background:none !important;
   color:#000 !important;
@@ -853,23 +864,26 @@ text-align:right;
   text-align:left !important;
 }
 
-
+/* =====================================================
+   24. FOOTER
+===================================================== */
 
 #erpFooter{
-background:var(--primary);
-color:#ffffff;
-text-align:center;
-padding:14px;
-font-size:13px;
-font-weight:500;
-width:100%;
-margin-top:30px;
-box-sizing:border-box;
-transition:background .3s,color .3s;
+  background:var(--primary);
+  color:#ffffff;
+  text-align:center;
+  padding:14px;
+  font-size:13px;
+  font-weight:500;
+  width:100%;
+  margin-top:30px;
+  box-sizing:border-box;
+  transition:background .3s,color .3s;
 }
 
-
-
+/* =====================================================
+   25. DASHBOARD TOPBAR / HEADER
+===================================================== */
 
 .dashboard-topbar{
   display:flex;
@@ -880,6 +894,7 @@ transition:background .3s,color .3s;
   position:relative;
 }
 
+/* SIDE SECTIONS */
 .topbar-left,
 .topbar-right{
   width:60px;
@@ -888,34 +903,41 @@ transition:background .3s,color .3s;
   position:relative;
 }
 
+/* CENTER TITLE AREA */
 .topbar-center{
   flex:1;
   text-align:center;
 }
 
+/* WELCOME TITLE */
 #welcomeTitle{
-margin:0;
-font-size:32px;
-font-weight:700;
-color:var(--text);
-line-height:1.2;
-transition:color .3s;
+  margin:0;
+  font-size:32px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.2;
+  transition:color .3s;
 }
 
+/* =====================================================
+   26. PROFILE BUTTON & DROPDOWN
+===================================================== */
+
+/* PROFILE BUTTON */
 .profile-btn{
-width:44px;
-height:44px;
-border:none;
-border-radius:50%;
-background:var(--card);
-color:var(--text);
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-box-shadow:0 6px 16px rgba(0,0,0,.08);
-padding:0;
-transition:background .3s,color .3s;
+  width:44px;
+  height:44px;
+  border:none;
+  border-radius:50%;
+  background:var(--card);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  padding:0;
+  transition:background .3s,color .3s;
 }
 
 .profile-btn i{
@@ -928,6 +950,9 @@ transition:background .3s,color .3s;
   opacity:1;
 }
 
+/* =====================================================
+   PROFILE DROPDOWN
+===================================================== */
 
 .profile-dropdown{
   display:none;
@@ -946,7 +971,7 @@ transition:background .3s,color .3s;
   display:block;
 }
 
-
+/* PROFILE INFO */
 .profile-info{
   padding:14px 16px;
   background:#f8fbff;
@@ -966,7 +991,7 @@ transition:background .3s,color .3s;
   word-break:break-word;
 }
 
-
+/* DROPDOWN BUTTONS */
 .profile-dropdown button{
   width:100%;
   border:none;
@@ -977,9 +1002,9 @@ transition:background .3s,color .3s;
   display:flex;
   align-items:center;
   gap:10px;
+  justify-content:flex-start;
   cursor:pointer;
   box-shadow:none;
-  justify-content:flex-start;
   font-size:14px;
 }
 
@@ -993,28 +1018,9 @@ transition:background .3s,color .3s;
   transform:none;
 }
 
-@media screen and (max-width:768px){
-
-.dashboard-topbar{
-  margin:5px 0 20px;
-}
-
-.topbar-left,
-.topbar-right{
-  width:44px;
-}
-
-#welcomeTitle{
-  font-size:24px;
-}
-
-.profile-dropdown{
-  width:220px;
-  right:0;
-}
-
-	}
-	  
+/* =====================================================
+   27. FILTER DROPDOWN
+===================================================== */
 
 .filter-dropdown{
   display:none;
@@ -1033,6 +1039,7 @@ transition:background .3s,color .3s;
   display:block;
 }
 
+/* DROPDOWN BUTTONS */
 .filter-dropdown button{
   width:100%;
   border:none;
@@ -1040,12 +1047,10 @@ transition:background .3s,color .3s;
   background:#ffffff;
   color:#222;
   padding:12px 16px;
-
   display:flex;
   align-items:center;
   gap:10px;
   justify-content:flex-start;
-
   cursor:pointer;
   box-shadow:none;
   font-size:14px;
@@ -1061,18 +1066,9 @@ transition:background .3s,color .3s;
   transform:none;
 }
 
-@media screen and (max-width:768px){
-
-.filter-dropdown{
-  top:55px;
-  left:0;
-  width:100%;
-  min-width:220px;
-}
-
-}
-
-	  
+/* =====================================================
+   28. SECTION TITLES & ICONS
+===================================================== */
 
 .section-title{
   display:flex;
@@ -1080,7 +1076,7 @@ transition:background .3s,color .3s;
   justify-content:center;
   gap:10px;
   color:#001d4c;
-  line-height:1;           /* important */
+  line-height:1;
 }
 
 .section-title i,
@@ -1088,63 +1084,52 @@ transition:background .3s,color .3s;
   width:30px;
   height:30px;
   stroke-width:2.2;
-
   flex-shrink:0;
-  display:block;           /* important */
-}
-	  
-@media screen and (max-width:768px){
-
-.section-title{
-  gap:8px;
-  line-height:1;
+  display:block;
 }
 
-.section-title i,
-.section-title svg{
-  width:24px;
-  height:24px;
-}
-
-}
+/* =====================================================
+   29. SECTION LOCK ICON
+===================================================== */
 
 .section-lock{
-color:#ffc107;
-margin-left:8px;
-width:18px;
-height:18px;
-vertical-align:middle;
+  color:#ffc107;
+  margin-left:8px;
+  width:18px;
+  height:18px;
+  vertical-align:middle;
 }
 
+
+/* =====================================================
+   30. SUCCESS TOAST
+===================================================== */
 
 .toast-success{
   position:fixed;
   bottom:30px;
   left:50%;
   transform:translateX(-50%);
-
   background:#16c60c;
   color:#ffffff;
-
   padding:12px 20px;
   border-radius:10px;
-
   font-size:14px;
   font-weight:500;
-
   opacity:0;
   transition:all 0.3s ease;
-
   z-index:3000;
-
   box-shadow:0 8px 20px rgba(0,0,0,0.15);
 }
 
 .toast-success.show{
   opacity:1;
   transform:translate(-50%, -10px);
-}	  
-	
+}
+
+/* =====================================================
+   31. ANIMATIONS
+===================================================== */
 
 @keyframes pulseGreen{
   0%{transform:scale(1);opacity:1;}
@@ -1154,9 +1139,7 @@ vertical-align:middle;
 
 .sync-dot-active{
   animation:pulseGreen 1.5s infinite;
-}
-
-	  
+} 
 	  
 </style>
 
