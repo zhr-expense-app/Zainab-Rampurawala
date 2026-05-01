@@ -1058,11 +1058,12 @@ button{
   top:55px;
   left:0;
   width:240px;
-  background:#ffffff;
+  background:var(--card);
   border-radius:14px;
-  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  box-shadow:var(--dropdown-shadow);
   overflow:hidden;
   z-index:999;
+  transition:background .3s, box-shadow .3s;
 }
 
 .filter-dropdown.show{
@@ -1074,8 +1075,8 @@ button{
   width:100%;
   border:none;
   border-radius:0;
-  background:#ffffff;
-  color:#222;
+  background:var(--card);
+  color:var(--text-soft);
   padding:12px 16px;
   display:flex;
   align-items:center;
@@ -1084,6 +1085,7 @@ button{
   cursor:pointer;
   box-shadow:none;
   font-size:14px;
+  transition:background .2s;
 }
 
 .filter-dropdown button i{
@@ -1092,7 +1094,7 @@ button{
 }
 
 .filter-dropdown button:hover{
-  background:#f5f8fc;
+  background:var(--hover);
   transform:none;
 }
 
@@ -1105,7 +1107,7 @@ button{
   align-items:center;      /* vertical center */
   justify-content:center;
   gap:10px;
-  color:#001d4c;
+  color:var(--text);
   line-height:1;
 }
 
@@ -1123,7 +1125,7 @@ button{
 ===================================================== */
 
 .section-lock{
-  color:#ffc107;
+  color:var(--warning);
   margin-left:8px;
   width:18px;
   height:18px;
@@ -1140,8 +1142,8 @@ button{
   bottom:30px;
   left:50%;
   transform:translateX(-50%);
-  background:#16c60c;
-  color:#ffffff;
+  background:var(--success);
+  color:var(--btn-text); 
   padding:12px 20px;
   border-radius:10px;
   font-size:14px;
@@ -1149,7 +1151,7 @@ button{
   opacity:0;
   transition:all 0.3s ease;
   z-index:3000;
-  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+  box-shadow:var(--toast-shadow);
 }
 
 .toast-success.show{
