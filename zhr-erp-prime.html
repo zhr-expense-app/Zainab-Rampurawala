@@ -84,6 +84,7 @@ document.getElementById("dashboard").style.display = "none";
   --subtext:#666;
   --primary:#001d4c;
   --border:#d9e2ef;
+  --table-border:var(--border);
   --tablehead:#f8fbff;
   --muted:#6c757d;
   --input-border:#ccc;
@@ -115,6 +116,7 @@ body.dark{
   --subtext:#b8bcc7;
   --primary:#0d6efd;
   --border:#384150;
+  --table-border:var(--border);
   --tablehead:#232936;
   --muted:#9aa3b2;
   --input-border:#4b5563;
@@ -455,7 +457,7 @@ button:active{
 
 .report-table th,
 .report-table td{
-  border:1px solid var(--primary);
+  border:1px solid var(--table-border);
   padding:10px;
   text-align:center;
 }
