@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>File Transfer | ZHR Tools</title>
+
+<link rel="icon" href="/favicon.png">
+<link rel="stylesheet" href="layout.css">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+
+body{
+font-family:'Segoe UI',sans-serif;
+margin:0;
+}
+
+/* TITLE */
+.page-title{
+text-align:center;
+font-size:30px;
+color:#001d4c;
+margin-top:50px;
+font-weight:700;
+}
+
+/* CONTAINER */
+.container{
+max-width:800px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+.card{
+background:#f8f9fb;
+padding:30px;
+border-radius:12px;
+box-shadow:0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* UPLOAD BOX */
+.upload-box{
+border:2px dashed #001d4c;
+padding:40px;
+text-align:center;
+border-radius:12px;
+cursor:pointer;
+background:#ffffff;
+transition:0.3s;
+}
+
+.upload-box:hover{
+background:#f1f5ff;
+}
+
+/* FILE NAME */
+.file-name{
+margin-top:10px;
+font-size:14px;
+color:#555;
+}
+
+/* INPUT */
+input{
+width:100%;
+padding:12px;
+margin-top:15px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+}
+
+/* BUTTON */
+button{
+background:#001d4c;
+color:white;
+border:none;
+padding:14px;
+width:100%;
+margin-top:20px;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+}
+
+/* RESULT BOX */
+.result-box{
+margin-top:25px;
+padding:20px;
+background:white;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,0.06);
+display:none;
+}
+
+.result-box input{
+margin-top:10px;
+}
+
+/* COPY BUTTON */
+.copy-btn{
+margin-top:10px;
+background:#198754;
+}
+
+/* INFO TEXT */
+.info{
+margin-top:15px;
+font-size:13px;
+color:#666;
+text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+.page-title{
+font-size:24px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="header"></div>
+<div id="sidebar-container"></div>
+
+<h1 class="page-title">Secure File Transfer</h1>
+
+<div class="container">
+
+<div class="card">
+
+<!-- UPLOAD -->
+<div class="upload-box" onclick="document.getElementById('fileInput').click()">
+<i data-lucide="upload-cloud"></i>
+<p>Click to Upload File</p>
+<input type="file" id="fileInput" hidden>
+</div>
+
+<div class="file-name" id="fileName"></div>
+
+<!-- EMAIL -->
+<input type="email" id="email" placeholder="Recipient Email (Optional)">
+
+<!-- BUTTON -->
+<button onclick="uploadUI()">
+<i data-lucide="send"></i>
+Upload & Generate Link
+</button>
+
+<!-- RESULT -->
+<div class="result-box" id="resultBox">
+
+<p><b>Link Generated</b></p>
+
+<input type="text" id="generatedLink" readonly>
+
+<button class="copy-btn" onclick="copyLink()">
+<i data-lucide="copy"></i>
+Copy Link
+</button>
+
+<p class="info">
+✔ Link will expire after one download or 30 minutes
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SHOW FILE NAME */
+
+document.getElementById("fileInput").addEventListener("change", function(){
+let file = this.files[0];
+
+if(file){
+document.getElementById("fileName").innerText = "Selected: " + file.name;
+}
+});
+
+/* TEMP FUNCTION (UI ONLY) */
+
+function uploadUI(){
+
+let file = document.getElementById("fileInput").files[0];
+
+if(!file){
+alert("Please select a file");
+return;
+}
+
+/* Fake link for now */
+
+let fakeId = Math.random().toString(36).substring(2,8);
+
+let link = window.location.origin + "/file.html?id=" + fakeId;
+
+document.getElementById("generatedLink").value = link;
+
+document.getElementById("resultBox").style.display = "block";
+
+}
+
+/* COPY */
+
+function copyLink(){
+
+let input = document.getElementById("generatedLink");
+
+input.select();
+document.execCommand("copy");
+
+alert("Link copied!");
+
+}
+
+</script>
+
+<script src="layout.js"></script>
+
+<script>
+lucide.createIcons();
+</script>
+
+</body>
+</html>
