@@ -233,10 +233,8 @@ async function uploadFile() {
 
     const data = await res.json();
 
-    document.getElementById("result").innerHTML = `
-      <p>✅ Upload Successful</p>
-      <a href="${data.link}" target="_blank">${data.link}</a>
-    `;
+    document.getElementById("generatedLink").value = data.link;
+document.getElementById("resultBox").style.display = "block";
 
   } catch (err) {
     console.error(err);
