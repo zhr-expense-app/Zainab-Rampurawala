@@ -157,7 +157,7 @@ font-size:24px;
 <input type="email" id="email" placeholder="Recipient Email (Optional)">
 
 <!-- BUTTON -->
-<button onclick="uploadUI()">
+<button onclick="uploadFile()">
 <i data-lucide="send"></i>
 Upload & Generate Link
 </button>
@@ -196,28 +196,6 @@ document.getElementById("fileName").innerText = "Selected: " + file.name;
 }
 });
 
-/* TEMP FUNCTION (UI ONLY) */
-
-function uploadUI(){
-
-let file = document.getElementById("fileInput").files[0];
-
-if(!file){
-alert("Please select a file");
-return;
-}
-
-/* Fake link for now */
-
-let fakeId = Math.random().toString(36).substring(2,8);
-
-let link = window.location.origin + "/file.html?id=" + fakeId;
-
-document.getElementById("generatedLink").value = link;
-
-document.getElementById("resultBox").style.display = "block";
-
-}
 
 /* COPY */
 
@@ -232,6 +210,41 @@ alert("Link copied!");
 
 }
 
+  
+/* UPLOAD FILE */
+  
+async function uploadFile() {
+  const fileInput = document.getElementById("fileInput");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Please select a file");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("https://blue-mode-7884.cahatimrampura.workers.dev/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    document.getElementById("result").innerHTML = `
+      <p>✅ Upload Successful</p>
+      <a href="${data.link}" target="_blank">${data.link}</a>
+    `;
+
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed");
+  }
+}
+
+  
 </script>
 
 <script src="layout.js"></script>
