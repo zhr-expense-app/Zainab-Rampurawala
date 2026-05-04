@@ -123,9 +123,9 @@ text-align:center;
 
 .progress-container{
   width:100%;
-  height:8px;
+  height:10px;
   background:#e5e7eb;
-  border-radius:10px;
+  border-radius:20px;
   margin-top:15px;
   overflow:hidden;
 }
@@ -133,24 +133,37 @@ text-align:center;
 .progress-bar{
   height:100%;
   width:0%;
-  background:#001d4c;
+  background:linear-gradient(90deg,#001d4c,#0056b3);
   transition:width 0.3s;
 }
 
 #toast{
   position:fixed;
-  bottom:20px;
-  right:20px;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
   padding:14px 20px;
   border-radius:8px;
   color:white;
   font-size:14px;
   display:none;
   z-index:9999;
+  min-width:200px;
+  text-align:center;
 }
 
 .toast-success{ background:#198754; }
 .toast-error{ background:#dc3545; }  
+
+
+/* SPIN */  
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
   
 
 /* MOBILE */
@@ -190,9 +203,9 @@ font-size:24px;
 <input type="email" id="email" placeholder="Recipient Email (Optional)">
 
 <!-- BUTTON -->
-<button onclick="uploadFile()">
-<i data-lucide="send"></i>
-Upload & Generate Link
+<button id="uploadBtn" onclick="uploadFile()">
+  <i data-lucide="send"></i>
+  Upload & Generate Link
 </button>
 
 <!-- PROGRESS -->
@@ -240,20 +253,18 @@ document.getElementById("fileInput").addEventListener("change", function(){
 /* COPY */
 
 function copyLink(){
+  let input = document.getElementById("generatedLink");
 
-let input = document.getElementById("generatedLink");
+  navigator.clipboard.writeText(input.value);
 
-input.select();
-document.execCommand("copy");
-
-alert("Link copied!");
-
+  showToast("Link copied successfully", "success");
 }
 
   
 /* UPLOAD FILE */
   
 function uploadFile() {
+  
   const file = document.getElementById("fileInput").files[0];
 
   if (!file) {
@@ -267,6 +278,11 @@ function uploadFile() {
     return;
   }
 
+const button = document.getElementById("uploadBtn");
+button.innerHTML = `<i data-lucide="loader" class="spin"></i> Uploading...`;
+lucide.createIcons();
+button.disabled = true;
+  
   const formData = new FormData();
   formData.append("file", file);
 
@@ -283,21 +299,46 @@ function uploadFile() {
   };
 
   xhr.onload = function(){
-    if(xhr.status === 200){
-      const data = JSON.parse(xhr.responseText);
 
-      document.getElementById("generatedLink").value = data.link;
-      document.getElementById("resultBox").style.display = "block";
+  const button = document.getElementById("uploadBtn");
 
-      showToast("Upload successful", "success");
-    } else {
-      showToast("Upload failed", "error");
-    }
-  };
+  if(xhr.status === 200){
+    const data = JSON.parse(xhr.responseText);
+
+    document.getElementById("generatedLink").value = data.link;
+    document.getElementById("resultBox").style.display = "block";
+
+    showToast("Upload successful", "success");
+
+  } else {
+    showToast("Upload failed", "error");
+  }
+
+  
+  button.innerHTML = `
+    <i data-lucide="send"></i>
+    Upload & Generate Link
+  `;
+  button.disabled = false;
+
+  lucide.createIcons();
+};
 
   xhr.onerror = function(){
-    showToast("Network error", "error");
-  };
+
+  const button = document.getElementById("uploadBtn");
+
+  showToast("Network error", "error");
+
+  // RESET BUTTON
+  button.innerHTML = `
+    <i data-lucide="send"></i>
+    Upload & Generate Link
+  `;
+  button.disabled = false;
+
+  lucide.createIcons();
+};
 
   xhr.send(formData);
 }
@@ -315,7 +356,48 @@ function showToast(message, type){
     toast.style.display = "none";
   }, 3000);
 }
-  
+
+
+ /* UPLOAD BOX */ 
+const uploadBox = document.querySelector(".upload-box");
+
+// When file is dragged over
+uploadBox.addEventListener("dragover", (e) => {
+  e.preventDefault(); // 🔥 VERY IMPORTANT
+  uploadBox.style.background = "#eef3ff";
+  uploadBox.style.borderColor = "#0d6efd";
+});
+
+// When drag leaves box
+uploadBox.addEventListener("dragleave", () => {
+  uploadBox.style.background = "#ffffff";
+  uploadBox.style.borderColor = "#001d4c";
+});
+
+// When file is dropped
+uploadBox.addEventListener("drop", (e) => {
+  e.preventDefault();
+
+  const files = e.dataTransfer.files;
+
+  if (!files.length) return;
+
+  // Assign dropped files to input
+  document.getElementById("fileInput").files = files;
+
+  const file = files[0];
+
+  // Show file name + size
+  const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+  document.getElementById("fileName").innerText =
+    `Selected: ${file.name} (${sizeMB} MB)`;
+
+  // Reset UI style
+  uploadBox.style.background = "#ffffff";
+  uploadBox.style.borderColor = "#001d4c";
+});
+    
 </script>
 
 <script src="layout.js"></script>
