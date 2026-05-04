@@ -88,7 +88,7 @@ color:#666;
 
 <p><b>File Ready to Download</b></p>
 
-<div class="file-name" id="fileName">Loading...</div>
+<div class="file-name" id="fileName">🔄 Fetching file details...</div>
 
 <div class="timer" id="timer"></div>
 
@@ -135,7 +135,10 @@ async function loadFile(){
 
     const data = await res.json();
 
-    document.getElementById("fileName").innerText = data.fileName;
+    const sizeMB = (data.size / (1024 * 1024)).toFixed(2);
+
+document.getElementById("fileName").innerText =
+  `${data.fileName} (${sizeMB} MB)`;
 
     startTimer(data.createdAt);
 
@@ -172,6 +175,9 @@ function startTimer(createdAt){
 
 // DOWNLOAD FUNCTION
 function downloadFile(){
+  const btn = document.getElementById("downloadBtn");
+  btn.innerText = "Downloading...";
+  btn.disabled = true;
 
   window.location.href = `${API_BASE}/download/${fileId}`;
 }
