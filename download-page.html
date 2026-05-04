@@ -110,6 +110,13 @@ Download File
 const params = new URLSearchParams(window.location.search);
 const fileId = params.get("id");
 
+if (!fileId) {
+  document.getElementById("fileName").innerText = "Invalid link";
+  document.getElementById("downloadBtn").style.display = "none";
+} else {
+  loadFile(); // only run if valid
+}
+
 // API BASE (CHANGE IF NEEDED)
 const API_BASE = "https://zhrconsultants.cahatimrampura.workers.dev";
 
