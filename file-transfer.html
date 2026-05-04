@@ -280,6 +280,7 @@ Copy Link
 /* SHOW FILE NAME */
 
 document.getElementById("fileInput").addEventListener("change", function(){
+
   let file = this.files[0];
 
   if(file){
@@ -288,6 +289,17 @@ document.getElementById("fileInput").addEventListener("change", function(){
     document.getElementById("fileName").innerText =
       `Selected: ${file.name} (${sizeMB} MB)`;
   }
+
+  // ✅ RESET BUTTON WHEN NEW FILE SELECTED
+  const button = document.getElementById("uploadBtn");
+
+  button.innerHTML = `
+    <i data-lucide="send"></i>
+    Upload & Generate Link
+  `;
+  button.disabled = false;
+
+  lucide.createIcons();
 });
 
 /* COPY */
@@ -369,38 +381,34 @@ button.disabled = true;
   
 
   if(xhr.status === 200){
-    
-    let data;
-try {
-  data = JSON.parse(xhr.responseText);
-} catch {
-  showToast("Invalid server response", "error");
-  return;
-}
-
-    document.getElementById("generatedLink").value = data.link;
-    document.getElementById("resultBox").style.display = "block";
-document.getElementById("progressContainer").style.display = "none";
-// RESET PROGRESS
-document.getElementById("progressText").innerText = "0%";
-
-document.querySelectorAll(".segment").forEach(seg=>{
-  seg.classList.remove("active");
-});
-      
-    showToast("Upload successful", "success");
-
-  } else {
-
-  showToast("Upload failed", "error");
+  
+  let data;
+  try {
+    data = JSON.parse(xhr.responseText);
+  } catch {
+    showToast("Invalid server response", "error");
+    return;
   }
 
-  
-  button.innerHTML = `
-    <i data-lucide="send"></i>
-    Upload & Generate Link
-  `;
-  button.disabled = false;
+  document.getElementById("generatedLink").value = data.link;
+  document.getElementById("resultBox").style.display = "block";
+
+  document.getElementById("progressContainer").style.display = "none";
+
+  // RESET PROGRESS
+  document.getElementById("progressText").innerText = "0%";
+  document.querySelectorAll(".segment").forEach(seg=>{
+    seg.classList.remove("active");
+  });
+
+  showToast("Upload successful", "success");
+
+  // ✅ DISABLE BUTTON AFTER SUCCESS
+  button.innerHTML = "Uploaded ✔";
+  button.disabled = true;
+
+} else {
+  showToast("Upload failed", "error");
 
   lucide.createIcons();
 };
