@@ -5,131 +5,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Contact Us | ZHR Tools</title>
+<title>Download File | ZHR Tools</title>
 
-<link rel="icon" href="/favicon.png">
 <link rel="stylesheet" href="layout.css">
-
-<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
-/* BODY */
-
 body{
 font-family:'Segoe UI',sans-serif;
-
 margin:0;
+background:#f4f6fa;
 }
 
 /* TITLE */
-
 .page-title{
 text-align:center;
-font-size:30px;
+font-size:28px;
 color:#001d4c;
-margin-top:50px;
+margin-top:40px;
 font-weight:700;
 }
 
 /* CONTAINER */
-
 .container{
-max-width:800px;
+max-width:600px;
 margin:auto;
 padding:20px;
 }
 
 /* CARD */
-
-.contact-card{
-background:#f8f9fb;
+.card{
+background:white;
 padding:30px;
 border-radius:12px;
 box-shadow:0 8px 25px rgba(0,0,0,0.08);
-margin-bottom:25px;
+text-align:center;
 }
 
-/* FORM GROUP */
-
-.form-group{
-display:flex;
-flex-direction:column;
-margin-bottom:18px;
-}
-
-/* LABEL */
-
-.form-group label{
+/* FILE INFO */
+.file-name{
+font-size:18px;
 font-weight:600;
-color:#001d4c;
-margin-bottom:6px;
+margin-top:10px;
 }
 
-/* INPUT */
-
-.form-group input,
-.form-group textarea{
-padding:12px 14px;
-border-radius:8px;
-border:1px solid #dcdcdc;
-font-size:15px;
-box-sizing:border-box;
-transition:0.2s;
-}
-
-/* FOCUS */
-
-.form-group input:focus,
-.form-group textarea:focus{
-border-color:#001d4c;
-box-shadow:0 0 0 2px rgba(0,29,76,0.08);
-outline:none;
+.timer{
+margin-top:10px;
+color:#dc3545;
+font-weight:600;
 }
 
 /* BUTTON */
-
-.submit-btn{
+button{
 background:#001d4c;
 color:white;
 border:none;
 padding:14px;
-border-radius:8px;
-font-size:16px;
-cursor:pointer;
-width:150px;
-transition:0.2s;
-}
-
-.submit-btn:hover{
-background:#003080;
-}
-
-/* DETAILS CARD */
-
-.contact-details{
-background:#ffffff;
-padding:25px;
-border-radius:12px;
-box-shadow:0 6px 20px rgba(0,0,0,0.06);
-}
-
-.contact-details h3{
-color:#001d4c;
-margin-bottom:10px;
-}
-
-.contact-details p{
-margin:8px 0;
-line-height:1.6;
-}
-
-/* MOBILE */
-
-@media(max-width:768px){
-.submit-btn{
 width:100%;
+margin-top:20px;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
 }
+
+/* STATUS */
+.status{
+margin-top:15px;
+font-size:14px;
+color:#666;
 }
 
 </style>
@@ -138,87 +81,98 @@ width:100%;
 
 <body>
 
-<!-- HEADER & SIDEBAR -->
-
-<div id="header"></div>
-<div id="sidebar-container"></div>
-
-<!-- TITLE -->
-
-<h1 class="page-title">Contact Us</h1>
+<h1 class="page-title">Secure File Download</h1>
 
 <div class="container">
+<div class="card">
 
-<!-- FORM -->
+<p><b>File Ready to Download</b></p>
 
-<div class="contact-card">
+<div class="file-name" id="fileName">Loading...</div>
 
-<form action="https://formspree.io/f/xrbbjada" method="POST">
+<div class="timer" id="timer"></div>
 
-<div class="form-group">
-<label>Name</label>
-<input type="text" name="name" placeholder="Enter your name" required>
-</div>
+<button id="downloadBtn" onclick="downloadFile()">
+Download File
+</button>
 
-<div class="form-group">
-<label>Email</label>
-<input type="email" name="email" placeholder="Enter your email" required>
-</div>
-
-<div class="form-group">
-<label>Phone Number</label>
-<input type="tel" name="phone" placeholder="Enter your phone number" required>
-</div>
-
-<div class="form-group">
-<label>Message</label>
-<textarea name="message" rows="5" placeholder="Write your message..." required></textarea>
-</div>
-
-<button type="submit" class="submit-btn">Submit</button>
-
-</form>
-
-</div>
-
-<div class="contact-details-grid">
-
-<!-- INDIA -->
-
-<div class="contact-box">
-
-<h3>India</h3>
-
-<p><b>Address:</b>  
-C/1302, Reliable Prestige 1, Achole Road,  
-Nalasopara (E), Mumbai-401209, India</p>
-
-<p><b>Phone/WhatsApp:</b> +91 7869531188</p>
-
-<p><b>Email:</b> accounts@zhrconsultants.com</p>
-
-<p><b>Working Hours:</b> Mon-Sat: 9:00 AM - 9:00 PM</p>
-
-</div>
-
-<!-- UAE -->
-
-<div class="contact-box">
-
-<h3>International Clients (UAE)</h3>
-
-<p>Services provided from India to clients across the UAE remotely</p>
-
-<p><b>Phone/WhatsApp:</b> +971 505389452</p>
-
-<p><b>Email:</b> accounts@zhrconsultants.com</p>
-
-</div>
+<p class="status">
+✔ This file can be downloaded only once<br>
+✔ Link expires in 30 minutes
+</p>
 
 </div>
 </div>
 
-<script src="layout.js"></script>
+<script>
+
+// GET FILE ID FROM URL
+const params = new URLSearchParams(window.location.search);
+const fileId = params.get("id");
+
+// API BASE (CHANGE IF NEEDED)
+const API_BASE = "https://api.zhrconsultants.com";
+
+// LOAD FILE INFO
+async function loadFile(){
+
+  try{
+
+    const res = await fetch(`${API_BASE}/file/${fileId}`);
+
+    if(!res.ok){
+      document.getElementById("fileName").innerText = "Link expired";
+      document.getElementById("downloadBtn").style.display = "none";
+      return;
+    }
+
+    const data = await res.json();
+
+    document.getElementById("fileName").innerText = data.fileName;
+
+    startTimer(data.createdAt);
+
+  }catch(err){
+    document.getElementById("fileName").innerText = "Error loading file";
+  }
+}
+
+// TIMER FUNCTION
+function startTimer(createdAt){
+
+  const expiryTime = createdAt + (30 * 60 * 1000);
+
+  const interval = setInterval(() => {
+
+    const now = Date.now();
+    const remaining = expiryTime - now;
+
+    if(remaining <= 0){
+      clearInterval(interval);
+      document.getElementById("timer").innerText = "Link expired";
+      document.getElementById("downloadBtn").style.display = "none";
+      return;
+    }
+
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+
+    document.getElementById("timer").innerText =
+      `Expires in: ${minutes}:${seconds.toString().padStart(2,'0')}`;
+
+  }, 1000);
+}
+
+// DOWNLOAD FUNCTION
+function downloadFile(){
+
+  window.location.href = `${API_BASE}/download/${fileId}`;
+}
+
+// INIT
+loadFile();
+
+</script>
 
 </body>
 </html>
