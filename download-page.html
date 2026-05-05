@@ -141,11 +141,12 @@ async function loadFile(){
 
     const data = await res.json();
 
-    const sizeMB = (data.size / (1024 * 1024)).toFixed(2);
+    const name = data.fileName || "File";
+const size = data.size ? (data.size / (1024 * 1024)).toFixed(2) : null;
 
 document.getElementById("fileName").innerText =
-  `${data.fileName} (${sizeMB} MB)`;
-
+  size ? `${name} (${size} MB)` : name;
+    
     startTimer(data.createdAt);
 
   }catch(err){
