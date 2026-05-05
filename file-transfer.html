@@ -412,6 +412,7 @@ button.disabled = true;
 
   lucide.createIcons();
 };
+    };
 
   xhr.onerror = function(){
 
@@ -464,6 +465,7 @@ uploadBox.addEventListener("dragover", (e) => {
   uploadBox.style.background = "#eef3ff";
   uploadBox.style.borderColor = "#0d6efd";
 });
+  
 
 // When drag leaves box
 uploadBox.addEventListener("dragleave", () => {
@@ -480,7 +482,11 @@ uploadBox.addEventListener("drop", (e) => {
   if (!files.length) return;
 
   // Assign dropped files to input
-  document.getElementById("fileInput").files = files;
+  const fileInput = document.getElementById("fileInput");
+const dataTransfer = new DataTransfer();
+
+dataTransfer.items.add(files[0]);
+fileInput.files = dataTransfer.files;
 
   const file = files[0];
 
