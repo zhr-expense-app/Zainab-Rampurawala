@@ -93,6 +93,11 @@ justify-content:center;
 gap:8px;
 }
 
+.btn-center{
+  display:flex;
+  justify-content:center;
+}
+  
 /* RESULT BOX */
 .result-box{
 margin-top:25px;
@@ -233,10 +238,11 @@ text-align:center;
 <input type="email" id="email" placeholder="Recipient Email (Optional)">
   
 <!-- BUTTON -->
+  <div class="btn-center">
 <button id="uploadBtn" onclick="uploadFile()">
   <i data-lucide="send"></i>
   Upload & Generate Link
-</button>
+</button></div>
 
 <!-- PROGRESS -->
 <div class="progress-wrapper" id="progressContainer" style="display:none;">
