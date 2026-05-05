@@ -38,6 +38,7 @@ background:#f8f9fb;
 padding:30px;
 border-radius:12px;
 box-shadow:0 8px 25px rgba(0,0,0,0.08);
+  text-align:center;
 }
 
 /* FILE INFO */
@@ -196,6 +197,14 @@ function downloadFile(){
 </script>
 
 <script src="layout.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  if (typeof loadLayout === "function") {
+    loadLayout();
+  }
+});
+</script>
   
 </body>
 </html>
