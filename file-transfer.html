@@ -174,24 +174,26 @@ text-align:center;
 
 .progress-segments{
   display:flex;
-  gap:6px;
-  padding:10px;
-  border:2px solid #000;
-  border-radius:25px;
+  gap:4px;                 
+  padding:6px 10px;        
+  border:1.5px solid #d1d5db;
+  border-radius:20px;
   justify-content:center;
+  max-width:320px;         
+  margin:0 auto;           
 }
 
 .segment{
-  width:12px;
-  height:30px;
-  border-radius:6px;
-  background:#ddd;
-  transition:0.3s;
+  width:6px;               
+  height:18px;             
+  border-radius:3px;
+  background:#e5e7eb;
+  transition:0.3s ease;
 }
 
 .segment.active{
-   background:#001d4c;
-  box-shadow:0 0 6px rgba(0,29,76,0.5);
+  background:#001d4c;
+  box-shadow:0 0 4px rgba(0,29,76,0.4);
 }
 
 .progress-text{
