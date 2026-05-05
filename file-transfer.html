@@ -346,7 +346,12 @@ lucide.createIcons();
 button.disabled = true;
   
   const formData = new FormData();
-  formData.append("file", file);
+formData.append("file", file);
+
+const email = document.getElementById("email").value;
+if(email){
+  formData.append("email", email);
+}
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", "https://zhrconsultants.cahatimrampura.workers.dev/upload");
@@ -411,7 +416,7 @@ button.disabled = true;
   showToast("Upload failed", "error");
 
   lucide.createIcons();
-};
+}
     };
 
   xhr.onerror = function(){
@@ -481,6 +486,15 @@ uploadBox.addEventListener("drop", (e) => {
 
   if (!files.length) return;
 
+if (files.length > 1) {
+  showToast("Only one file allowed", "error");
+
+  uploadBox.style.background = "#ffffff";
+  uploadBox.style.borderColor = "#001d4c";
+
+  return;
+}
+  
   // Assign dropped files to input
   const fileInput = document.getElementById("fileInput");
 const dataTransfer = new DataTransfer();
@@ -499,6 +513,18 @@ fileInput.files = dataTransfer.files;
   // Reset UI style
   uploadBox.style.background = "#ffffff";
   uploadBox.style.borderColor = "#001d4c";
+
+// ✅ RESET BUTTON (ADD HERE)
+const button = document.getElementById("uploadBtn");
+
+button.innerHTML = `
+  <i data-lucide="send"></i>
+  Upload & Generate Link
+`;
+button.disabled = false;
+
+lucide.createIcons();
+  
 });
 
 
