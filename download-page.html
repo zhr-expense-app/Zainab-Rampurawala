@@ -29,8 +29,10 @@ font-weight:700;
 /* CONTAINER */
 .container{
 max-width:600px;
-margin:auto;
+margin-left:auto;
+margin-right:auto;
 padding:20px;
+margin-top:30px;
 }
 
 /* CARD */
@@ -81,13 +83,16 @@ color:#666;
 
 <body>
 
-<h1 class="page-title">File Download</h1>
+<div id="header"></div>
+<div id="sidebar-container"></div>
+
+<h1 class="page-title">Secure File Download</h1>
 
 <div class="container">
 <div class="card">
 
 <p style="text-align:center; color:#666; font-size:14px;">
-  End-to-end secure file transfer
+  End-to-end encrypted file transfer
 </p>
 
 <div class="file-name" id="fileName">🔄 Fetching file details...</div>
@@ -194,5 +199,7 @@ function downloadFile(){
 
 </script>
 
+<script src="layout.js"></script>
+  
 </body>
 </html>
