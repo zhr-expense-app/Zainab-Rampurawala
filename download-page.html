@@ -89,16 +89,25 @@ color:#666;
 <div class="card">
 
 <p style="text-align:center; color:#666; font-size:14px;">
-  End-to-end encrypted file transfer
+  🔐 Secure file sharing with one-time download
 </p>
+
+<!-- FILE ICON -->
+<div style="text-align:center; margin:20px 0;">
+  <i data-lucide="file" style="width:48px; height:48px; color:#001d4c;"></i>
+</div>
 
 <div class="file-name" id="fileName">🔄 Fetching file details...</div>
 
 <div class="timer" id="timer"></div>
 
-<button id="downloadBtn" onclick="downloadFile()">
-Download File
-</button>
+<!-- CENTERED BUTTON -->
+<div style="display:flex; justify-content:center;">
+  <button id="downloadBtn" onclick="downloadFile()" style="width:220px;">
+    <i data-lucide="download"></i>
+    Download File
+  </button>
+</div>
 
 <p class="status">
 ✔ This file can be downloaded only once<br>
