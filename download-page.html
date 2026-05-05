@@ -156,7 +156,8 @@ document.getElementById("fileName").innerText =
 // TIMER FUNCTION
 function startTimer(createdAt){
 
-  const expiryTime = createdAt + (30 * 60 * 1000);
+  const createdTime = Number(createdAt); // ✅ ensure number
+  const expiryTime = createdTime + (30 * 60 * 1000);
 
   const interval = setInterval(() => {
 
@@ -178,7 +179,7 @@ function startTimer(createdAt){
 
   }, 1000);
 }
-
+  
 // DOWNLOAD FUNCTION
 function downloadFile(){
   const btn = document.getElementById("downloadBtn");
