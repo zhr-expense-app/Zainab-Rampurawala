@@ -8,6 +8,7 @@
 <title>Download File | ZHR Tools</title>
 
 <link rel="stylesheet" href="layout.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 
@@ -54,6 +55,30 @@ color:#dc3545;
 font-weight:600;
 }
 
+.timer-box{
+  margin-top:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:#fff3f3;
+  border:1px solid #ffd6d6;
+  color:#dc3545;
+  padding:12px 18px;
+  border-radius:10px;
+  width:fit-content;
+  margin-left:auto;
+  margin-right:auto;
+  font-weight:600;
+  font-size:15px;
+}
+
+.timer-clock{
+  width:18px;
+  height:18px;
+}
+  
+
 /* BUTTON */
 button{
 background:#001d4c;
@@ -73,6 +98,8 @@ margin-top:15px;
 font-size:14px;
 color:#666;
 }
+
+  
 
 </style>
 
@@ -94,126 +121,226 @@ color:#666;
 
 <!-- FILE ICON -->
 <div style="text-align:center; margin:20px 0;">
-  <i data-lucide="file" style="width:48px; height:48px; color:#001d4c;"></i>
+  <i data-lucide="file" style="width:48px;height:48px;color:#001d4c;"></i>
 </div>
 
-<div class="file-name" id="fileName">🔄 Fetching file details...</div>
+<!-- FILE NAME -->
+<div class="file-name" id="fileName">
+  Fetching file details...
+</div>
 
-<div class="timer" id="timer"></div>
-
-<!-- CENTERED BUTTON -->
+<!-- TIMER -->
+<div class="timer-box">
+  <i data-lucide="clock-3" class="timer-clock"></i>
+  <span id="timer">30:00</span>
+</div>
+<!-- DOWNLOAD BUTTON -->
 <div style="display:flex; justify-content:center;">
-  <button id="downloadBtn" onclick="downloadFile()" style="width:220px;">
-    <i data-lucide="download"></i>
-    Download File
-  </button>
+
+<button
+  id="downloadBtn"
+  onclick="downloadFile()"
+  style="
+    width:220px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  "
+>
+
+<i data-lucide="download"></i>
+Download File
+
+</button>
+
 </div>
 
 <p class="status">
 ✔ This file can be downloaded only once<br>
-✔ Link expires in 30 minutes
+✔ Link expires automatically after 30 minutes
 </p>
 
-<p style="margin-top:20px; font-size:13px; color:#888;">
+<p style="
+margin-top:20px;
+font-size:13px;
+color:#888;
+text-align:center;
+">
   Powered by <b>ZHR Consultants</b>
 </p>
-  
+
 </div>
 </div>
 
-<script>
-
-// GET FILE ID FROM URL
-const params = new URLSearchParams(window.location.search);
-const fileId = params.get("id");
-
-if (!fileId) {
-  document.getElementById("fileName").innerText = "Invalid link";
-  document.getElementById("downloadBtn").style.display = "none";
-} else {
-  loadFile(); // only run if valid
-}
-
-// API BASE (CHANGE IF NEEDED)
-const API_BASE = "https://zhrconsultants.cahatimrampura.workers.dev";
-
-// LOAD FILE INFO
-async function loadFile(){
-
-  try{
-
-    const res = await fetch(`${API_BASE}/file/${fileId}`);
-
-    if(!res.ok){
-      document.getElementById("fileName").innerText = "Link expired";
-      document.getElementById("downloadBtn").style.display = "none";
-      return;
-    }
-
-    const data = await res.json();
-
-    const name = data.fileName || "File";
-const size = data.size ? (data.size / (1024 * 1024)).toFixed(2) : null;
-
-document.getElementById("fileName").innerText =
-  size ? `${name} (${size} MB)` : name;
-    
-    startTimer(data.createdAt);
-
-  }catch(err){
-  document.getElementById("fileName").innerText = "File ready for download";
-}
-}
-
-// TIMER FUNCTION
-function startTimer(createdAt){
-
-  const createdTime = Number(createdAt); // ✅ ensure number
-  const expiryTime = createdTime + (30 * 60 * 1000);
-
-  const interval = setInterval(() => {
-
-    const now = Date.now();
-    const remaining = expiryTime - now;
-
-    if(remaining <= 0){
-      clearInterval(interval);
-      document.getElementById("timer").innerText = "Link expired";
-      document.getElementById("downloadBtn").style.display = "none";
-      return;
-    }
-
-    const minutes = Math.floor(remaining / 60000);
-    const seconds = Math.floor((remaining % 60000) / 1000);
-
-    document.getElementById("timer").innerText =
-      `Expires in: ${minutes}:${seconds.toString().padStart(2,'0')}`;
-
-  }, 1000);
-}
-  
-// DOWNLOAD FUNCTION
-function downloadFile(){
-  const btn = document.getElementById("downloadBtn");
-  btn.innerText = "Downloading...";
-  btn.disabled = true;
-
-  window.location.href = `${API_BASE}/download/${fileId}`;
-}
-
-
-
-</script>
-
+<!-- LAYOUT -->
 <script src="layout.js"></script>
 
 <script>
+
 document.addEventListener("DOMContentLoaded", function(){
-  if (typeof loadLayout === "function") {
+
+  // LOAD SIDEBAR + HEADER
+  if(typeof loadLayout === "function"){
     loadLayout();
   }
+
+  // LOAD LUCIDE ICONS
+  lucide.createIcons();
+
+  // GET FILE ID
+  const params = new URLSearchParams(window.location.search);
+  const fileId = params.get("id");
+
+  // INVALID LINK
+  if(!fileId){
+
+    document.getElementById("fileName").innerText =
+      "Invalid link";
+
+    document.getElementById("downloadBtn").style.display =
+      "none";
+
+    return;
+  }
+
+  // API BASE
+  const API_BASE =
+    "https://zhrconsultants.cahatimrampura.workers.dev";
+
+  // LOAD FILE DETAILS
+  async function loadFile(){
+
+    try{
+
+      const res =
+        await fetch(`${API_BASE}/file/${fileId}`);
+
+      // LINK EXPIRED
+      if(!res.ok){
+
+        document.getElementById("fileName").innerText =
+          "Link expired";
+
+        document.getElementById("downloadBtn").style.display =
+          "none";
+
+        return;
+      }
+
+      const data = await res.json();
+
+      // FILE NAME
+      const name = data.fileName || "File";
+
+      // FILE SIZE
+      const size = data.size
+        ? (data.size / (1024 * 1024)).toFixed(2)
+        : null;
+
+      // SHOW NAME + SIZE
+      document.getElementById("fileName").innerText =
+        size
+          ? `${name} (${size} MB)`
+          : name;
+
+      // START TIMER
+      startTimer(data.createdAt);
+
+    }catch(err){
+
+      console.error(err);
+
+      document.getElementById("fileName").innerText =
+        "Unable to load file";
+
+      document.getElementById("downloadBtn").style.display =
+        "none";
+    }
+  }
+
+  // TIMER FUNCTION
+  function startTimer(createdAt){
+
+  // 30 mins expiry
+  const expiryTime =
+    Number(createdAt) + (30 * 60 * 1000);
+
+  const timerEl =
+    document.getElementById("timer");
+
+  const downloadBtn =
+    document.getElementById("downloadBtn");
+
+  function updateTimer(){
+
+    const now = Date.now();
+
+    const remaining =
+      expiryTime - now;
+
+    // EXPIRED
+    if(remaining <= 0){
+
+      timerEl.innerText = "Expired";
+
+      downloadBtn.disabled = true;
+
+      downloadBtn.innerHTML = `
+        Link Expired
+      `;
+
+      return;
+    }
+
+    // MINUTES
+    const minutes =
+      Math.floor(remaining / 60000);
+
+    // SECONDS
+    const seconds =
+      Math.floor((remaining % 60000) / 1000);
+
+    // FORMAT
+    timerEl.innerText =
+      `${minutes}:${seconds
+        .toString()
+        .padStart(2, '0')}`;
+
+  }
+
+  // RUN IMMEDIATELY
+  updateTimer();
+
+  // UPDATE EVERY SECOND
+  setInterval(updateTimer, 1000);
+}
+
+  // DOWNLOAD FUNCTION
+  window.downloadFile = function(){
+
+    const btn =
+      document.getElementById("downloadBtn");
+
+    btn.innerHTML = `
+      <i data-lucide="loader" class="spin"></i>
+      Downloading...
+    `;
+
+    btn.disabled = true;
+
+    lucide.createIcons();
+
+    window.location.href =
+      `${API_BASE}/download/${fileId}`;
+  }
+
+  // LOAD FILE
+  loadFile();
+
 });
+
 </script>
-  
+
 </body>
 </html>
