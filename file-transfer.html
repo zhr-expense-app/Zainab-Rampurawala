@@ -247,9 +247,6 @@ button:disabled{
 </div>
 
 <div class="file-name" id="fileName"></div>
-
-<!-- EMAIL -->
-<input type="email" id="email" placeholder="Recipient Email (Optional)">
   
 <!-- BUTTON -->
   <div class="btn-center">
@@ -383,10 +380,6 @@ button.disabled = true;
   const formData = new FormData();
 formData.append("file", file);
 
-const email = document.getElementById("email").value;
-if(email){
-  formData.append("email", email);
-}
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", "https://zhrconsultants.cahatimrampura.workers.dev/upload");
