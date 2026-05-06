@@ -127,7 +127,11 @@ color:#666;
 
 <!-- FILE ICON -->
 <div style="text-align:center; margin:20px 0;">
-  <i data-lucide="file" style="width:48px;height:48px;color:#001d4c;"></i>
+  <i
+    id="fileIcon"
+    data-lucide="file"
+    style="width:48px;height:48px;color:#001d4c;"
+  ></i>
 </div>
 
 <!-- FILE NAME -->
@@ -238,6 +242,82 @@ document.addEventListener("DOMContentLoaded", function(){
 
       // FILE NAME
       const name = data.fileName || "File";
+
+      // FILE EXTENSION
+const extension =
+  name.split(".").pop().toLowerCase();
+
+// ICON MAP
+const iconMap = {
+
+  // DOCUMENTS
+  pdf: "file-text",
+  doc: "file-text",
+  docx: "file-text",
+  txt: "file-text",
+  rtf: "file-text",
+  csv: "file-spreadsheet",
+
+  // EXCEL
+  xls: "file-spreadsheet",
+  xlsx: "file-spreadsheet",
+  ods: "file-spreadsheet",
+
+  // PRESENTATION
+  ppt: "presentation",
+  pptx: "presentation",
+  odp: "presentation",
+
+  // IMAGES
+  jpg: "image",
+  jpeg: "image",
+  png: "image",
+  gif: "image",
+  webp: "image",
+  svg: "image",
+  bmp: "image",
+  heic: "image",
+
+  // VIDEO
+  mp4: "film",
+  mov: "film",
+  avi: "film",
+  mkv: "film",
+  webm: "film",
+
+  // AUDIO
+  mp3: "music",
+  wav: "music",
+  aac: "music",
+  m4a: "music",
+  ogg: "music",
+
+  // ARCHIVES
+  zip: "archive",
+  rar: "archive",
+  "7z": "archive",
+  tar: "archive",
+  gz: "archive",
+
+  // DESIGN
+  psd: "palette",
+  ai: "palette",
+  fig: "figma",
+  xd: "pen-tool",
+  sketch: "pen-tool"
+};
+
+// DEFAULT ICON
+const iconName =
+  iconMap[extension] || "file";
+
+// UPDATE ICON
+document
+  .getElementById("fileIcon")
+  .setAttribute("data-lucide", iconName);
+
+// REFRESH ICON
+lucide.createIcons();
 
       // FILE SIZE
       const size = data.size
