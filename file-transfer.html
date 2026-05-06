@@ -116,6 +116,8 @@ margin-top:10px;
 .copy-btn{
 margin-top:10px;
 background:#198754;
+  display:flex;
+  justify-content:center;
 }
 
 /* INFO TEXT */
@@ -208,7 +210,12 @@ text-align:center;
   color:#001d4c;
 }
 
-
+button:disabled{
+  background:#198754;
+  opacity:1;
+  cursor:not-allowed;
+}
+  
 </style>
 
 </head>
@@ -409,8 +416,11 @@ if(email){
   showToast("Upload successful", "success");
 
   // ✅ DISABLE BUTTON AFTER SUCCESS
-  button.innerHTML = "Uploaded ✔";
-  button.disabled = true;
+button.innerHTML = `
+  <i data-lucide="check-circle"></i>
+  Uploaded
+`;
+button.disabled = true;
 
 } else {
   showToast("Upload failed", "error");
