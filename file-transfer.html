@@ -238,7 +238,12 @@ button:disabled{
   <i data-lucide="upload-cloud"></i>
   <p><b>Upload or drag & drop your file</b></p>
   <span style="font-size:13px; color:#666;">Max file size: 99 MB</span>
-  <input type="file" id="fileInput" hidden>
+  <input 
+  type="file" 
+  id="fileInput" 
+  hidden
+  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.ods,.odp,.jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.heic,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav,.aac,.m4a,.ogg,.zip,.rar,.7z,.tar,.gz,.psd,.ai,.fig,.xd,.sketch"
+>
 </div>
 
 <div class="file-name" id="fileName"></div>
@@ -343,6 +348,27 @@ function uploadFile() {
     return;
   }
 
+// ✅ ALLOWED FILE TYPES
+const allowedExtensions = [
+  "pdf","doc","docx","xls","xlsx","ppt","pptx",
+  "txt","csv","rtf","odt","ods","odp",
+  "jpg","jpeg","png","gif","webp","svg","bmp","heic",
+  "mp4","mov","avi","mkv","webm",
+  "mp3","wav","aac","m4a","ogg",
+  "zip","rar","7z","tar","gz",
+  "psd","ai","fig","xd","sketch"
+];
+
+// Get extension
+const extension = file.name.split(".").pop().toLowerCase();
+
+// Validate
+if (!allowedExtensions.includes(extension)) {
+  showToast("File type not allowed", "error");
+  return;
+}
+
+  
   const maxSize = 99 * 1024 * 1024;
   if (file.size > maxSize) {
     showToast("File exceeds 99MB limit", "error");
